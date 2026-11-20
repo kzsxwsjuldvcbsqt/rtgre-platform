@@ -1,0 +1,7 @@
+# Copier en terraform.tfvars, qui n'est pas suivi par Git, puis remplir.
+tenancy_ocid            = "ocid1.tenancy.oc1..<identifiant>"
+region                  = "eu-paris-1"
+oci_profile             = "DEFAULT"
+project                 = "rtgre-platform"
+environment             = "prod"
+compartment_description = "Ressources de la plateforme qui héberge rtgre.fr."
