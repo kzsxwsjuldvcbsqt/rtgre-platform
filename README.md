@@ -14,6 +14,13 @@ Les versions des outils sont fixées dans `mise.toml`. Avec [mise](https://mise.
 mise install
 ```
 
+## Organisation
+
+| Dossier | Rôle |
+| --- | --- |
+| [`terraform/bootstrap`](terraform/bootstrap) | Socle de la tenancy : compartiment de la plateforme et tags par défaut |
+| [`docs/adr`](docs/adr) | Décisions d'architecture |
+
 ## Qualité
 
 Les contrôles sont décrits dans `.pre-commit-config.yaml` et s'exécutent avant chaque commit une fois les hooks installés :
