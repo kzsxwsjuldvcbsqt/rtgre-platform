@@ -11,6 +11,9 @@ locals {
   identity_domain_url = one(data.oci_identity_domains.this.domains).url
   ci_plan_name        = "${var.project}-ci-plan"
 
+  # Sans « all », l'API ne renvoie ni les membres d'un groupe ni les règles d'emprunt d'une confiance.
+  identity_read_attribute_sets = ["all"]
+
   # Le claim « sub » du jeton GitHub dépend de l'événement qui a lancé le workflow.
   ci_plan_subjects = [
     "repo:${var.github_repository}:pull_request",
@@ -34,16 +37,29 @@ resource "oci_identity_domains_user" "ci_plan" {
   urnietfparamsscimschemasoracleidcsextensionuser_user {
     service_user = true
   }
+
+  lifecycle {
+    # Oracle ajoute à « schemas » des extensions (OCITags, userState, capabilities…) selon les
+    # attributs renvoyés : les retirer à chaque plan n'aurait aucun effet.
+    ignore_changes = [schemas]
+  }
 }
 
 resource "oci_identity_domains_group" "ci_plan" {
-  idcs_endpoint = local.identity_domain_url
-  display_name  = local.ci_plan_name
-  schemas       = ["urn:ietf:params:scim:schemas:core:2.0:Group"]
+  idcs_endpoint  = local.identity_domain_url
+  display_name   = local.ci_plan_name
+  attribute_sets = local.identity_read_attribute_sets
+  schemas        = ["urn:ietf:params:scim:schemas:core:2.0:Group"]
 
   members {
     type  = "User"
     value = oci_identity_domains_user.ci_plan.id
+  }
+
+  lifecycle {
+    # Oracle ajoute à « schemas » des extensions (OCITags, userState, capabilities…) selon les
+    # attributs renvoyés : les retirer à chaque plan n'aurait aucun effet.
+    ignore_changes = [schemas]
   }
 }
 
@@ -73,12 +89,19 @@ resource "oci_identity_domains_app" "ci_token_exchange" {
   based_on_template {
     value = "CustomWebAppTemplateId"
   }
+
+  lifecycle {
+    # Oracle ajoute à « schemas » des extensions (OCITags, userState, capabilities…) selon les
+    # attributs renvoyés : les retirer à chaque plan n'aurait aucun effet.
+    ignore_changes = [schemas]
+  }
 }
 
 resource "oci_identity_domains_identity_propagation_trust" "github_actions" {
   idcs_endpoint             = local.identity_domain_url
   name                      = "${var.project}-github-actions"
   description               = "Accepte les jetons OIDC de GitHub Actions pour ${var.github_repository}."
+  attribute_sets            = local.identity_read_attribute_sets
   schemas                   = ["urn:ietf:params:scim:schemas:oracle:idcs:IdentityPropagationTrust"]
   type                      = "JWT"
   active                    = true
