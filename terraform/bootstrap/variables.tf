@@ -74,3 +74,25 @@ variable "budget_alert_recipients" {
     error_message = "budget_alert_recipients doit contenir au moins une adresse e-mail valide."
   }
 }
+
+variable "identity_domain_name" {
+  description = "Nom du domaine d'identité qui porte l'utilisateur de service et la confiance de la CI."
+  type        = string
+  default     = "Default"
+}
+
+variable "github_repository" {
+  description = "Dépôt GitHub autorisé à s'authentifier, au format propriétaire/nom."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$", var.github_repository))
+    error_message = "github_repository doit être au format propriétaire/nom."
+  }
+}
+
+variable "github_oidc_issuer" {
+  description = "Émetteur des jetons OIDC de GitHub Actions."
+  type        = string
+  default     = "https://token.actions.githubusercontent.com"
+}
