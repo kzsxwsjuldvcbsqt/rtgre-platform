@@ -6,3 +6,4 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | --- | --- | --- |
 | [0001](0001-consigner-les-decisions-d-architecture.md) | Consigner les décisions d'architecture | accepté |
 | [0002](0002-heberger-sur-oracle-cloud-always-free.md) | Héberger sur Oracle Cloud Always Free | accepté |
+| [0003](0003-monter-kubernetes-avec-kubeadm.md) | Monter Kubernetes avec kubeadm | proposé |
