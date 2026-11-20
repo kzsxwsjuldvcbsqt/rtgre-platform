@@ -17,3 +17,11 @@ output "subnet_cidrs" {
   description = "Plage d'adresses de chaque sous-réseau, par rôle."
   value       = local.subnet_cidrs
 }
+
+output "nsg_ids" {
+  description = "OCID de chaque groupe de sécurité réseau, par rôle (load_balancer, nodes)."
+  value = {
+    load_balancer = oci_core_network_security_group.load_balancer.id
+    nodes         = oci_core_network_security_group.nodes.id
+  }
+}
