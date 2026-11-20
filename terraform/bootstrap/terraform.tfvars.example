@@ -8,3 +8,4 @@ compartment_description = "Ressources de la plateforme qui héberge rtgre.fr."
 monthly_budget_amount   = 1
 first_spend_threshold   = 0.01
 budget_alert_recipients = ["alertes@example.com"]
+github_oidc_subject_prefix = "repo:<propriétaire>@<id>/rtgre-platform@<id>"

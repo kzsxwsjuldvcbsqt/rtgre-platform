@@ -1,0 +1,104 @@
+name: Oracle Cloud login
+description: >-
+  Échange le jeton OIDC de GitHub Actions contre un jeton de session Oracle (UPST) de courte durée
+  et écrit le profil correspondant dans ~/.oci/config. Le job doit avoir la permission id-token: write.
+
+inputs:
+  domain-url:
+    description: URL du domaine d'identité Oracle qui porte la confiance.
+    required: true
+  client-id:
+    description: Identifiant de l'application OAuth qui authentifie l'échange.
+    required: true
+  client-secret:
+    description: Secret de l'application OAuth qui authentifie l'échange.
+    required: true
+  tenancy:
+    description: OCID de la tenancy.
+    required: true
+  region:
+    description: Région Oracle Cloud.
+    required: true
+  profile:
+    description: Nom du profil écrit dans ~/.oci/config.
+    required: false
+    default: DEFAULT
+
+runs:
+  using: composite
+  steps:
+    - name: Exchange the GitHub token for an Oracle session token
+      shell: bash
+      env:
+        DOMAIN_URL: ${{ inputs.domain-url }}
+        CLIENT_ID: ${{ inputs.client-id }}
+        CLIENT_SECRET: ${{ inputs.client-secret }}
+        TENANCY: ${{ inputs.tenancy }}
+        REGION: ${{ inputs.region }}
+        PROFILE: ${{ inputs.profile }}
+      run: |
+        set -euo pipefail
+
+        # Lit un claim de la charge utile d'un JWT (base64url sans remplissage).
+        jwt_claim() {
+          local payload
+          payload=$(cut -d. -f2 <<< "$1" | tr '_-' '/+')
+          while [ $(( ${#payload} % 4 )) -ne 0 ]; do payload="$payload="; done
+          base64 -d <<< "$payload" | jq -r --arg claim "$2" '.[$claim]'
+        }
+
+        if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+          echo "::error::Le job doit avoir la permission id-token: write."
+          exit 1
+        fi
+
+        session_dir="$HOME/.oci/sessions/$PROFILE"
+        mkdir -p "$session_dir"
+        chmod 700 "$HOME/.oci" "$session_dir"
+
+        # Paire de clés éphémère : le jeton Oracle est lié à cette clé publique.
+        openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out "$session_dir/key.pem" 2>/dev/null
+        chmod 600 "$session_dir/key.pem"
+        public_key=$(openssl pkey -in "$session_dir/key.pem" -pubout -outform DER | base64 -w0)
+        fingerprint=$(openssl pkey -in "$session_dir/key.pem" -pubout -outform DER | openssl md5 -c | awk '{print $2}')
+
+        github_token=$(curl -sSf \
+          -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+          "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r '.value')
+        echo "::add-mask::$github_token"
+
+        response=$(curl -sS -w '\n%{http_code}' -X POST "${DOMAIN_URL%/}/oauth2/v1/token" \
+          -u "$CLIENT_ID:$CLIENT_SECRET" \
+          --data-urlencode 'grant_type=urn:ietf:params:oauth:grant-type:token-exchange' \
+          --data-urlencode 'requested_token_type=urn:oci:token-type:oci-upst' \
+          --data-urlencode 'subject_token_type=jwt' \
+          --data-urlencode "subject_token=$github_token" \
+          --data-urlencode "public_key=$public_key")
+        status=$(tail -n1 <<< "$response")
+        body=$(sed '$d' <<< "$response")
+
+        if [ "$status" != "200" ]; then
+          reason=$(jq -c '{error, error_description}' <<< "$body" 2>/dev/null || echo "$body")
+          echo "::error::Échange refusé par Oracle (HTTP $status) : $reason"
+          # Le sujet identifie seulement le dépôt et l'événement : il aide à corriger les règles de la confiance.
+          echo "Sujet du jeton GitHub : $(jwt_claim "$github_token" sub)"
+          exit 1
+        fi
+
+        session_token=$(jq -r '.token' <<< "$body")
+        echo "::add-mask::$session_token"
+        printf '%s' "$session_token" > "$session_dir/token"
+        chmod 600 "$session_dir/token"
+
+        cat > "$HOME/.oci/config" <<EOF
+        [$PROFILE]
+        fingerprint=$fingerprint
+        key_file=$session_dir/key.pem
+        tenancy=$TENANCY
+        region=$REGION
+        security_token_file=$session_dir/token
+        EOF
+        chmod 600 "$HOME/.oci/config"
+
+        expires=$(jwt_claim "$session_token" exp)
+        echo "Jeton Oracle valable jusqu'à $(date -u -d "@$expires" '+%H:%M:%S UTC')."
