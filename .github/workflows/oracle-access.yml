@@ -1,0 +1,83 @@
+name: Oracle access
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/actions/oci-login/**
+      - .github/workflows/oracle-access.yml
+      - terraform/bootstrap/ci_identity.tf
+  push:
+    branches:
+      - main
+    paths:
+      - .github/actions/oci-login/**
+      - .github/workflows/oracle-access.yml
+      - terraform/bootstrap/ci_identity.tf
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: oracle-access-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MISE_VERSION: '2026.11.11'
+
+jobs:
+  check:
+    name: Federated access (read-only)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      OCI_CLI_AUTH: security_token
+      STATE_BUCKET: ${{ vars.OCI_STATE_BUCKET }}
+      TENANCY: ${{ vars.OCI_TENANCY_OCID }}
+      SUPPRESS_LABEL_WARNING: 'True'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned tools
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          version: ${{ env.MISE_VERSION }}
+
+      - name: Log in to Oracle Cloud
+        uses: $/.github/actions/oci-login
+        with:
+          domain-url: ${{ vars.OCI_DOMAIN_URL }}
+          client-id: ${{ vars.OCI_CLIENT_ID }}
+          client-secret: ${{ secrets.OCI_CLIENT_SECRET }}
+          tenancy: ${{ vars.OCI_TENANCY_OCID }}
+          region: ${{ vars.OCI_REGION }}
+
+      - name: Read the Terraform state bucket
+        run: |
+          oci os object list --bucket-name "$STATE_BUCKET" \
+            --query 'data[].name' --output table
+
+      - name: Refuse writes to the state bucket
+        run: |
+          probe="ci/write-probe-$GITHUB_RUN_ID"
+          if echo probe | oci os object put --bucket-name "$STATE_BUCKET" \
+            --name "$probe" --file - --no-overwrite >/dev/null 2>&1; then
+            oci os object delete --bucket-name "$STATE_BUCKET" --name "$probe" --force
+            echo "::error::L'identité de la CI a pu écrire dans le bucket du state."
+            exit 1
+          fi
+          echo "Écriture refusée, comme attendu."
+
+      - name: Refuse access outside the platform compartment
+        run: |
+          if oci iam tag-namespace list --compartment-id "$TENANCY" >/dev/null 2>&1; then
+            echo "::error::L'identité de la CI peut lire la racine de la tenancy."
+            exit 1
+          fi
+          echo "Lecture hors du compartiment refusée, comme attendu."
