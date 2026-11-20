@@ -39,6 +39,14 @@ runs:
       run: |
         set -euo pipefail
 
+        # Lit un claim de la charge utile d'un JWT (base64url sans remplissage).
+        jwt_claim() {
+          local payload
+          payload=$(cut -d. -f2 <<< "$1" | tr '_-' '/+')
+          while [ $(( ${#payload} % 4 )) -ne 0 ]; do payload="$payload="; done
+          base64 -d <<< "$payload" | jq -r --arg claim "$2" '.[$claim]'
+        }
+
         if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
           echo "::error::Le job doit avoir la permission id-token: write."
           exit 1
@@ -72,6 +80,8 @@ runs:
         if [ "$status" != "200" ]; then
           reason=$(jq -c '{error, error_description}' <<< "$body" 2>/dev/null || echo "$body")
           echo "::error::Échange refusé par Oracle (HTTP $status) : $reason"
+          # Le sujet identifie seulement le dépôt et l'événement : il aide à corriger les règles de la confiance.
+          echo "Sujet du jeton GitHub : $(jwt_claim "$github_token" sub)"
           exit 1
         fi
 
@@ -90,7 +100,5 @@ runs:
         EOF
         chmod 600 "$HOME/.oci/config"
 
-        expires=$(cut -d. -f2 <<< "$session_token" | tr '_-' '/+' | base64 -d 2>/dev/null | jq -r '.exp' || true)
-        if [ -n "$expires" ] && [ "$expires" != "null" ]; then
-          echo "Jeton Oracle valable jusqu'à $(date -u -d "@$expires" '+%H:%M:%S UTC')."
-        fi
+        expires=$(jwt_claim "$session_token" exp)
+        echo "Jeton Oracle valable jusqu'à $(date -u -d "@$expires" '+%H:%M:%S UTC')."
