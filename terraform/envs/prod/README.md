@@ -9,6 +9,14 @@ Le compartiment et l'espace de tags sont lus dans le state du bootstrap avec `te
 - Le bootstrap appliqué, avec son state dans le bucket `rtgre-platform-tfstate`.
 - Les outils de `mise.toml`, et un profil `~/.oci/config` autorisé à lire ce bucket.
 
+## Paramètres
+
+| Fichier | Suivi par Git | Contenu |
+| --- | --- | --- |
+| `prod.auto.tfvars` | oui | Paramètres de l'environnement : nom, plages d'adresses, plages autorisées |
+| `terraform.tfvars` | non | Ce qui dépend du poste : région, authentification, namespace |
+| `backend.hcl` | non | Emplacement du state |
+
 ## Utilisation
 
 Depuis ce dossier, préparer les deux fichiers locaux, qui ne sont pas suivis par Git :
