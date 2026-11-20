@@ -1,0 +1,31 @@
+name: Incident
+description: Une panne ou une dégradation constatée en production.
+labels: [incident]
+body:
+  - type: textarea
+    id: symptomes
+    attributes:
+      label: Symptômes
+      description: Ce qui a été observé, par qui et à quelle heure (heure de Paris).
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - Site inaccessible
+        - Site accessible mais données périmées
+        - Dégradation sans impact visible
+    validations:
+      required: true
+  - type: textarea
+    id: chronologie
+    attributes:
+      label: Chronologie
+      description: Les événements dans l'ordre, du premier signe au retour à la normale.
+  - type: textarea
+    id: suivi
+    attributes:
+      label: Suivi
+      description: Lien vers le post-mortem dans docs/postmortems/ une fois rédigé.
