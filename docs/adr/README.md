@@ -8,3 +8,4 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | [0002](0002-heberger-sur-oracle-cloud-always-free.md) | Héberger sur Oracle Cloud Always Free | accepté |
 | [0003](0003-monter-kubernetes-avec-kubeadm.md) | Monter Kubernetes avec kubeadm | proposé |
 | [0004](0004-stocker-le-state-avec-le-backend-oci.md) | Stocker le state avec le backend oci natif | accepté |
+| [0005](0005-authentifier-la-ci-par-federation-d-identite.md) | Authentifier la CI par fédération d'identité | accepté |
