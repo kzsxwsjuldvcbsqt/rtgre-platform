@@ -23,7 +23,7 @@ cp terraform.tfvars.example terraform.tfvars
 cp backend.hcl.example backend.hcl
 ```
 
-Renseigner `tenancy_ocid`, `budget_alert_recipients` et `github_repository` dans `terraform.tfvars`, et le namespace Object Storage dans `backend.hcl` (`oci os ns get`).
+Renseigner `tenancy_ocid`, `budget_alert_recipients` et `github_oidc_subject_prefix` dans `terraform.tfvars`, et le namespace Object Storage dans `backend.hcl` (`oci os ns get`).
 
 ```bash
 terraform init -backend-config=backend.hcl
@@ -76,6 +76,7 @@ Le state du bootstrap vit dans le bucket que le bootstrap crée. Sur une tenancy
 - Le budget mesure le coût d'usage avant les crédits d'essai : une ressource hors de l'offre Always Free déclenche l'alerte même si les crédits la paient. Oracle évalue les budgets environ toutes les heures, l'alerte n'est donc pas instantanée.
 - L'API des budgets stocke les caractères accentués sous forme d'entités HTML (`&eacute;`). La description du budget est écrite sans accent pour éviter un écart permanent dans le plan.
 - Pour les ressources du domaine d'identité, l'API ne renvoie les membres d'un groupe et les règles d'emprunt qu'avec `attribute_sets = ["all"]`, et Oracle ajoute à `schemas` des extensions qui varient : ce champ est ignoré.
+- GitHub émet un sujet OIDC immuable, qui inclut les identifiants numériques du propriétaire et du dépôt (`repo:<propriétaire>@<id>/<dépôt>@<id>`). Le préfixe exact se lit avec `gh api repos/<propriétaire>/<dépôt>/actions/oidc/customization/sub`, champ `sub_claim_prefix`.
 - La règle d'emprunt d'une confiance attend l'identifiant SCIM de l'utilisateur. Avec son OCID, l'API refuse la valeur (40 caractères au plus).
 - Le state est verrouillé pendant chaque exécution. Pour un verrou bloqué ou un state à restaurer, voir le runbook [Restaurer un state Terraform](../../docs/runbooks/restaurer-un-state-terraform.md).
 - Le bucket du state est protégé par `prevent_destroy`. Un `destroy` complet demande de retirer volontairement cette protection.

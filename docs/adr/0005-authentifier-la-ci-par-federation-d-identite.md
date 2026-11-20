@@ -36,7 +36,7 @@ Fédération avec un jeton UPST, entièrement déclarée dans `terraform/bootstr
 - l'utilisateur de service `rtgre-platform-ci-plan`, membre du groupe du même nom ;
 - une politique qui donne à ce groupe la lecture seule sur le compartiment de la plateforme ;
 - l'application OAuth `rtgre-platform-ci-token-exchange` ;
-- une confiance qui n'accepte que les jetons dont le `sub` vaut `repo:<dépôt>:pull_request` ou `repo:<dépôt>:ref:refs/heads/main`.
+- une confiance qui n'accepte que les jetons dont le `sub` vaut `<préfixe>:pull_request` ou `<préfixe>:ref:refs/heads/main`. Le préfixe est le sujet immuable de GitHub, `repo:<propriétaire>@<id>/<dépôt>@<id>` : un dépôt supprimé puis recréé sous le même nom n'aurait pas les mêmes identifiants, et serait refusé.
 
 L'échange est fait par une action composite du dépôt, `.github/actions/oci-login`, plutôt que par une action tierce.
 
@@ -45,7 +45,7 @@ L'échange est fait par une action composite du dépôt, `.github/actions/oci-lo
 - Aucune clé API Oracle n'est stockée dans GitHub. Le seul secret, celui de l'application OAuth, est inutile sans un jeton GitHub de ce dépôt.
 - Chaque job obtient un jeton qui expire de lui-même, lié à une paire de clés générée pour ce seul job.
 - L'identité des pull requests est en lecture seule : les plans de PR tournent avec `-lock=false`, et une PR ne peut ni modifier l'infrastructure ni réécrire le state. Le workflow `Oracle access` le vérifie à chaque modification de cette configuration.
-- Appliquer depuis la CI demandera une seconde identité, réservée à un environnement GitHub protégé (`sub` = `repo:<dépôt>:environment:<nom>`), avec ses propres droits. Elle viendra avec la première configuration appliquée par la CI.
+- Appliquer depuis la CI demandera une seconde identité, réservée à un environnement GitHub protégé (`sub` = `<préfixe>:environment:<nom>`), avec ses propres droits. Elle viendra avec la première configuration appliquée par la CI.
 - Le secret de l'application est lisible dans le state Terraform. Le bucket du state est privé, mais quiconque peut lire le state peut lire ce secret. La rotation est décrite dans le runbook [Renouveler le secret de la CI](../runbooks/renouveler-le-secret-de-la-ci.md).
 - Le domaine d'identité est de type gratuit, limité à deux applications non Oracle. Cette application en occupe une.
 - Le bootstrap lui-même reste appliqué depuis un poste administrateur : il gère l'IAM de la tenancy, et la CI n'a volontairement aucun droit pour le faire.
