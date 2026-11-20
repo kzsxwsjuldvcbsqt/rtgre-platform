@@ -4,12 +4,13 @@
 resource "oci_budget_budget" "tenancy" {
   compartment_id = var.tenancy_ocid
   display_name   = "${var.project}-monthly"
-  description    = "Dépenses mensuelles de la tenancy ; la plateforme doit rester dans l'offre Always Free."
-  amount         = var.monthly_budget_amount
-  reset_period   = "MONTHLY"
-  target_type    = "COMPARTMENT"
-  targets        = [var.tenancy_ocid]
-  freeform_tags  = local.freeform_tags
+  # Sans accent : l'API des budgets renvoie « é » sous la forme « &eacute; », ce qui crée un écart à chaque plan.
+  description   = "Suivi mensuel de la tenancy ; la plateforme doit rester dans l'offre Always Free."
+  amount        = var.monthly_budget_amount
+  reset_period  = "MONTHLY"
+  target_type   = "COMPARTMENT"
+  targets       = [var.tenancy_ocid]
+  freeform_tags = local.freeform_tags
 }
 
 resource "oci_budget_alert_rule" "first_spend" {
