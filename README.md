@@ -13,3 +13,13 @@ Les versions des outils sont fixées dans `mise.toml`. Avec [mise](https://mise.
 ```bash
 mise install
 ```
+
+## Qualité
+
+Les contrôles sont décrits dans `.pre-commit-config.yaml` et s'exécutent avant chaque commit une fois les hooks installés :
+
+```bash
+pre-commit install
+```
+
+Le workflow `Quality` relance les mêmes contrôles sur chaque pull request, analyse tout l'historique à la recherche de secrets et vérifie que chaque message de commit suit [Conventional Commits](https://www.conventionalcommits.org/fr/).
