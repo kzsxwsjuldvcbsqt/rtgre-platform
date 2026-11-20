@@ -118,7 +118,8 @@ resource "oci_identity_domains_identity_propagation_trust" "github_actions" {
     for_each = local.ci_plan_subjects
 
     content {
-      rule = "sub eq '${impersonation_service_users.value}'"
+      # Sans apostrophes : avec « sub eq '<valeur>' », comme dans les exemples d'Oracle, aucune règle ne correspond.
+      rule = "sub eq ${impersonation_service_users.value}"
       # L'API attend l'identifiant SCIM de l'utilisateur (40 caractères au plus), pas son OCID.
       value = oci_identity_domains_user.ci_plan.id
       ocid  = oci_identity_domains_user.ci_plan.ocid
