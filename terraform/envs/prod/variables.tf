@@ -35,3 +35,36 @@ variable "bootstrap_state_key" {
   type        = string
   default     = "bootstrap/terraform.tfstate"
 }
+
+variable "name" {
+  description = "Préfixe des noms affichés des ressources de cet environnement."
+  type        = string
+}
+
+variable "vcn_cidr" {
+  description = "Plage d'adresses du réseau virtuel."
+  type        = string
+}
+
+variable "vcn_dns_label" {
+  description = "Label DNS du réseau virtuel."
+  type        = string
+}
+
+variable "subnet_newbits" {
+  description = "Bits ajoutés au masque du réseau virtuel pour chaque sous-réseau."
+  type        = number
+}
+
+variable "subnet_netnums" {
+  description = "Numéro de chaque sous-réseau dans le réseau virtuel."
+  type = object({
+    load_balancer = number
+    nodes         = number
+  })
+}
+
+variable "public_ingress_cidrs" {
+  description = "Plages autorisées à joindre le load balancer depuis Internet."
+  type        = list(string)
+}

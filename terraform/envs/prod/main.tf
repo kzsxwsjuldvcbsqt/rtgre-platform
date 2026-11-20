@@ -22,3 +22,16 @@ locals {
     stack      = "envs/prod"
   }
 }
+
+module "network" {
+  source = "../../modules/network"
+
+  compartment_id       = local.compartment_id
+  name                 = var.name
+  freeform_tags        = local.freeform_tags
+  vcn_cidr             = var.vcn_cidr
+  vcn_dns_label        = var.vcn_dns_label
+  subnet_newbits       = var.subnet_newbits
+  subnet_netnums       = var.subnet_netnums
+  public_ingress_cidrs = var.public_ingress_cidrs
+}
