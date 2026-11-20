@@ -27,4 +27,4 @@ Règles :
 | Module | Rôle |
 | --- | --- |
 | [`network`](network) | Réseau virtuel, sous-réseaux, passerelle Internet et groupes de sécurité réseau |
-| *(à venir)* `compute` | Nœuds A1 de la plateforme |
+| [`compute`](compute) | Nœuds du cluster, dans les limites de l'offre gratuite |
