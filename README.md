@@ -18,7 +18,9 @@ mise install
 
 | Dossier | Rôle |
 | --- | --- |
-| [`terraform/bootstrap`](terraform/bootstrap) | Socle de la tenancy : compartiment de la plateforme et tags par défaut |
+| [`terraform/bootstrap`](terraform/bootstrap) | Socle de la tenancy : compartiment, tags, budget, bucket du state, identité de la CI |
+| [`terraform/envs/prod`](terraform/envs/prod) | Environnement de production, assemblé à partir des modules |
+| [`terraform/modules`](terraform/modules) | Modules réutilisables et leurs conventions |
 | [`docs/adr`](docs/adr) | Décisions d'architecture |
 | [`docs/runbooks`](docs/runbooks) | Procédures d'exploitation |
 

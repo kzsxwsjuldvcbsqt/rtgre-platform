@@ -1,0 +1,6 @@
+# Copier en terraform.tfvars, qui n'est pas suivi par Git, puis remplir.
+region                  = "eu-paris-1"
+oci_auth                = "APIKey"
+oci_profile             = "DEFAULT"
+state_bucket            = "rtgre-platform-tfstate"
+objectstorage_namespace = "<namespace Object Storage>"
