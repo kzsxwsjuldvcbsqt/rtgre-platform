@@ -5,3 +5,6 @@ oci_profile             = "DEFAULT"
 project                 = "rtgre-platform"
 environment             = "prod"
 compartment_description = "Ressources de la plateforme qui héberge rtgre.fr."
+monthly_budget_amount   = 1
+first_spend_threshold   = 0.01
+budget_alert_recipients = ["alertes@example.com"]
