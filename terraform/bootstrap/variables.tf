@@ -44,3 +44,33 @@ variable "compartment_description" {
   description = "Description affichée dans la console pour le compartiment de la plateforme."
   type        = string
 }
+
+variable "monthly_budget_amount" {
+  description = "Budget mensuel de la tenancy, dans la devise du compte."
+  type        = number
+
+  validation {
+    condition     = var.monthly_budget_amount > 0
+    error_message = "monthly_budget_amount doit être strictement positif."
+  }
+}
+
+variable "first_spend_threshold" {
+  description = "Dépense réelle, dans la devise du compte, à partir de laquelle l'alerte de première dépense part."
+  type        = number
+
+  validation {
+    condition     = var.first_spend_threshold > 0
+    error_message = "first_spend_threshold doit être strictement positif."
+  }
+}
+
+variable "budget_alert_recipients" {
+  description = "Adresses e-mail qui reçoivent les alertes de budget."
+  type        = list(string)
+
+  validation {
+    condition     = length(var.budget_alert_recipients) > 0 && alltrue([for address in var.budget_alert_recipients : can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", address))])
+    error_message = "budget_alert_recipients doit contenir au moins une adresse e-mail valide."
+  }
+}
