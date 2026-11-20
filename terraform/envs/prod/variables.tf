@@ -19,3 +19,19 @@ variable "oci_profile" {
   type        = string
   default     = "DEFAULT"
 }
+
+variable "state_bucket" {
+  description = "Bucket Object Storage des states Terraform (sortie state_bucket du bootstrap)."
+  type        = string
+}
+
+variable "objectstorage_namespace" {
+  description = "Namespace Object Storage de la tenancy (sortie objectstorage_namespace du bootstrap)."
+  type        = string
+}
+
+variable "bootstrap_state_key" {
+  description = "Clé du state du bootstrap dans le bucket."
+  type        = string
+  default     = "bootstrap/terraform.tfstate"
+}
