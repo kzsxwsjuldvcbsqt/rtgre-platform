@@ -1,0 +1,46 @@
+# Terraform
+# Le fichier .terraform.lock.hcl est suivi : il fige les versions des providers.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Variables propres à un poste : seuls les exemples sont suivis.
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Ansible
+*.retry
+.vault-pass*
+ansible/inventories/**/generated/
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# Secrets en clair : seuls les fichiers chiffrés par SOPS sont suivis.
+*.dec.yaml
+*.dec.yml
+.env
+.env.*
+!.env.example
+
+# Python (Ansible, Molecule)
+.venv/
+__pycache__/
+*.pyc
+
+# Éditeurs et système
+.idea/
+.vscode/
+*.swp
+.DS_Store
