@@ -20,6 +20,7 @@ mise install
 | --- | --- |
 | [`terraform/bootstrap`](terraform/bootstrap) | Socle de la tenancy : compartiment de la plateforme et tags par défaut |
 | [`docs/adr`](docs/adr) | Décisions d'architecture |
+| [`docs/runbooks`](docs/runbooks) | Procédures d'exploitation |
 
 ## Qualité
 

@@ -17,6 +17,7 @@ terraform.rc
 *.tfvars
 *.tfvars.json
 !*.tfvars.example
+backend.hcl
 
 # Ansible
 *.retry

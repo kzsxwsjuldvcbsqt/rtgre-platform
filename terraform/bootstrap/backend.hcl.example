@@ -1,0 +1,7 @@
+# Copier en backend.hcl, qui n'est pas suivi par Git, puis remplir.
+# Les valeurs viennent des sorties state_bucket et objectstorage_namespace du bootstrap.
+bucket              = "rtgre-platform-tfstate"
+namespace           = "<namespace Object Storage>"
+region              = "eu-paris-1"
+auth                = "APIKey"
+config_file_profile = "DEFAULT"
