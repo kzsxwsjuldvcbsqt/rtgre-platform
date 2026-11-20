@@ -81,13 +81,13 @@ variable "identity_domain_name" {
   default     = "Default"
 }
 
-variable "github_repository" {
-  description = "Dépôt GitHub autorisé à s'authentifier, au format propriétaire/nom."
+variable "github_oidc_subject_prefix" {
+  description = "Préfixe du claim sub des jetons OIDC du dépôt autorisé, tel que renvoyé par gh api repos/<propriétaire>/<dépôt>/actions/oidc/customization/sub (champ sub_claim_prefix)."
   type        = string
 
   validation {
-    condition     = can(regex("^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$", var.github_repository))
-    error_message = "github_repository doit être au format propriétaire/nom."
+    condition     = can(regex("^repo:[^:]+$", var.github_oidc_subject_prefix))
+    error_message = "github_oidc_subject_prefix doit commencer par « repo: » et ne pas contenir le type d'événement."
   }
 }
 

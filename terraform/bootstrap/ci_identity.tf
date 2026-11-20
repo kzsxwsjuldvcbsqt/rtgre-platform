@@ -14,10 +14,11 @@ locals {
   # Sans « all », l'API ne renvoie ni les membres d'un groupe ni les règles d'emprunt d'une confiance.
   identity_read_attribute_sets = ["all"]
 
-  # Le claim « sub » du jeton GitHub dépend de l'événement qui a lancé le workflow.
+  # Le claim « sub » du jeton GitHub dépend de l'événement qui a lancé le workflow. Avec le sujet
+  # immuable de GitHub, le préfixe contient aussi les identifiants numériques du propriétaire et du dépôt.
   ci_plan_subjects = [
-    "repo:${var.github_repository}:pull_request",
-    "repo:${var.github_repository}:ref:refs/heads/main",
+    "${var.github_oidc_subject_prefix}:pull_request",
+    "${var.github_oidc_subject_prefix}:ref:refs/heads/main",
   ]
 }
 
@@ -100,7 +101,7 @@ resource "oci_identity_domains_app" "ci_token_exchange" {
 resource "oci_identity_domains_identity_propagation_trust" "github_actions" {
   idcs_endpoint             = local.identity_domain_url
   name                      = "${var.project}-github-actions"
-  description               = "Accepte les jetons OIDC de GitHub Actions pour ${var.github_repository}."
+  description               = "Accepte les jetons OIDC de GitHub Actions pour ${var.github_oidc_subject_prefix}."
   attribute_sets            = local.identity_read_attribute_sets
   schemas                   = ["urn:ietf:params:scim:schemas:oracle:idcs:IdentityPropagationTrust"]
   type                      = "JWT"
