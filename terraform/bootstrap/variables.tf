@@ -34,6 +34,12 @@ variable "environment" {
   type        = string
 }
 
+variable "tag_propagation_delay" {
+  description = "Attente entre la création des tags et leur première utilisation, le temps qu'Oracle les propage."
+  type        = string
+  default     = "30s"
+}
+
 variable "compartment_description" {
   description = "Description affichée dans la console pour le compartiment de la plateforme."
   type        = string

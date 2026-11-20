@@ -29,6 +29,15 @@ resource "oci_identity_tag" "default" {
   freeform_tags    = local.freeform_tags
 }
 
+# Un tag tout juste créé est refusé (400 « Invalid tags ») tant qu'Oracle ne l'a pas propagé.
+resource "time_sleep" "tag_propagation" {
+  create_duration = var.tag_propagation_delay
+
+  triggers = {
+    for key, tag in oci_identity_tag.default : key => tag.id
+  }
+}
+
 resource "oci_identity_compartment" "platform" {
   compartment_id = var.tenancy_ocid
   name           = local.compartment_name
@@ -40,6 +49,8 @@ resource "oci_identity_compartment" "platform" {
     for key, value in local.default_tags :
     "${oci_identity_tag_namespace.platform.name}.${oci_identity_tag.default[key].name}" => value
   }
+
+  depends_on = [time_sleep.tag_propagation]
 }
 
 resource "oci_identity_tag_default" "platform" {
