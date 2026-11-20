@@ -51,6 +51,14 @@ resource "oci_identity_compartment" "platform" {
   }
 
   depends_on = [time_sleep.tag_propagation]
+
+  lifecycle {
+    # Oracle ajoute ces tags à la création : les retirer ferait apparaître un écart à chaque plan.
+    ignore_changes = [
+      defined_tags["Oracle-Tags.CreatedBy"],
+      defined_tags["Oracle-Tags.CreatedOn"],
+    ]
+  }
 }
 
 resource "oci_identity_tag_default" "platform" {
