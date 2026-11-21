@@ -28,3 +28,5 @@ Règles :
 | --- | --- |
 | [`network`](network) | Réseau virtuel, sous-réseaux, passerelle Internet et groupes de sécurité réseau |
 | [`compute`](compute) | Nœuds du cluster, dans les limites de l'offre gratuite |
+| [`bastion`](bastion) | Bastion d'Oracle et règle SSH des nœuds |
+| [`load_balancer`](load_balancer) | Network Load Balancer public devant les nœuds |
