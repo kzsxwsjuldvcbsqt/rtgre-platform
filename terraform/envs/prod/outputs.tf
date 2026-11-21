@@ -32,3 +32,11 @@ output "node_image" {
   description = "Image utilisée pour les nouveaux nœuds."
   value       = module.compute.image
 }
+
+output "bastion" {
+  description = "Bastion des nœuds : OCID et durée maximale d'une session."
+  value = {
+    id                         = module.bastion.bastion_id
+    max_session_ttl_in_seconds = module.bastion.max_session_ttl_in_seconds
+  }
+}

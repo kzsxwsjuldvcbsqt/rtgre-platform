@@ -50,4 +50,17 @@ module "compute" {
   ssh_authorized_keys            = var.ssh_authorized_keys
   nodes                          = var.nodes
   free_tier_limits               = var.free_tier_limits
+  agent_plugins                  = var.node_agent_plugins
+}
+
+module "bastion" {
+  source = "../../modules/bastion"
+
+  compartment_id               = local.compartment_id
+  name                         = replace(var.name, "-", "")
+  freeform_tags                = local.freeform_tags
+  target_subnet_id             = module.network.subnet_ids["nodes"]
+  target_nsg_id                = module.network.nsg_ids["nodes"]
+  client_cidr_block_allow_list = var.bastion_client_cidrs
+  max_session_ttl_in_seconds   = var.bastion_max_session_ttl_in_seconds
 }
