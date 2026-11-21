@@ -65,19 +65,20 @@
     mode: "0600"
   register: cilium_manifest
 
-# kubectl diff renvoie 1 quand le cluster diffère du manifeste : l'apply n'a lieu que dans ce cas.
+# kubectl diff renvoie 0 sans écart et 1 avec écart. À la première installation, il échoue avec
+# NotFound : les espaces de noms du chart (cilium-secrets) n'existent pas encore pour la simulation.
 - name: Compare the cluster with the manifest
   ansible.builtin.command: >-
     kubectl --kubeconfig {{ cilium_kubeconfig }} diff --server-side -f {{ cilium_manifest_path }}
   register: cilium_diff
   changed_when: false
-  failed_when: cilium_diff.rc not in [0, 1]
+  failed_when: cilium_diff.rc not in [0, 1] and 'NotFound' not in cilium_diff.stderr
 
 - name: Apply the manifest
   ansible.builtin.command: >-
     kubectl --kubeconfig {{ cilium_kubeconfig }} apply --server-side --force-conflicts
     -f {{ cilium_manifest_path }}
-  when: cilium_diff.rc == 1
+  when: cilium_diff.rc != 0
   changed_when: true
 
 - name: Wait for the Cilium agents to be ready
