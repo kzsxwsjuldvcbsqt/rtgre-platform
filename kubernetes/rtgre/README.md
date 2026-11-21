@@ -18,6 +18,7 @@ flowchart LR
 | PersistentVolumeClaim `site` | Volume local déclaré dans [`storage`](../storage) : le dernier site publié survit au redémarrage des pods. |
 | CronJob `rtgre-log-retention` | Remplace le pod du serveur web chaque semaine : ses journaux disparaissent avec lui. |
 | HTTPRoute `rtgre` | Attache le site à la [passerelle](../gateway) du cluster, pour les noms de `hostnames`. |
+| HTTPRoute `rtgre-redirect` | Renvoie les noms de `redirectHostnames`, comme `www`, vers le nom principal. |
 | NetworkPolicy, CiliumNetworkPolicy | Seule la passerelle entre dans l'espace de noms. Le générateur ne sort que vers ADE, en HTTPS. |
 
 ## Choix notables
