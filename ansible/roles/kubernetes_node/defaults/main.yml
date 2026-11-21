@@ -23,7 +23,7 @@ kubernetes_node_apt_repository_url: https://pkgs.k8s.io/core:/stable:/v{minor}/d
 
 # Image « pause » des sandboxes de pods ; elle doit correspondre à celle qu'attend kubeadm
 # (kubeadm config images list).
-kubernetes_node_pause_image: registry.k8s.io/pause:3.10.1
+kubernetes_node_pause_image: registry.k8s.io/pause:3.10.2
 
 # Socket du runtime, utilisé par kubelet et crictl.
 kubernetes_node_containerd_socket: unix:///run/containerd/containerd.sock
