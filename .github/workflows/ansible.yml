@@ -1,0 +1,80 @@
+name: Ansible
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ansible/**
+      - .github/workflows/ansible.yml
+      - mise.toml
+  push:
+    branches:
+      - main
+    paths:
+      - ansible/**
+      - .github/workflows/ansible.yml
+      - mise.toml
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ansible-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MISE_VERSION: '2026.11.11'
+
+jobs:
+  roles:
+    name: List the roles with a Molecule scenario
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      roles: ${{ steps.list.outputs.roles }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: List roles
+        id: list
+        run: |
+          roles=$(find ansible/roles -mindepth 3 -maxdepth 3 -path '*/molecule/*' -type d \
+            | cut -d/ -f3 | sort -u | jq -R . | jq -cs .)
+          echo "roles=$roles" >> "$GITHUB_OUTPUT"
+
+  molecule:
+    name: Molecule (${{ matrix.role }})
+    needs: roles
+    if: needs.roles.outputs.roles != '[]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        role: ${{ fromJSON(needs.roles.outputs.roles) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned tools
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          version: ${{ env.MISE_VERSION }}
+
+      - name: Install Ansible dependencies
+        run: mise run ansible-deps
+
+      - name: Run the Molecule scenario
+        working-directory: ansible/roles/${{ matrix.role }}
+        env:
+          PY_COLORS: '1'
+          ANSIBLE_FORCE_COLOR: '1'
+        run: molecule test

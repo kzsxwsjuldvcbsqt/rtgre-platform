@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: kzsxwsjuldvcbsqt
+  role_name: hardening
+  namespace: rtgre_platform
+  description: Socle de sécurité des nœuds Ubuntu de la plateforme (SSH, pare-feu, mises à jour, noyau).
+  license: MIT
+  min_ansible_version: "2.22"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - noble
+
+dependencies: []
