@@ -29,6 +29,16 @@ ansible-inventory --graph
 
 Le plugin `oracle.oci.oci` n'accepte que les fichiers dont le nom se termine par `.oci.yml`.
 
+## Configurer les nœuds
+
+Les nœuds ne sont joignables que par le Bastion. Il faut d'abord ouvrir les sessions (voir le runbook [Se connecter à un nœud](../docs/runbooks/se-connecter-a-un-noeud.md)), puis, depuis ce dossier :
+
+```bash
+ansible-playbook playbooks/site.yml
+```
+
+Le playbook vérifie d'abord les plages réseau déclarées dans `inventories/prod/group_vars/all.yml`, puis applique `hardening` et `kubernetes_node` à tous les nœuds. Pour une modification risquée, l'appliquer d'abord à un seul nœud avec `--limit wk-1`.
+
 ## Rôles
 
 | Rôle | Rôle dans la plateforme |
