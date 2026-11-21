@@ -1,0 +1,10 @@
+apiVersion: v2
+name: cert-manager
+description: cert-manager, ses émetteurs Let's Encrypt et ses règles réseau.
+type: application
+version: 0.1.0
+dependencies:
+  # cert-manager 1.21 prend en charge Kubernetes 1.33 à 1.36.
+  - name: cert-manager
+    version: v1.21.3
+    repository: oci://quay.io/jetstack/charts
