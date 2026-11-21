@@ -33,6 +33,16 @@ output "node_image" {
   value       = module.compute.image
 }
 
+output "load_balancer" {
+  description = "Load balancer web : OCID, adresses publique et privée, ports écoutés."
+  value = {
+    id         = module.load_balancer.id
+    public_ip  = module.load_balancer.public_ip
+    private_ip = module.load_balancer.private_ip
+    listeners  = module.load_balancer.listeners
+  }
+}
+
 output "bastion" {
   description = "Bastion des nœuds : OCID et durée maximale d'une session."
   value = {

@@ -21,5 +21,10 @@ resource "oci_limits_quota" "free_tier" {
     "set block-storage quota backup-count to ${var.free_tier_quotas.block_backups} in tenancy",
     "set object-storage quota storage-bytes to ${var.free_tier_quotas.object_storage_in_bytes} in tenancy",
     "zero database quotas in tenancy",
+    # Le Network Load Balancer gratuit, et aucun Load Balancer : même celui de l'offre gratuite
+    # n'est pas utilisé (ADR 0012).
+    "zero load-balancer quotas in tenancy",
+    "zero network-load-balancer-api quotas in tenancy",
+    "set network-load-balancer-api quota max-nlb-flexible-count to ${var.free_tier_quotas.network_load_balancers} in tenancy",
   ]
 }

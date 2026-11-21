@@ -67,3 +67,19 @@ module "bastion" {
   client_cidr_block_allow_list = var.bastion_client_cidrs
   max_session_ttl_in_seconds   = var.bastion_max_session_ttl_in_seconds
 }
+
+# Le trafic web entre par le load balancer, vers les nœuds de travail seulement : c'est là que
+# tourne la passerelle du cluster.
+module "load_balancer" {
+  source = "../../modules/load_balancer"
+
+  compartment_id = local.compartment_id
+  name           = "${var.name}-web"
+  freeform_tags  = local.freeform_tags
+  subnet_id      = module.network.subnet_ids["load_balancer"]
+  nsg_ids        = [module.network.nsg_ids["load_balancer"]]
+  backends       = { for hostname, node in module.compute.nodes : hostname => node.id if node.role == "worker" }
+
+  listeners              = var.load_balancer_listeners
+  proxy_protocol_enabled = var.load_balancer_proxy_protocol_enabled
+}

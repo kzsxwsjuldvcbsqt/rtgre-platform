@@ -39,6 +39,7 @@ locals {
         { permission = "manage instance-family", condition = "" },
         { permission = "manage volume-family", condition = "" },
         { permission = "manage bastion-family", condition = "" },
+        { permission = "manage network-load-balancers", condition = "" },
         { permission = "manage objects", condition = "target.bucket.name = '${oci_objectstorage_bucket.terraform_state.name}'" },
       ]
     }

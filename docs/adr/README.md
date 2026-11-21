@@ -15,3 +15,4 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | [0009](0009-reseau-des-pods-avec-cilium.md) | Réseau des pods avec Cilium, sur Kubernetes 1.36 | accepté |
 | [0010](0010-deployer-en-gitops-avec-argo-cd.md) | Déployer en GitOps avec Argo CD | accepté |
 | [0011](0011-stocker-sur-des-volumes-locaux-statiques.md) | Stocker sur des volumes locaux statiques | accepté |
+| [0012](0012-exposer-par-un-network-load-balancer-et-gateway-api.md) | Exposer par un Network Load Balancer et Gateway API | accepté |

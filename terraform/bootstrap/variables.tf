@@ -115,6 +115,7 @@ variable "free_tier_quotas" {
     block_storage_in_gbs    = number
     block_backups           = number
     object_storage_in_bytes = number
+    network_load_balancers  = number
   })
 
   validation {
