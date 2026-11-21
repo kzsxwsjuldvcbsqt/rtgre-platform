@@ -113,6 +113,17 @@
       "dependencyDashboardApproval": true
     },
     {
+      "description": "cert-manager : chaque version mineure prend en charge une plage de versions de Kubernetes (ADR 0013) ; une montée mineure ou majeure attend une approbation dans le tableau de bord",
+      "matchDepNames": [
+        "cert-manager"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
       "description": "Traefik et Gateway API vont ensemble : chaque version de Traefik prend en charge une version précise de Gateway API (ADR 0012). Une montée mineure ou majeure de l'un, et toute montée de l'autre, attendent une approbation dans le tableau de bord",
       "matchDepNames": [
         "traefik"
