@@ -14,3 +14,4 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | [0008](0008-passer-en-paiement-a-l-usage-sous-quotas.md) | Passer en paiement à l'usage, sous quotas | accepté |
 | [0009](0009-reseau-des-pods-avec-cilium.md) | Réseau des pods avec Cilium, sur Kubernetes 1.36 | accepté |
 | [0010](0010-deployer-en-gitops-avec-argo-cd.md) | Déployer en GitOps avec Argo CD | accepté |
+| [0011](0011-stocker-sur-des-volumes-locaux-statiques.md) | Stocker sur des volumes locaux statiques | accepté |
