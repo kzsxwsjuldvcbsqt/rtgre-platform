@@ -29,6 +29,7 @@ La seconde commande installe les dépendances Python et les collections d'Ansibl
 | [`terraform/bootstrap`](terraform/bootstrap) | Socle de la tenancy : compartiment, tags, budget, bucket du state, identité de la CI |
 | [`terraform/envs/prod`](terraform/envs/prod) | Environnement de production, assemblé à partir des modules |
 | [`terraform/modules`](terraform/modules) | Modules réutilisables et leurs conventions |
+| [`terraform/dns`](terraform/dns) | Zone DNS de rtgre.fr chez OVH, appliquée depuis le poste |
 | [`ansible`](ansible) | Configuration des nœuds : inventaire dynamique, rôles et playbooks |
 | [`kubernetes`](kubernetes) | Ce qui tourne dans le cluster, déployé par Argo CD : un chart par application |
 | [`docs/adr`](docs/adr) | Décisions d'architecture |
