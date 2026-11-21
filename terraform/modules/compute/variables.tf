@@ -92,3 +92,14 @@ variable "free_tier_limits" {
     block_volume_in_gbs = number
   })
 }
+
+variable "agent_plugins" {
+  description = "État souhaité de chaque plugin de l'agent Oracle Cloud, par nom (ENABLED ou DISABLED). Les plugins absents gardent leur état par défaut."
+  type        = map(string)
+  default     = {}
+
+  validation {
+    condition     = alltrue([for state in values(var.agent_plugins) : contains(["ENABLED", "DISABLED"], state)])
+    error_message = "L'état d'un plugin doit valoir ENABLED ou DISABLED."
+  }
+}

@@ -29,6 +29,8 @@ terraform/modules/**/.terraform.lock.hcl
 ansible/collections/
 # Cache d'ansible-lint.
 ansible/.ansible/
+# Configuration SSH générée pour les sessions du Bastion.
+ansible/.ssh/
 .vault-pass*
 ansible/inventories/**/generated/
 

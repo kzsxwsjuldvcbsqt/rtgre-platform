@@ -105,3 +105,19 @@ variable "free_tier_limits" {
     block_volume_in_gbs = number
   })
 }
+
+variable "node_agent_plugins" {
+  description = "État souhaité des plugins de l'agent Oracle Cloud sur les nœuds."
+  type        = map(string)
+  default     = {}
+}
+
+variable "bastion_client_cidrs" {
+  description = "Plages autorisées à se connecter au Bastion."
+  type        = list(string)
+}
+
+variable "bastion_max_session_ttl_in_seconds" {
+  description = "Durée de vie maximale d'une session du Bastion."
+  type        = number
+}
