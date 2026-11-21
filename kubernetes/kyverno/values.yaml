@@ -1,0 +1,65 @@
+# Les signatures sont exigées dans les espaces de noms qui portent cette étiquette. Elle se pose
+# là où l'espace de noms est déclaré : namespaceLabels, dans kubernetes/apps/values.yaml.
+verifiedNamespaces:
+  label: &verifiedLabel rtgre.fr/signed-images
+  value: &verifiedValue required
+
+# Seuls noms que Kyverno peut joindre hors du cluster, en HTTPS : le registre des images signées,
+# puis Sigstore, pour ses certificats racines et son journal de transparence.
+egress:
+  hosts:
+    - ghcr.io
+    - pkg-containers.githubusercontent.com
+    - tuf-repo-cdn.sigstore.dev
+    - rekor.sigstore.dev
+
+# Valeurs du chart officiel kyverno (ADR 0019).
+kyverno:
+  # Seul le contrôleur d'admission est déployé : aucune politique ne génère, ne nettoie ni ne
+  # rapporte.
+  backgroundController:
+    enabled: false
+  cleanupController:
+    enabled: false
+  reportsController:
+    enabled: false
+  features:
+    admissionReports:
+      enabled: false
+    aggregateReports:
+      enabled: false
+    policyReports:
+      enabled: false
+    validatingAdmissionPolicyReports:
+      enabled: false
+    backgroundScan:
+      enabled: false
+
+  # Tâches que Helm lancerait avant une installation, une mise à jour ou une suppression :
+  # Argo CD n'installe pas par Helm, et ne les lancerait pas au bon moment. Ce cluster n'a
+  # jamais eu de politique à l'ancien format, que la première chercherait.
+  upgrade:
+    legacyPolicyCheck:
+      enabled: false
+  crds:
+    migration:
+      enabled: false
+  webhooksCleanup:
+    enabled: false
+
+  config:
+    # Kyverno n'est appelé que pour les espaces de noms étiquetés. Ailleurs, sa panne ne bloque
+    # rien.
+    webhooks:
+      namespaceSelector:
+        matchExpressions:
+          - key: *verifiedLabel
+            operator: In
+            values:
+              - *verifiedValue
+
+  admissionController:
+    replicas: 1
+    serviceMonitor:
+      enabled: true
+      interval: 60s

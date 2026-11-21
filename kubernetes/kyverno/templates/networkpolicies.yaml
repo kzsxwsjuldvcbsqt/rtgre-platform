@@ -1,0 +1,84 @@
+# Par défaut, rien n'entre dans l'espace de noms et rien n'en sort.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Kyverno lit ses politiques dans l'API de Kubernetes et y inscrit ses webhooks.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: to-kube-apiserver
+spec:
+  endpointSelector: {}
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+# L'API de Kubernetes appelle le webhook à chaque création de pod dans un espace de noms
+# étiqueté. Elle tourne sur le plan de contrôle : ses appels arrivent d'un nœud. Prometheus lit
+# les métriques.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: admission-controller-ingress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: admission-controller
+  ingress:
+    - fromEntities:
+        - kube-apiserver
+        - remote-node
+      toPorts:
+        - ports:
+            - port: {{ .Values.kyverno.admissionController.webhookServer.port | quote }}
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: monitoring
+            app.kubernetes.io/name: prometheus
+      toPorts:
+        - ports:
+            - port: {{ .Values.kyverno.admissionController.metricsService.port | quote }}
+              protocol: TCP
+---
+# Pour vérifier une signature, Kyverno ne sort que vers le registre et vers Sigstore. Les requêtes
+# DNS passent par le proxy de Cilium, qui apprend ainsi les adresses de ces noms.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: admission-controller-to-registries
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: admission-controller
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
+    - toFQDNs:
+        {{- range .Values.egress.hosts }}
+        - matchName: {{ . }}
+        {{- end }}
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
