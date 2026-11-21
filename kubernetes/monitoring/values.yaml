@@ -111,12 +111,13 @@ kube-prometheus-stack:
         mountPath: /var/lib/grafana/dashboards/plateforme
         readOnly: true
 
+    # Mesuré à 239 Mo pendant l'affichage des tableaux de bord.
     resources:
       requests:
         cpu: 20m
-        memory: 96Mi
+        memory: 192Mi
       limits:
-        memory: 256Mi
+        memory: 384Mi
 
   # Ce que l'étape suivante apportera : les alertes et leurs règles.
   alertmanager:
