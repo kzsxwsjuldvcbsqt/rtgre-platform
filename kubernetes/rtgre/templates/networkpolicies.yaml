@@ -1,0 +1,69 @@
+# Par défaut, rien n'entre dans l'espace de noms et rien n'en sort.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  labels:
+    {{- include "rtgre.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+{{- with .Values.gatewayNamespace }}
+---
+# Seule la passerelle joint le serveur web.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: web-from-gateway
+  labels:
+    {{- include "rtgre.labels" $ | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: rtgre
+      app.kubernetes.io/component: web
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ . }}
+      ports:
+        - port: http
+{{- end }}
+---
+# Le générateur ne sort que vers ADE, en HTTPS. Une politique de Cilium, car une NetworkPolicy
+# ne sait filtrer que des adresses, et celles d'ADE peuvent changer. Les requêtes DNS passent
+# par le proxy de Cilium, qui apprend ainsi les adresses du nom autorisé.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: generator-to-ade
+  labels:
+    {{- include "rtgre.labels" . | nindent 4 }}
+spec:
+  # Le pod de la tâche horaire, et celui du serveur web pour la première génération.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: rtgre
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchName: {{ .Values.generator.adeHost }}
+    - toFQDNs:
+        - matchName: {{ .Values.generator.adeHost }}
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

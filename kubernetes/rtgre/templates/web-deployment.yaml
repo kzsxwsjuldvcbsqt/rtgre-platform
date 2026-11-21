@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rtgre-web
+  labels:
+    {{- include "rtgre.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  # Le volume local n'existe que sur un nœud : un seul pod, remplacé avant d'être recréé.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rtgre
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      labels:
+        {{- include "rtgre.labels" . | nindent 8 }}
+        app.kubernetes.io/component: web
+      annotations:
+        # Une configuration modifiée redémarre nginx.
+        checksum/config: {{ .Files.Get "files/nginx.conf" | sha256sum }}
+    spec:
+      automountServiceAccountToken: false
+      dnsConfig:
+        {{- include "rtgre.dnsConfig" . | nindent 8 }}
+      securityContext:
+        {{- include "rtgre.podSecurityContext" (dict "root" . "user" .Values.web.user) | nindent 8 }}
+      initContainers:
+        # Sur un volume vide (premier déploiement, nœud remplacé), le site est généré avant
+        # que nginx démarre. Sinon, le site déjà publié est servi tel quel.
+        - name: first-generation
+          {{- include "rtgre.generatorContainer" . | nindent 10 }}
+          command:
+            - sh
+            - -c
+            - test -f "$SCHEDULE_OUTPUT_ROOT/dist/index.html" || exec python -m schedule.build
+      containers:
+        - name: nginx
+          image: {{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}
+          # Sans le script d'entrée de l'image, qui cherche à modifier sa configuration.
+          command:
+            - nginx
+            - -g
+            - daemon off;
+          securityContext:
+            {{- include "rtgre.containerSecurityContext" . | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.web.port }}
+          # Prêt quand le site répond ; en vie tant que nginx répond.
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.web.resources | nindent 12 }}
+          volumeMounts:
+            - name: site
+              mountPath: {{ .Values.site.mountPath }}
+              readOnly: true
+            - name: config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: site
+          persistentVolumeClaim:
+            claimName: {{ .Values.site.claimName }}
+        - name: config
+          configMap:
+            name: rtgre-web
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi
