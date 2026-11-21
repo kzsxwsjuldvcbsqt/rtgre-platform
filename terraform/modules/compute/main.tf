@@ -68,6 +68,21 @@ resource "oci_core_instance" "node" {
     ssh_authorized_keys = join("\n", var.ssh_authorized_keys)
   }
 
+  agent_config {
+    are_all_plugins_disabled = false
+    is_management_disabled   = false
+    is_monitoring_disabled   = false
+
+    dynamic "plugins_config" {
+      for_each = var.agent_plugins
+
+      content {
+        name          = plugins_config.key
+        desired_state = plugins_config.value
+      }
+    }
+  }
+
   lifecycle {
     # L'image la plus récente change chaque mois : sans cela, chaque nouvelle image recréerait les nœuds.
     # Un nœud prend la nouvelle image quand il est volontairement remplacé (terraform apply -replace).
