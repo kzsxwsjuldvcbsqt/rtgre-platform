@@ -1,0 +1,11 @@
+# Tableaux de bord de Grafana, montés tels quels depuis files/dashboards. Grafana relit le
+# dossier toutes les trente secondes : une modification n'exige aucun redémarrage.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: monitoring-dashboards
+data:
+  {{- range $path, $_ := .Files.Glob "files/dashboards/*.json" }}
+  {{ base $path }}: |-
+    {{- $.Files.Get $path | nindent 4 }}
+  {{- end }}

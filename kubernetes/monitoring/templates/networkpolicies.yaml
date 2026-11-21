@@ -9,13 +9,20 @@ spec:
     - Ingress
     - Egress
 ---
-# Prometheus, son opérateur et kube-state-metrics lisent l'API de Kubernetes.
+# Prometheus, son opérateur et kube-state-metrics lisent l'API de Kubernetes. Grafana, non.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
   name: to-kube-apiserver
 spec:
-  endpointSelector: {}
+  endpointSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values:
+          - prometheus
+          - kube-state-metrics
+          - kube-prometheus-stack-prometheus-operator
   egress:
     - toEntities:
         - kube-apiserver
@@ -100,4 +107,62 @@ spec:
       toPorts:
         - ports:
             - port: "10250"
+              protocol: TCP
+---
+# Grafana n'interroge que Prometheus, et ne reçoit que lui, pour ses propres métriques. Son
+# interface s'ouvre par une redirection de port, qui ne passe pas par ces règles.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: grafana
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: grafana
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: prometheus
+      toPorts:
+        - ports:
+            - port: "3000"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: prometheus
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP
+    # Résolution du nom de service de Prometheus. Tous les noms sont admis : le résolveur essaie
+    # plusieurs suffixes, et de toute façon Grafana ne peut joindre que Prometheus.
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
+---
+# Prometheus reçoit les requêtes de Grafana.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: prometheus-from-grafana
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: grafana
+      toPorts:
+        - ports:
+            - port: "9090"
               protocol: TCP

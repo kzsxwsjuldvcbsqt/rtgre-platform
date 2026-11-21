@@ -8,7 +8,7 @@ Ce qui tourne dans le cluster est décrit ici et déployé par Argo CD ([ADR 001
 | [`argocd`](argocd) | Argo CD : le chart officiel `argo-cd`, figé dans `Chart.lock`, et les valeurs de la plateforme |
 | [`cert-manager`](cert-manager) | Certificats : cert-manager et ses émetteurs Let's Encrypt |
 | [`gateway`](gateway) | Passerelle du cluster : Traefik en contrôleur Gateway API, et son certificat |
-| [`monitoring`](monitoring) | Métriques : Prometheus, son opérateur et kube-state-metrics |
+| [`monitoring`](monitoring) | Métriques et tableaux de bord : Prometheus, son opérateur, kube-state-metrics et Grafana |
 | [`node-exporter`](node-exporter) | Métriques des nœuds, dans le seul espace de noms privilégié |
 | [`rtgre`](rtgre) | Le site rtgre.fr : génération horaire depuis ADE, et serveur web |
 | [`storage`](storage) | Volumes persistants locaux, déclarés un par un |
