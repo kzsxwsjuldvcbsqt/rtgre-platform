@@ -43,6 +43,8 @@ La prod est déployée par le workflow `Terraform` : plan commenté sur chaque p
 | yamllint | Fichiers YAML |
 | zizmor, actionlint | Sécurité et validité des workflows GitHub Actions |
 | ShellCheck | Scripts shell et blocs `run` des workflows |
+| Checkov | Terraform, dont les règles propres à Oracle Cloud (`CKV_OCI_*`) ; exceptions justifiées dans le code |
+| Trivy | Mauvaises configurations (Terraform, Dockerfile) et vulnérabilités des dépendances, HIGH et CRITICAL bloquantes ; exceptions datées dans `.trivyignore.yaml` |
 | conventional-pre-commit | Format des messages de commit |
 | Molecule | Rôles Ansible, dans un conteneur Ubuntu 24.04 |
 
@@ -52,4 +54,4 @@ Les contrôles sont décrits dans `.pre-commit-config.yaml` et s'exécutent avan
 pre-commit install
 ```
 
-Le workflow `Quality` relance les mêmes contrôles sur chaque pull request, analyse tout l'historique à la recherche de secrets et vérifie que chaque message de commit suit [Conventional Commits](https://www.conventionalcommits.org/fr/).
+Le workflow `Security` relance Trivy sur chaque pull request et chaque lundi : une vulnérabilité peut être publiée sur une dépendance inchangée. Le workflow `Quality` relance les mêmes contrôles sur chaque pull request, analyse tout l'historique à la recherche de secrets et vérifie que chaque message de commit suit [Conventional Commits](https://www.conventionalcommits.org/fr/).
