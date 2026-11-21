@@ -14,13 +14,42 @@ data "terraform_remote_state" "prod" {
 }
 
 locals {
+  cluster_ip = data.terraform_remote_state.prod.outputs.load_balancer.public_ip
+  on_cluster = var.site_served_by == "cluster"
+
+  # Le sommet de la zone et www suivent var.site_served_by : changer cette seule valeur bascule
+  # le site, dans un sens comme dans l'autre. Le cluster n'a pas d'IPv6.
+  site_ttl  = local.on_cluster ? var.cluster_ttl : 0
+  site_ipv4 = local.on_cluster ? [local.cluster_ip] : var.github_pages.ipv4
+  site_ipv6 = local.on_cluster ? [] : var.github_pages.ipv6
+
+  site_records = merge(
+    {
+      for index, address in local.site_ipv4 :
+      "site:a:${index}" => { subdomain = "", fieldtype = "A", ttl = local.site_ttl, target = address }
+    },
+    {
+      for index, address in local.site_ipv6 :
+      "site:aaaa:${index}" => { subdomain = "", fieldtype = "AAAA", ttl = local.site_ttl, target = address }
+    },
+    {
+      # Un CNAME dans les deux cas : la bascule modifie l'enregistrement sans le recréer.
+      "site:www" = {
+        subdomain = "www"
+        fieldtype = "CNAME"
+        ttl       = local.site_ttl
+        target    = local.on_cluster ? "${var.zone}." : var.github_pages.www_target
+      }
+    },
+  )
+
   cluster_records = {
     for subdomain in var.cluster_subdomains :
     "cluster:${subdomain == "" ? "@" : subdomain}" => {
       subdomain = subdomain
       fieldtype = "A"
       ttl       = var.cluster_ttl
-      target    = data.terraform_remote_state.prod.outputs.load_balancer.public_ip
+      target    = local.cluster_ip
     }
   }
 }
@@ -42,7 +71,7 @@ resource "ovh_domain_zone_record" "protected" {
 }
 
 resource "ovh_domain_zone_record" "this" {
-  for_each = merge(var.records, local.cluster_records)
+  for_each = merge(var.records, local.cluster_records, local.site_records)
 
   zone      = var.zone
   subdomain = each.value.subdomain

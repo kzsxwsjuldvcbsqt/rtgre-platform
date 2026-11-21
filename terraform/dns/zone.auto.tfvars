@@ -16,18 +16,21 @@ protected_records = {
   spf       = { subdomain = "", fieldtype = "SPF", ttl = 0, target = "v=spf1 include:mx.ovh.com -all" }
 }
 
-# Site : rtgre.fr est servi par GitHub Pages jusqu'à la bascule vers le cluster (#57).
+# Ce qui sert rtgre.fr et www.rtgre.fr : « github-pages » ou « cluster ». C'est la seule valeur
+# à changer pour basculer le site (docs/runbooks/basculer-rtgre-fr.md).
+site_served_by = "github-pages"
+
+# Adresses que GitHub publie pour un domaine personnalisé. Elles ne servent que lorsque
+# site_served_by vaut « github-pages ».
+github_pages = {
+  ipv4       = ["185.199.108.153", "185.199.109.153", "185.199.110.153", "185.199.111.153"]
+  ipv6       = ["2606:50c0:8000::153", "2606:50c0:8001::153", "2606:50c0:8002::153", "2606:50c0:8003::153"]
+  www_target = "kzsxwsjuldvcbsqt.github.io."
+}
+
+# Autres enregistrements, écrits tels quels.
 records = {
-  pages-a-108     = { subdomain = "", fieldtype = "A", ttl = 0, target = "185.199.108.153" }
-  pages-a-109     = { subdomain = "", fieldtype = "A", ttl = 0, target = "185.199.109.153" }
-  pages-a-110     = { subdomain = "", fieldtype = "A", ttl = 0, target = "185.199.110.153" }
-  pages-a-111     = { subdomain = "", fieldtype = "A", ttl = 0, target = "185.199.111.153" }
-  pages-aaaa-8000 = { subdomain = "", fieldtype = "AAAA", ttl = 0, target = "2606:50c0:8000::153" }
-  pages-aaaa-8001 = { subdomain = "", fieldtype = "AAAA", ttl = 0, target = "2606:50c0:8001::153" }
-  pages-aaaa-8002 = { subdomain = "", fieldtype = "AAAA", ttl = 0, target = "2606:50c0:8002::153" }
-  pages-aaaa-8003 = { subdomain = "", fieldtype = "AAAA", ttl = 0, target = "2606:50c0:8003::153" }
-  pages-www       = { subdomain = "www", fieldtype = "CNAME", ttl = 0, target = "kzsxwsjuldvcbsqt.github.io." }
-  ftp             = { subdomain = "ftp", fieldtype = "CNAME", ttl = 0, target = "rtgre.fr." }
+  ftp = { subdomain = "ftp", fieldtype = "CNAME", ttl = 0, target = "rtgre.fr." }
 }
 
 # Noms qui désignent le cluster. « test » sert à valider le HTTPS avant la bascule.
