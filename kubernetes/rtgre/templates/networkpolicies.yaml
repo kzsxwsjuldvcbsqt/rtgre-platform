@@ -45,8 +45,12 @@ metadata:
 spec:
   # Le pod de la tâche horaire, et celui du serveur web pour la première génération.
   endpointSelector:
-    matchLabels:
-      app.kubernetes.io/name: rtgre
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values:
+          - generator
+          - web
   egress:
     - toEndpoints:
         - matchLabels:
@@ -64,4 +68,23 @@ spec:
       toPorts:
         - ports:
             - port: "443"
+              protocol: TCP
+---
+# La tâche de conservation des journaux ne sort que vers l'API de Kubernetes.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: log-retention-to-kube-apiserver
+  labels:
+    {{- include "rtgre.labels" . | nindent 4 }}
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: log-retention
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
               protocol: TCP

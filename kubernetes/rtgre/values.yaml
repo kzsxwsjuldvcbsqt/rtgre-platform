@@ -28,10 +28,27 @@ web:
   # Utilisateur nginx de l'image.
   user: 101
   port: 8080
+  # Délai entre la demande d'arrêt d'un pod et l'arrêt de nginx.
+  shutdownDelaySeconds: 10
   resources:
     requests:
       cpu: 10m
       memory: 16Mi
+    limits:
+      memory: 64Mi
+
+# Conservation des journaux de visite : le serveur web est redémarré chaque semaine, la nuit, par
+# un script qui n'utilise que la bibliothèque standard de Python.
+logRetention:
+  image:
+    repository: docker.io/library/python
+    tag: 3.14.10-alpine3.24@sha256:5862d971d1f0ae26b258cefa4e893556b1d3aba81bd2ff30888704ad378bab67
+  # Le lundi à 4 h 30, à l'heure de generator.timeZone.
+  schedule: "30 4 * * 1"
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
     limits:
       memory: 64Mi
 

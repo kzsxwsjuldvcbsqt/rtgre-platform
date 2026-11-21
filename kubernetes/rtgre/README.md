@@ -16,6 +16,7 @@ flowchart LR
 | CronJob `rtgre-generator` | Génère le site chaque heure, une génération à la fois. Il remplace le site publié d'un seul coup : nginx ne sert jamais un site à moitié écrit. |
 | Deployment `rtgre-web` | nginx sert le volume en lecture seule. Sur un volume vide, un conteneur d'initialisation génère d'abord le site. |
 | PersistentVolumeClaim `site` | Volume local déclaré dans [`storage`](../storage) : le dernier site publié survit au redémarrage des pods. |
+| CronJob `rtgre-log-retention` | Remplace le pod du serveur web chaque semaine : ses journaux disparaissent avec lui. |
 | HTTPRoute `rtgre` | Attache le site à la [passerelle](../gateway) du cluster, pour les noms de `hostnames`. |
 | NetworkPolicy, CiliumNetworkPolicy | Seule la passerelle entre dans l'espace de noms. Le générateur ne sort que vers ADE, en HTTPS. |
 
@@ -25,7 +26,8 @@ flowchart LR
 - **Sans privilège** : les deux images tournent sous un utilisateur ordinaire, système de fichiers en lecture seule, sans capacité, dans un espace de noms au niveau Pod Security `restricted`. L'image officielle de nginx est lancée sans son script d'entrée, sur le port 8080.
 - **Partage du volume par le groupe** : le générateur (utilisateur 65532) écrit, nginx (utilisateur 101) lit, tous deux par le `fsGroup` 65532.
 - **Sortie filtrée par nom** : une NetworkPolicy ne filtre que des adresses, et celles d'ADE peuvent changer. La politique de Cilium autorise le nom `generator.adeHost`, et son proxy DNS refuse tout autre nom. Les pods demandent ce nom tel quel (`ndots: 1`) : un refus sur un domaine de recherche du cluster arrêterait la résolution.
-- **Aucune adresse IP dans les journaux** de nginx.
+- **Journaux de visite sans adresse complète** ([ADR 0014](../../docs/adr/0014-journaux-de-visite-sans-adresse-complete.md)) : nginx ne garde que le réseau du visiteur, un /24 en IPv4 et un /48 en IPv6, et aucun journal ne dépasse quatorze jours.
+- **Redémarrage sans coupure** : le nouveau pod démarre avant l'arrêt de l'ancien, et nginx sert encore dix secondes après la demande d'arrêt, le temps que la passerelle se détourne de lui.
 - **Comme GitHub Pages** : mêmes codes de réponse, mêmes types de contenu, même durée de cache, `/page` sert `page.html`. nginx ajoute trois en-têtes de sécurité.
 - **En HTTPS, avec HSTS**, sous `test.rtgre.fr` pour l'instant : rtgre.fr désigne toujours GitHub Pages, jusqu'à la bascule.
 

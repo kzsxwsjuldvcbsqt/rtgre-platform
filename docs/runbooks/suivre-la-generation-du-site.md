@@ -38,6 +38,20 @@ ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre delete job generation-man
 
 Si le nom d'ADE change, il se corrige à deux endroits : la configuration du site, dans le dépôt rtgre, et `generator.adeHost`, dans `kubernetes/rtgre/values.yaml`. Sinon la politique réseau bloque le nouveau nom.
 
+## Lire les journaux de visite
+
+```bash
+ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre logs deploy/rtgre-web -c nginx
+```
+
+Chaque ligne porte le réseau du visiteur, jamais son adresse ([ADR 0014](../adr/0014-journaux-de-visite-sans-adresse-complete.md)). Les journaux repartent de zéro chaque lundi à 4 h 30, quand le CronJob `rtgre-log-retention` remplace le pod. Pour le faire sans attendre :
+
+```bash
+ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre create job --from=cronjob/rtgre-log-retention conservation-manuelle
+ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre wait job/conservation-manuelle --for=condition=complete --timeout=120s
+ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre delete job conservation-manuelle
+```
+
 ## Le site ne répond plus
 
 1. Le pod `rtgre-web` n'est pas prêt : `kubectl -n rtgre describe pod -l app.kubernetes.io/component=web`. Bloqué à l'initialisation, c'est que le volume est vide et qu'ADE ne répond pas : il réessaie de lui-même.
