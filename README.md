@@ -56,7 +56,7 @@ Toutes les versions sont épinglées : outils dans `mise.toml`, providers Terraf
 
 - **Renovate** (`renovate.json`) propose les mises à jour, regroupées par écosystème, chaque lundi matin. Les correctifs de sécurité arrivent sans attendre. Une montée mineure de Kubernetes, de Cilium ou d'Argo CD attend une approbation dans le tableau de bord des dépendances, car leur compatibilité doit être vérifiée ([ADR 0009](docs/adr/0009-reseau-des-pods-avec-cilium.md), [ADR 0010](docs/adr/0010-deployer-en-gitops-avec-argo-cd.md)).
 - **Les alertes Dependabot** signalent une vulnérabilité publiée sur une dépendance en place.
-- **Le workflow `Security`** analyse chaque lundi les dépendances avec Trivy.
+- **Le workflow `Security`** analyse chaque lundi, avec Trivy, les dépendances et chaque image que le cluster déploie.
 
 ## Qualité
 
@@ -69,11 +69,12 @@ Toutes les versions sont épinglées : outils dans `mise.toml`, providers Terraf
 | zizmor, actionlint | Sécurité et validité des workflows GitHub Actions |
 | ShellCheck | Scripts shell et blocs `run` des workflows |
 | Checkov | Terraform, dont les règles propres à Oracle Cloud (`CKV_OCI_*`) ; exceptions justifiées dans le code |
-| Trivy | Mauvaises configurations (Terraform, Dockerfile) et vulnérabilités des dépendances, HIGH et CRITICAL bloquantes ; exceptions datées dans `.trivyignore.yaml` |
+| Trivy | Mauvaises configurations (Terraform, Dockerfile), vulnérabilités des dépendances et de chaque image déployée par `kubernetes/` (`mise run images-scan`), HIGH et CRITICAL bloquantes ; exceptions justifiées et datées dans `.trivyignore.yaml` |
 | conventional-pre-commit | Format des messages de commit |
 | Molecule | Rôles Ansible, dans un conteneur Ubuntu 24.04 |
 | helm lint, kubeconform | Charts de `kubernetes/`, rendus pour la version de Kubernetes du cluster (`mise run kubernetes-validate`) |
 | cosign | Signature des images listées dans `kubernetes/signed-images.txt`, avant tout déploiement |
+| promtool, amtool | Règles d'alerte et leurs tests, configuration d'Alertmanager, existence du runbook de chaque alerte |
 
 Les contrôles sont décrits dans `.pre-commit-config.yaml` et s'exécutent avant chaque commit une fois les hooks installés :
 

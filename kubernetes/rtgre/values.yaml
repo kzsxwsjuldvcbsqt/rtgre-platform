@@ -38,11 +38,9 @@ web:
       memory: 64Mi
 
 # Conservation des journaux de visite : le serveur web est redémarré chaque semaine, la nuit, par
-# un script qui n'utilise que la bibliothèque standard de Python.
+# un script qui n'utilise que la bibliothèque standard de Python. Il tourne avec l'image du
+# générateur, qui apporte Python : signée, déjà sur le nœud, et une image de moins à suivre.
 logRetention:
-  image:
-    repository: docker.io/library/python
-    tag: 3.14.10-alpine3.24@sha256:5862d971d1f0ae26b258cefa4e893556b1d3aba81bd2ff30888704ad378bab67
   # Le lundi à 4 h 30, à l'heure de generator.timeZone.
   schedule: "30 4 * * 1"
   resources:

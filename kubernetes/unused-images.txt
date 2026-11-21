@@ -1,0 +1,5 @@
+# Images que les charts citent sans jamais les lancer : scripts/ci/list-chart-images.sh les
+# écarte, pour ne pas analyser ce qui ne tourne pas. Une image par ligne, sans tag.
+
+# Valeur par défaut de l'opérateur de Prometheus, pour un conteneur Thanos que Prometheus n'a pas.
+quay.io/thanos/thanos

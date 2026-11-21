@@ -14,7 +14,7 @@ Ce qui tourne dans le cluster est décrit ici et déployé par Argo CD ([ADR 001
 | [`rtgre`](rtgre) | Le site rtgre.fr : génération horaire depuis ADE, et serveur web |
 | [`storage`](storage) | Volumes persistants locaux, déclarés un par un |
 
-[`signed-images.txt`](signed-images.txt) liste les images qui doivent être signées, et par qui.
+[`signed-images.txt`](signed-images.txt) liste les images qui doivent être signées, et par qui. [`unused-images.txt`](unused-images.txt) liste celles qu'un chart cite sans jamais les lancer.
 
 Le réseau des pods, Cilium, n'est pas ici : Argo CD en a besoin pour démarrer, c'est donc Ansible qui l'installe ([rôle `cilium`](../ansible/roles/cilium)).
 
@@ -29,6 +29,14 @@ mise run kubernetes-validate
 ```
 
 Cette commande rend chaque chart pour la version de Kubernetes du cluster, valide les objets obtenus, puis vérifie la signature des images qui doivent en porter une.
+
+Chaque image déployée est aussi analysée par Trivy, sur chaque pull request et chaque lundi. Avant d'en ajouter ou d'en changer une :
+
+```bash
+mise run images-scan
+```
+
+Une vulnérabilité HIGH ou CRITICAL bloque. Si aucune version corrigée n'existe, l'exception va dans [`.trivyignore.yaml`](../.trivyignore.yaml), avec sa justification, les binaires concernés et une échéance.
 
 Une image se référence par son empreinte, dans des valeurs `repository` et `tag` (`tag: 1.2.3@sha256:…`) : Renovate la tient alors à jour.
 
