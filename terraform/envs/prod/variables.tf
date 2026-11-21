@@ -121,3 +121,16 @@ variable "bastion_max_session_ttl_in_seconds" {
   description = "Durée de vie maximale d'une session du Bastion."
   type        = number
 }
+
+variable "load_balancer_listeners" {
+  description = "Ports TCP du load balancer, par nom : le port public et le port des nœuds qui le reçoit."
+  type = map(object({
+    port         = number
+    backend_port = number
+  }))
+}
+
+variable "load_balancer_proxy_protocol_enabled" {
+  description = "Transmet l'adresse du client à la passerelle du cluster par le PROXY protocol v2."
+  type        = bool
+}

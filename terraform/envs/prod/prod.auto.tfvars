@@ -33,3 +33,11 @@ node_agent_plugins = {
 # plages sont admises. Une session exige de toute façon une authentification Oracle et une clé SSH.
 bastion_client_cidrs               = ["0.0.0.0/0"]
 bastion_max_session_ttl_in_seconds = 10800
+
+# Load balancer : HTTP et HTTPS, vers les ports que la passerelle du cluster ouvre sur les nœuds
+# (ports.*.nodePort dans kubernetes/gateway/values.yaml). Elle attend le PROXY protocol.
+load_balancer_listeners = {
+  http  = { port = 80, backend_port = 30080 }
+  https = { port = 443, backend_port = 30443 }
+}
+load_balancer_proxy_protocol_enabled = true
