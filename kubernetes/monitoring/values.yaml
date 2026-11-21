@@ -1,0 +1,102 @@
+# Ce que Prometheus a le droit de joindre, en plus de l'API de Kubernetes. Une cible ajoutée par
+# un chart n'est collectée que si elle figure ici.
+scrape:
+  # Ports des nœuds : kubelet, et node-exporter (kubernetes/node-exporter).
+  nodePorts:
+    - 10250
+    - 9100
+  # Pods, par espace de noms, étiquettes et port.
+  pods:
+    - namespace: kube-system
+      labels:
+        k8s-app: kube-dns
+      port: 9153
+    - namespace: monitoring
+      labels:
+        app.kubernetes.io/name: kube-state-metrics
+      port: 8080
+    - namespace: monitoring
+      labels:
+        app.kubernetes.io/component: prometheus-operator
+      port: 10250
+
+# Valeurs du chart officiel kube-prometheus-stack (ADR 0015).
+kube-prometheus-stack:
+  fullnameOverride: monitoring
+
+  # Ce que les étapes suivantes apporteront : Grafana, les alertes et leurs règles.
+  grafana:
+    enabled: false
+  alertmanager:
+    enabled: false
+  defaultRules:
+    create: false
+
+  # node-exporter lit le système hôte : il a sa propre application et son propre espace de
+  # noms, seul à être privilégié (kubernetes/node-exporter).
+  nodeExporter:
+    enabled: false
+
+  # Avec kubeadm, ces composants n'exposent leurs métriques que sur la boucle locale du plan de
+  # contrôle : Prometheus ne peut pas les joindre, et les ouvrir au réseau n'en vaut pas la peine.
+  kubeControllerManager:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+  kubeProxy:
+    enabled: false
+
+  prometheusOperator:
+    # Le certificat du webhook de validation vient de cert-manager, déjà là, plutôt que d'un
+    # Job et d'une image de plus.
+    admissionWebhooks:
+      certManager:
+        enabled: true
+      patch:
+        enabled: false
+    resources:
+      requests:
+        cpu: 20m
+        memory: 64Mi
+      limits:
+        memory: 192Mi
+
+  prometheus:
+    prometheusSpec:
+      # Conservation bornée en durée et en taille : le volume est sur le disque du nœud.
+      retention: 15d
+      retentionSize: 4GB
+      scrapeInterval: 60s
+      evaluationInterval: 60s
+      # Toute cible déclarée dans le cluster est collectée, quel que soit son chart.
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+      probeSelectorNilUsesHelmValues: false
+      ruleSelectorNilUsesHelmValues: false
+      scrapeConfigSelectorNilUsesHelmValues: false
+      resources:
+        requests:
+          cpu: 100m
+          memory: 384Mi
+        limits:
+          memory: 1Gi
+      # Volume local déclaré dans kubernetes/storage/values.yaml (ADR 0011).
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: local
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 5Gi
+
+  kube-state-metrics:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 48Mi
+      limits:
+        memory: 128Mi

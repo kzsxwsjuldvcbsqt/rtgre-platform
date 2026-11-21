@@ -1,0 +1,9 @@
+apiVersion: v2
+name: monitoring
+description: Métriques du cluster, avec Prometheus et son opérateur, et leurs règles réseau.
+type: application
+version: 0.1.0
+dependencies:
+  - name: kube-prometheus-stack
+    version: 93.4.1
+    repository: oci://ghcr.io/prometheus-community/charts

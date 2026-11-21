@@ -1,0 +1,9 @@
+apiVersion: v2
+name: node-exporter
+description: Métriques des nœuds, dans un espace de noms à part parce qu'il lit le système hôte.
+type: application
+version: 0.1.0
+dependencies:
+  - name: prometheus-node-exporter
+    version: 5.2.0
+    repository: oci://ghcr.io/prometheus-community/charts
