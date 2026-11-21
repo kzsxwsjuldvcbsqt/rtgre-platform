@@ -1,0 +1,46 @@
+# Loki, en un seul processus, sur un volume local (ADR 0017).
+loki:
+  image:
+    repository: docker.io/grafana/loki
+    tag: 3.7.10@sha256:b43c257ccfc925d4a50b8717cac61a3b51df8c48d01847936057e5c4075a24a7
+  # Utilisateur de l'image.
+  user: 10001
+  port: 3100
+  # Durée de conservation. Les journaux de visite ne doivent pas dépasser quatorze jours
+  # (ADR 0014) : treize jours ici, plus le délai de suppression ci-dessous, restent en dessous.
+  retention: 312h
+  retentionDeleteDelay: 1h
+  # Volume déclaré dans kubernetes/storage/values.yaml, sous la demande data-loki-0.
+  storage:
+    storageClass: local
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 192Mi
+    limits:
+      memory: 512Mi
+
+# Alloy lit les journaux des pods par l'API de Kubernetes et les envoie à Loki : un seul pod,
+# sans accès au disque des nœuds.
+alloy:
+  image:
+    repository: docker.io/grafana/alloy
+    tag: v1.22.0@sha256:9acc2529bc1edb7f5b2bd801dd8334ebc80c158e3a9e5526ecd7c9a273d43189
+  # L'image tourne en root par défaut : un utilisateur ordinaire suffit.
+  user: 65532
+  port: 12345
+  resources:
+    requests:
+      cpu: 20m
+      memory: 96Mi
+    limits:
+      memory: 256Mi
+
+# Ce qui a le droit d'interroger Loki, en plus d'Alloy : Grafana, et Prometheus pour ses métriques.
+clients:
+  namespace: monitoring
+  grafana:
+    app.kubernetes.io/name: grafana
+  prometheus:
+    app.kubernetes.io/name: prometheus

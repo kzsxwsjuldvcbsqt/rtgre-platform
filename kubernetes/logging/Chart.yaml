@@ -1,0 +1,5 @@
+apiVersion: v2
+name: logging
+description: Journaux des pods, collectés par Alloy et conservés par Loki, treize jours au plus.
+type: application
+version: 0.1.0
