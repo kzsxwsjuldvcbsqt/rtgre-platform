@@ -25,6 +25,8 @@
     name: "{{ kubernetes_node_packages | map('regex_replace', '$', '=' ~ kubernetes_node_version ~ '-*') | list }}"
     state: present
     allow_change_held_packages: true
+    # Une version plus ancienne que celle installée doit pouvoir être imposée.
+    allow_downgrade: true
     # L'index n'est rafraîchi que si le dépôt vient d'être ajouté ou modifié.
     update_cache: "{{ kubernetes_node_repository is changed }}"
 
@@ -35,6 +37,8 @@
          | map('regex_replace', '$', '=' ~ kubernetes_node_minor_version ~ '.*') | list }}
     state: present
     allow_change_held_packages: true
+    # Une version plus ancienne que celle installée doit pouvoir être imposée.
+    allow_downgrade: true
 
 - name: Hold the Kubernetes packages and tools
   ansible.builtin.dpkg_selections:
