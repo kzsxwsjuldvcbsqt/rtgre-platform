@@ -1,0 +1,6 @@
+paths:
+  .github/workflows/**/*.yml:
+    ignore:
+      # « $/ » désigne une action du dépôt courant, à la même référence : GitHub l'accepte et zizmor
+      # la recommande, mais actionlint 1.7.12 ne la connaît pas encore. À retirer dès qu'il la gère.
+      - 'specifying action "\$/\.github/actions/[^"]+" in invalid format because ref is missing'
