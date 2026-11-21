@@ -1,0 +1,6 @@
+dependencies:
+- name: prometheus-node-exporter
+  repository: oci://ghcr.io/prometheus-community/charts
+  version: 5.2.0
+digest: sha256:524b6dc1af63b82ceaeb1c71f89ac0ac13b5b0ce8f0cd712eaec9b1688629583
+generated: "2026-11-21T21:58:49.671750994+01:00"

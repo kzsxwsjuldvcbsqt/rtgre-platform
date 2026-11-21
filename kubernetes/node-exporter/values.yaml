@@ -1,0 +1,18 @@
+# Valeurs du chart officiel prometheus-node-exporter. Un pod par nœud, plan de contrôle compris.
+prometheus-node-exporter:
+  fullnameOverride: node-exporter
+  # Déclare la cible à Prometheus (kubernetes/monitoring).
+  prometheus:
+    monitor:
+      enabled: true
+      # Le nom du nœud plutôt que son adresse, dans les tableaux de bord.
+      relabelings:
+        - sourceLabels:
+            - __meta_kubernetes_pod_node_name
+          targetLabel: instance
+  resources:
+    requests:
+      cpu: 10m
+      memory: 24Mi
+    limits:
+      memory: 64Mi
