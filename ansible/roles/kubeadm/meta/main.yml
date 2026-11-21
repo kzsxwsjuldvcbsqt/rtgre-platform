@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: kzsxwsjuldvcbsqt
+  role_name: kubeadm
+  namespace: rtgre_platform
+  description: Initialise le plan de contrôle avec kubeadm et y joint les nœuds de travail.
+  license: MIT
+  min_ansible_version: "2.22"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - noble
+
+dependencies: []

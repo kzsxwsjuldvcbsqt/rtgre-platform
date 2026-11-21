@@ -1,0 +1,30 @@
+---
+# Rôle du nœud dans le cluster : control-plane ou worker. Fourni par l'inventaire.
+kubeadm_node_role: ""
+
+# Hôte de l'inventaire qui porte le plan de contrôle, pour générer les jetons de jonction.
+kubeadm_control_plane_host: ""
+
+# Version de Kubernetes, identique à celle des paquets installés par le rôle kubernetes_node.
+kubeadm_kubernetes_version: ""
+
+# Plages des pods et des services. Fournies par l'environnement.
+kubeadm_pod_cidr: ""
+kubeadm_service_cidr: ""
+
+kubeadm_cluster_name: kubernetes
+kubeadm_api_server_port: 6443
+
+# Noms acceptés par le certificat du serveur d'API, en plus de l'adresse du plan de contrôle.
+# localhost permet d'y accéder par une redirection de port du Bastion.
+kubeadm_api_server_extra_sans:
+  - localhost
+  - 127.0.0.1
+
+kubeadm_cri_socket: unix:///run/containerd/containerd.sock
+
+# Vérifications préalables de kubeadm à ignorer, chacune justifiée dans l'environnement.
+kubeadm_ignore_preflight_errors: []
+
+# Durée de vie d'un jeton de jonction : il n'existe que le temps de joindre un nœud.
+kubeadm_join_token_ttl: 15m

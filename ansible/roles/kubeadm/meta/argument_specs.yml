@@ -1,0 +1,46 @@
+---
+argument_specs:
+  main:
+    short_description: Initialise le plan de contrôle ou joint un nœud de travail.
+    options:
+      kubeadm_node_role:
+        type: str
+        required: true
+        choices: [control-plane, worker]
+        description: Rôle du nœud dans le cluster.
+      kubeadm_control_plane_host:
+        type: str
+        required: true
+        description: Hôte de l'inventaire qui porte le plan de contrôle.
+      kubeadm_kubernetes_version:
+        type: str
+        required: true
+        description: Version de Kubernetes, sans le préfixe v.
+      kubeadm_pod_cidr:
+        type: str
+        required: true
+        description: Plage des pods.
+      kubeadm_service_cidr:
+        type: str
+        required: true
+        description: Plage des services.
+      kubeadm_cluster_name:
+        type: str
+        description: Nom du cluster.
+      kubeadm_api_server_port:
+        type: int
+        description: Port du serveur d'API.
+      kubeadm_api_server_extra_sans:
+        type: list
+        elements: str
+        description: Noms supplémentaires du certificat du serveur d'API.
+      kubeadm_cri_socket:
+        type: str
+        description: Socket CRI de containerd.
+      kubeadm_ignore_preflight_errors:
+        type: list
+        elements: str
+        description: Vérifications préalables de kubeadm à ignorer.
+      kubeadm_join_token_ttl:
+        type: str
+        description: Durée de vie d'un jeton de jonction.

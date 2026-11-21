@@ -1,0 +1,25 @@
+# {{ ansible_managed }}
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: {{ ansible_default_ipv4.address }}
+  bindPort: {{ kubeadm_api_server_port }}
+nodeRegistration:
+  name: {{ inventory_hostname }}
+  criSocket: {{ kubeadm_cri_socket }}
+  ignorePreflightErrors: {{ kubeadm_ignore_preflight_errors | to_json }}
+---
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: ClusterConfiguration
+clusterName: {{ kubeadm_cluster_name }}
+kubernetesVersion: v{{ kubeadm_kubernetes_version }}
+controlPlaneEndpoint: "{{ ansible_default_ipv4.address }}:{{ kubeadm_api_server_port }}"
+networking:
+  podSubnet: {{ kubeadm_pod_cidr }}
+  serviceSubnet: {{ kubeadm_service_cidr }}
+apiServer:
+  certSANs: {{ ([ansible_default_ipv4.address, inventory_hostname] + kubeadm_api_server_extra_sans) | to_json }}
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd

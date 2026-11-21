@@ -1,0 +1,38 @@
+---
+- name: Write the kubeadm configuration
+  ansible.builtin.template:
+    src: kubeadm-config.yaml.j2
+    dest: /etc/kubernetes/kubeadm-config.yaml
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Check whether the control plane is already initialized
+  ansible.builtin.stat:
+    path: /etc/kubernetes/admin.conf
+  register: kubeadm_admin_conf
+
+# kubeadm init n'est lancé qu'une fois : relancer sur un cluster existant échouerait.
+- name: Initialize the control plane
+  ansible.builtin.command: kubeadm init --config /etc/kubernetes/kubeadm-config.yaml
+  when: not kubeadm_admin_conf.stat.exists
+  changed_when: true
+
+- name: Create the kubeconfig directory of the admin account
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0700"
+
+# kubectl est utilisable sur le nœud par le compte d'administration, joignable par le Bastion
+# uniquement. Le kubeconfig ne quitte pas le nœud.
+- name: Give the admin account a kubeconfig
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "/home/{{ ansible_user }}/.kube/config"
+    remote_src: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
