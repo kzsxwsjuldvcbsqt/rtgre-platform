@@ -29,6 +29,14 @@ ansible-inventory --graph
 
 Le plugin `oracle.oci.oci` n'accepte que les fichiers dont le nom se termine par `.oci.yml`.
 
+## Rôles
+
+| Rôle | Rôle dans la plateforme |
+| --- | --- |
+| [`hardening`](roles/hardening) | Socle de sécurité : SSH, pare-feu, mises à jour, noyau |
+
+Chaque rôle a un scénario Molecule (`roles/<rôle>/molecule/default`), lancé en local avec `molecule test` depuis le dossier du rôle, et dans la CI par le workflow `Ansible`. Molecule a besoin de Docker et de `rsync`.
+
 ## Qualité
 
 `ansible-lint`, avec le profil `production`, tourne dans pre-commit et dans la CI. Il crée un cache dans `ansible/.ansible/`, ignoré par Git.
