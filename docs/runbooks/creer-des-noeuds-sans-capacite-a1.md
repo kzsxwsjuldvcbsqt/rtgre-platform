@@ -39,4 +39,10 @@ Le script continue pour l'instance manquante. Rien n'est à défaire : Terraform
 Après plusieurs jours sans succès, les options sont, dans l'ordre :
 
 1. une seule instance de 2 OCPU et 12 Go, plan de contrôle et nœud de travail confondus (scénario prévu par l'ADR 0003) ;
-2. le passage de la tenancy en paiement à l'usage, réputé prioritaire pour la capacité, en restant dans les limites gratuites. Cette décision demande un nouvel ADR.
+2. le passage de la tenancy en paiement à l'usage, réputé prioritaire pour la capacité. C'est ce qui a été fait le 2026-11-21, sous quotas : voir l'[ADR 0008](../adr/0008-passer-en-paiement-a-l-usage-sous-quotas.md).
+
+## Historique
+
+| Date | Tentatives | Issue |
+| --- | --- | --- |
+| 2026-11-20 au 2026-11-21 | 12 échecs sur une nuit puis une matinée | Créés le 2026-11-21 à 10h24 (UTC), 30 minutes après la demande de passage en paiement à l'usage |
