@@ -11,6 +11,11 @@ kubernetes_node_packages:
   - kubeadm
   - kubectl
 
+# Outils publiés au rythme des versions mineures, installés dans la version mineure de Kubernetes.
+# kubeadm ne dépend plus de cri-tools, qui fournit pourtant crictl, l'outil de diagnostic du runtime.
+kubernetes_node_tool_packages:
+  - cri-tools
+
 # Dépôt officiel des paquets Kubernetes ; {minor} est remplacé par la version mineure.
 kubernetes_node_apt_repository_url: https://pkgs.k8s.io/core:/stable:/v{minor}/deb/
 

@@ -25,7 +25,9 @@
     - name: Check that the Kubernetes packages are held
       ansible.builtin.assert:
         that:
-          - kubernetes_node_packages | difference(kubernetes_node_held.stdout_lines) | length == 0
+          - >-
+            (kubernetes_node_packages + kubernetes_node_tool_packages)
+            | difference(kubernetes_node_held.stdout_lines) | length == 0
 
     - name: Read the effective containerd configuration
       ansible.builtin.command: containerd config dump
