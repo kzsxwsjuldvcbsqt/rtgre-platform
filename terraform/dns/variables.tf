@@ -90,3 +90,22 @@ variable "cluster_ttl" {
     error_message = "OVH exige une durée de vie d'au moins 60 secondes."
   }
 }
+
+variable "site_served_by" {
+  description = "Ce qui sert le site au sommet de la zone et sous www : github-pages ou cluster."
+  type        = string
+
+  validation {
+    condition     = contains(["github-pages", "cluster"], var.site_served_by)
+    error_message = "site_served_by doit valoir github-pages ou cluster."
+  }
+}
+
+variable "github_pages" {
+  description = "Adresses de GitHub Pages pour un domaine personnalisé, et cible de www."
+  type = object({
+    ipv4       = list(string)
+    ipv6       = list(string)
+    www_target = string
+  })
+}
