@@ -40,6 +40,14 @@ scrape:
       labels:
         app.kubernetes.io/name: argocd-application-controller
       port: 8082
+    - namespace: logging
+      labels:
+        app.kubernetes.io/name: loki
+      port: 3100
+    - namespace: logging
+      labels:
+        app.kubernetes.io/name: alloy
+      port: 12345
 
 # Adresses que la sonde interroge chaque minute, en suivant les redirections : disponibilité,
 # temps de réponse et date d'expiration du certificat. Elle ne peut joindre que ces noms.
@@ -144,6 +152,13 @@ kube-prometheus-stack:
             editable: false
             jsonData:
               timeInterval: 60s
+          # Journaux des pods (kubernetes/logging).
+          - name: Loki
+            uid: loki
+            type: loki
+            access: proxy
+            url: http://loki.logging.svc:3100
+            editable: false
     dashboardProviders:
       dashboardproviders.yaml:
         apiVersion: 1

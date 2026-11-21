@@ -9,27 +9,34 @@ import json, sys
 DS = {"type": "prometheus", "uid": "prometheus"}
 
 
-def stat(title, expr, unit="none", steps=None, x=0, y=0, w=6, decimals=None, description=""):
+LOKI = {"type": "loki", "uid": "loki"}
+
+
+def stat(title, expr, unit="none", steps=None, x=0, y=0, w=6, decimals=None, description="", source=None):
+    source = source or DS
     steps = steps or [{"color": "green", "value": None}]
     defaults = {"unit": unit, "thresholds": {"mode": "absolute", "steps": steps}, "color": {"mode": "thresholds"}}
     if decimals is not None:
         defaults["decimals"] = decimals
-    return {"type": "stat", "title": title, "description": description, "datasource": DS,
+    target = {"datasource": source, "expr": expr, "refId": "A"}
+    target.update({"queryType": "instant"} if source is LOKI else {"instant": True})
+    return {"type": "stat", "title": title, "description": description, "datasource": source,
             "gridPos": {"h": 4, "w": w, "x": x, "y": y},
-            "targets": [{"datasource": DS, "expr": expr, "instant": True, "refId": "A"}],
+            "targets": [target],
             "fieldConfig": {"defaults": defaults, "overrides": []},
             "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False},
                         "colorMode": "value", "graphMode": "none", "textMode": "auto"}}
 
 
-def series(title, expr, legend, unit="none", x=0, y=0, w=12, h=8, maximum=None, description=""):
+def series(title, expr, legend, unit="none", x=0, y=0, w=12, h=8, maximum=None, description="", source=None):
+    source = source or DS
     defaults = {"unit": unit, "min": 0, "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 10,
                                                    "showPoints": "never", "spanNulls": True}}
     if maximum is not None:
         defaults["max"] = maximum
-    return {"type": "timeseries", "title": title, "description": description, "datasource": DS,
+    return {"type": "timeseries", "title": title, "description": description, "datasource": source,
             "gridPos": {"h": h, "w": w, "x": x, "y": y},
-            "targets": [{"datasource": DS, "expr": expr, "legendFormat": legend, "refId": "A"}],
+            "targets": [{"datasource": source, "expr": expr, "legendFormat": legend, "refId": "A"}],
             "fieldConfig": {"defaults": defaults, "overrides": []},
             "options": {"legend": {"displayMode": "list", "placement": "bottom", "showLegend": True},
                         "tooltip": {"mode": "multi", "sort": "desc"}}}
@@ -91,6 +98,7 @@ platform = dashboard("plateforme", "Plateforme", "État des nœuds et du cluster
 
 GENERATOR = 'namespace="rtgre", cronjob="rtgre-generator"'
 SITE = 'job="site"'
+VISITS = '{namespace="rtgre", container="nginx"}'
 rtgre = dashboard("rtgre", "rtgre", "Le site rtgre.fr : disponibilité, certificat, trafic et génération horaire.", [
     stat("Site joignable", 'min(probe_success{%s})' % SITE, x=0, w=4,
          steps=[{"color": "red", "value": None}, {"color": "green", "value": 1}],
@@ -120,18 +128,27 @@ rtgre = dashboard("rtgre", "rtgre", "Le site rtgre.fr : disponibilité, certific
     series("Durée des requêtes à la passerelle, 95e centile",
            'histogram_quantile(0.95, sum by (le) (rate(traefik_entrypoint_request_duration_seconds_bucket{entrypoint="websecure"}[5m])))',
            "95e centile", unit="s", x=12, y=12),
+    stat("Requêtes servies sur 24 heures", 'sum(count_over_time(%s [24h]))' % VISITS, x=0, y=20, w=6, source=LOKI,
+         description="Lignes du journal de nginx : pages, feuilles de style, scripts. Les sondes n'y figurent pas."),
+    stat("Réseaux distincts sur 24 heures",
+         'count(sum by (network) (count_over_time(%s | pattern "<_> <network> <_>" [24h])))' % VISITS,
+         x=6, y=20, w=6, source=LOKI,
+         description="Nombre approché de visiteurs : le journal ne garde que le réseau de chacun (ADR 0014)."),
+    series("Requêtes servies par heure, par code de réponse",
+           'sum by (status) (count_over_time(%s | pattern "<_> <_> \\"<_>\\" <status> <_>" [1h]))' % VISITS,
+           "{{status}}", x=12, y=20, h=4, source=LOKI),
     series("Durée des générations",
            'kube_job_status_completion_time{namespace="rtgre", job_name=~"rtgre-generator-.*"} - kube_job_status_start_time{namespace="rtgre", job_name=~"rtgre-generator-.*"}',
-           "{{job_name}}", unit="s", x=0, y=20),
+           "{{job_name}}", unit="s", x=0, y=24),
     series("Générations en échec",
            'sum(kube_job_status_failed{namespace="rtgre", job_name=~"rtgre-generator-.*"}) or vector(0)',
-           "échecs conservés", x=12, y=20, description="Le cluster garde les trois derniers échecs."),
+           "échecs conservés", x=12, y=24, description="Le cluster garde les trois derniers échecs."),
     series("Mémoire des pods",
            'sum by (pod) (container_memory_working_set_bytes{namespace="rtgre", %s})' % CONTAINERS,
-           "{{pod}}", unit="bytes", x=0, y=28),
+           "{{pod}}", unit="bytes", x=0, y=32),
     series("Processeur des pods",
            'sum by (pod) (rate(container_cpu_usage_seconds_total{namespace="rtgre", %s}[5m]))' % CONTAINERS,
-           "{{pod}}", x=12, y=28, description="En cœurs."),
+           "{{pod}}", x=12, y=32, description="En cœurs."),
 ])
 
 for name, content in (("plateforme", platform), ("rtgre", rtgre)):

@@ -43,8 +43,8 @@
             "uid": "prometheus"
           },
           "expr": "min(probe_success{job=\"site\"})",
-          "instant": true,
-          "refId": "A"
+          "refId": "A",
+          "instant": true
         }
       ],
       "fieldConfig": {
@@ -104,8 +104,8 @@
             "uid": "prometheus"
           },
           "expr": "max(probe_duration_seconds{job=\"site\"})",
-          "instant": true,
-          "refId": "A"
+          "refId": "A",
+          "instant": true
         }
       ],
       "fieldConfig": {
@@ -170,8 +170,8 @@
             "uid": "prometheus"
           },
           "expr": "min(probe_ssl_earliest_cert_expiry{job=\"site\"} - time()) / 86400",
-          "instant": true,
-          "refId": "A"
+          "refId": "A",
+          "instant": true
         }
       ],
       "fieldConfig": {
@@ -236,8 +236,8 @@
             "uid": "prometheus"
           },
           "expr": "time() - kube_cronjob_status_last_successful_time{namespace=\"rtgre\", cronjob=\"rtgre-generator\"}",
-          "instant": true,
-          "refId": "A"
+          "refId": "A",
+          "instant": true
         }
       ],
       "fieldConfig": {
@@ -301,8 +301,8 @@
             "uid": "prometheus"
           },
           "expr": "kube_deployment_status_replicas_ready{namespace=\"rtgre\", deployment=\"rtgre-web\"}",
-          "instant": true,
-          "refId": "A"
+          "refId": "A",
+          "instant": true
         }
       ],
       "fieldConfig": {
@@ -362,8 +362,8 @@
             "uid": "prometheus"
           },
           "expr": "time() - max(kube_pod_start_time{namespace=\"rtgre\", pod=~\"rtgre-web-.*\"})",
-          "instant": true,
-          "refId": "A"
+          "refId": "A",
+          "instant": true
         }
       ],
       "fieldConfig": {
@@ -616,6 +616,172 @@
       "id": 10
     },
     {
+      "type": "stat",
+      "title": "Requêtes servies sur 24 heures",
+      "description": "Lignes du journal de nginx : pages, feuilles de style, scripts. Les sondes n'y figurent pas.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 20
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({namespace=\"rtgre\", container=\"nginx\"} [24h]))",
+          "refId": "A",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "id": 11
+    },
+    {
+      "type": "stat",
+      "title": "Réseaux distincts sur 24 heures",
+      "description": "Nombre approché de visiteurs : le journal ne garde que le réseau de chacun (ADR 0014).",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 20
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "count(sum by (network) (count_over_time({namespace=\"rtgre\", container=\"nginx\"} | pattern \"<_> <network> <_>\" [24h])))",
+          "refId": "A",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "id": 12
+    },
+    {
+      "type": "timeseries",
+      "title": "Requêtes servies par heure, par code de réponse",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (status) (count_over_time({namespace=\"rtgre\", container=\"nginx\"} | pattern \"<_> <_> \\\"<_>\\\" <status> <_>\" [1h]))",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 13
+    },
+    {
       "type": "timeseries",
       "title": "Durée des générations",
       "description": "",
@@ -627,7 +793,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 20
+        "y": 24
       },
       "targets": [
         {
@@ -665,7 +831,7 @@
           "sort": "desc"
         }
       },
-      "id": 11
+      "id": 14
     },
     {
       "type": "timeseries",
@@ -679,7 +845,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 20
+        "y": 24
       },
       "targets": [
         {
@@ -717,7 +883,7 @@
           "sort": "desc"
         }
       },
-      "id": 12
+      "id": 15
     },
     {
       "type": "timeseries",
@@ -731,7 +897,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 28
+        "y": 32
       },
       "targets": [
         {
@@ -769,7 +935,7 @@
           "sort": "desc"
         }
       },
-      "id": 13
+      "id": 16
     },
     {
       "type": "timeseries",
@@ -783,7 +949,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 28
+        "y": 32
       },
       "targets": [
         {
@@ -821,7 +987,7 @@
           "sort": "desc"
         }
       },
-      "id": 14
+      "id": 17
     }
   ]
 }
