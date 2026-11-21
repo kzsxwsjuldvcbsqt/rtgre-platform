@@ -11,7 +11,9 @@ resource "oci_objectstorage_bucket" "terraform_state" {
   access_type    = "NoPublicAccess"
   storage_tier   = "Standard"
   versioning     = "Enabled"
-  freeform_tags  = local.freeform_tags
+  # Émet un événement à chaque écriture ou suppression d'objet, pour pouvoir auditer le state.
+  object_events_enabled = true
+  freeform_tags         = local.freeform_tags
 
   lifecycle {
     # Le supprimer ferait perdre le state de toute la plateforme.
