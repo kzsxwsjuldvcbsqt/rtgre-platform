@@ -17,3 +17,4 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | [0011](0011-stocker-sur-des-volumes-locaux-statiques.md) | Stocker sur des volumes locaux statiques | accepté |
 | [0012](0012-exposer-par-un-network-load-balancer-et-gateway-api.md) | Exposer par un Network Load Balancer et Gateway API | accepté |
 | [0013](0013-certificats-par-cert-manager-et-lets-encrypt.md) | Certificats par cert-manager et Let's Encrypt | accepté |
+| [0014](0014-journaux-de-visite-sans-adresse-complete.md) | Journaux de visite sans adresse complète | accepté |
