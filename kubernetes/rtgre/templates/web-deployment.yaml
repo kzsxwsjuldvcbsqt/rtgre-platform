@@ -30,13 +30,14 @@ spec:
         {{- include "rtgre.podSecurityContext" (dict "root" . "user" .Values.web.user) | nindent 8 }}
       initContainers:
         # Sur un volume vide (premier déploiement, nœud remplacé), le site est généré avant
-        # que nginx démarre. Sinon, le site déjà publié est servi tel quel.
+        # que nginx démarre. Sinon, le site déjà publié est servi tel quel : le générateur
+        # laisse un marqueur dans chaque site qu'il publie.
         - name: first-generation
           {{- include "rtgre.generatorContainer" . | nindent 10 }}
           command:
             - sh
             - -c
-            - test -f "$SCHEDULE_OUTPUT_ROOT/dist/index.html" || exec python -m schedule.build
+            - test -f "$SCHEDULE_OUTPUT_ROOT/dist/.schedule-generated" || exec python -m schedule.build
       containers:
         - name: nginx
           image: {{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}
