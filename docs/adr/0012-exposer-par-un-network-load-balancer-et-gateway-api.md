@@ -47,6 +47,7 @@ Le Network Load Balancer gratuit devant le nœud de travail, et Traefik comme co
 - **Traefik ne sert que Gateway API** : ses fournisseurs Ingress et IngressRoute sont désactivés, ses propres CRD ne sont pas installées. Les routes sont des objets standard, portables vers un autre contrôleur.
 - **Les CRD de Gateway API** viennent du dépôt officiel, à la version que Traefik prend en charge, épinglée par son commit.
 - **Quotas** : tout Load Balancer est interdit dans la tenancy, et un seul Network Load Balancer est permis.
+- **Mesure** (`scripts/measure-node.sh wk-1 60`, au repos) : Traefik occupe 21 Mo de mémoire sur le nœud de travail.
 
 ## Conséquences
 

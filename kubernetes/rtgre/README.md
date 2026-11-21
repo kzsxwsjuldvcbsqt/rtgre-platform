@@ -8,6 +8,7 @@ flowchart LR
     G -->|écrit| V[(Volume site)]
     V -->|lecture seule| W[Deployment rtgre-web<br>nginx]
     W --> S[Service rtgre-web]
+    P[Passerelle public] -->|HTTPRoute rtgre| S
 ```
 
 | Objet | Rôle |
@@ -15,7 +16,8 @@ flowchart LR
 | CronJob `rtgre-generator` | Génère le site chaque heure, une génération à la fois. Il remplace le site publié d'un seul coup : nginx ne sert jamais un site à moitié écrit. |
 | Deployment `rtgre-web` | nginx sert le volume en lecture seule. Sur un volume vide, un conteneur d'initialisation génère d'abord le site. |
 | PersistentVolumeClaim `site` | Volume local déclaré dans [`storage`](../storage) : le dernier site publié survit au redémarrage des pods. |
-| NetworkPolicy, CiliumNetworkPolicy | Rien n'entre dans l'espace de noms. Le générateur ne sort que vers ADE, en HTTPS. |
+| HTTPRoute `rtgre` | Attache le site à la [passerelle](../gateway) du cluster, pour les noms de `hostnames`. |
+| NetworkPolicy, CiliumNetworkPolicy | Seule la passerelle entre dans l'espace de noms. Le générateur ne sort que vers ADE, en HTTPS. |
 
 ## Choix notables
 
@@ -25,7 +27,7 @@ flowchart LR
 - **Sortie filtrée par nom** : une NetworkPolicy ne filtre que des adresses, et celles d'ADE peuvent changer. La politique de Cilium autorise le nom `generator.adeHost`, et son proxy DNS refuse tout autre nom. Les pods demandent ce nom tel quel (`ndots: 1`) : un refus sur un domaine de recherche du cluster arrêterait la résolution.
 - **Aucune adresse IP dans les journaux** de nginx.
 - **Comme GitHub Pages** : mêmes codes de réponse, mêmes types de contenu, même durée de cache, `/page` sert `page.html`. nginx ajoute trois en-têtes de sécurité.
-- **Rien n'est exposé pour l'instant** : `gatewayNamespace` est vide, donc aucune entrée n'est autorisée. La passerelle arrive avec l'exposition du cluster.
+- **Exposé en HTTP seulement pour l'instant**, par l'adresse du load balancer : rtgre.fr désigne toujours GitHub Pages. Le HTTPS puis la bascule du nom suivent.
 
 ## Mise à jour de l'image
 

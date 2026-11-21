@@ -41,6 +41,8 @@ L'infrastructure est déployée par le workflow `Terraform` : plan commenté sur
 
 Le contenu du cluster est déployé en GitOps par Argo CD ([ADR 0010](docs/adr/0010-deployer-en-gitops-avec-argo-cd.md)). Il suit le dossier `kubernetes/` de `main` avec une clé de déploiement en lecture seule, applique chaque changement dans les minutes qui suivent sa fusion et annule toute modification manuelle. Son interface n'est pas exposée : elle s'ouvre à travers le Bastion ([runbook](docs/runbooks/acceder-a-argocd.md)).
 
+Le trafic web entre par le Network Load Balancer gratuit d'Oracle, déclaré dans Terraform, puis par la passerelle du cluster, Traefik en contrôleur Gateway API ([ADR 0012](docs/adr/0012-exposer-par-un-network-load-balancer-et-gateway-api.md), [`kubernetes/gateway`](kubernetes/gateway)). Seuls les ports 80 et 443 du load balancer sont ouverts : les nœuds n'acceptent rien d'Internet.
+
 Le site est généré dans le cluster par l'image que publie le dépôt rtgre ([`kubernetes/rtgre`](kubernetes/rtgre)). Quand rtgre publie une nouvelle image, Renovate propose sa nouvelle empreinte et la fusionne de lui-même une fois la CI verte : celle-ci vérifie que l'image est signée par le workflow de rtgre.
 
 ## Dépendances
