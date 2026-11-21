@@ -1,0 +1,3 @@
+---
+# Utilisateur par défaut des images Ubuntu d'Oracle Cloud.
+ansible_user: ubuntu

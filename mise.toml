@@ -2,5 +2,21 @@
 gitleaks = "8.30.1"
 "pipx:oci-cli" = "3.96.3"
 "pipx:pre-commit" = "4.7.0"
+python = "3.13.18"
 terraform = "1.17.2"
 tflint = "0.66.0"
+uv = "0.13.7"
+
+# Ansible, Molecule et le SDK Oracle partagent un environnement virtuel propre au dépôt.
+[env]
+_.python.venv = { path = ".venv", create = true }
+
+[tasks.ansible-deps]
+description = "Installe les dépendances Python et les collections Ansible aux versions figées"
+# Limite la recherche des collections au projet : sinon une copie ailleurs sur le poste suffit à
+# faire sauter l'installation dans ansible/collections.
+env = { ANSIBLE_COLLECTIONS_PATH = "ansible/collections" }
+run = [
+  "uv pip install --quiet -r ansible/requirements.txt",
+  "ansible-galaxy collection install --upgrade -r ansible/requirements.yml -p ansible/collections",
+]

@@ -1,0 +1,7 @@
+# Outils Python d'Ansible, aux versions exactes. Installés par : mise run ansible-deps
+ansible-core==2.22.0
+ansible-lint==26.11.0
+molecule==26.11.0
+molecule-plugins[docker]==26.11.0
+# SDK utilisé par l'inventaire dynamique de la collection oracle.oci.
+oci==2.192.0

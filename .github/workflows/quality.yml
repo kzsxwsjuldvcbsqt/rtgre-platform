@@ -41,6 +41,9 @@ jobs:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml', 'mise.toml') }}
 
+      - name: Install Ansible dependencies
+        run: mise run ansible-deps
+
       - name: Run all hooks
         env:
           # Le hook gitleaks ne lit que l'index ; l'historique est analysé par le job Secrets.
