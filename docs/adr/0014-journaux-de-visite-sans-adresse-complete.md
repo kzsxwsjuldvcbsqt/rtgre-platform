@@ -35,7 +35,7 @@ Seul le réseau du visiteur est journalisé, tronqué par nginx au moment d'écr
 - **Ce qui est journalisé** : la date, le réseau, la requête, le code de réponse, la taille, la page d'origine, le navigateur, la durée. Les sondes de kubelet ne le sont pas.
 - **Conservation** : les journaux d'un pod disparaissent avec lui. Une tâche remplace le pod du serveur web chaque semaine, la nuit, sans coupure. Si un passage échoue, le suivant rattrape : aucun journal ne dépasse quatorze jours.
 - **Moindre privilège** : cette tâche est le seul pod de l'espace de noms à recevoir un jeton de l'API de Kubernetes. Son seul droit est de modifier le déploiement du serveur web, et elle ne sort que vers l'API.
-- **Sans `kubectl`** : son image officielle (v1.36.6) porte six vulnérabilités HIGH selon Trivy. Un script d'une trentaine de lignes, avec la seule bibliothèque standard de Python, fait le même appel depuis l'image officielle de Python, qui n'en porte aucune.
+- **Sans `kubectl`** : son image officielle (v1.36.6) porte six vulnérabilités HIGH selon Trivy. Un script d'une trentaine de lignes, avec la seule bibliothèque standard de Python, fait le même appel depuis l'image officielle de Python, qui n'en porte aucune. Depuis le 21 novembre 2026, il tourne avec l'image du générateur du site, qui apporte Python : l'image officielle a reçu depuis cinq vulnérabilités HIGH, dans des paquets que le script n'utilise pas.
 
 ## Conséquences
 
