@@ -1,3 +1,27 @@
 ---
 # Utilisateur par défaut des images Ubuntu d'Oracle Cloud.
 ansible_user: ubuntu
+
+# Réseau ------------------------------------------------------------------------
+
+# Plage du réseau virtuel, définie dans terraform/envs/prod/prod.auto.tfvars (vcn_cidr).
+# Le playbook vérifie que chaque nœud y a bien son adresse.
+platform_vcn_cidr: 10.20.0.0/16
+
+# Plages internes de Kubernetes. Elles ne doivent chevaucher ni le réseau virtuel ni entre elles.
+kubernetes_pod_cidr: 10.244.0.0/16
+kubernetes_service_cidr: 10.96.0.0/12
+
+# Durcissement --------------------------------------------------------------------
+
+# Le trafic entre nœuds et celui des pods vers les nœuds ne passe pas par Internet : il est admis.
+hardening_firewall_trusted_cidrs:
+  - "{{ platform_vcn_cidr }}"
+  - "{{ kubernetes_pod_cidr }}"
+
+# Le trafic des pods traverse la chaîne FORWARD des nœuds.
+hardening_firewall_routed_policy: allow
+
+# Kubernetes ---------------------------------------------------------------------
+
+kubernetes_node_version: "1.37.2"

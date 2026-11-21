@@ -34,6 +34,10 @@ hardening_firewall_enabled: true
 # Kubernetes installé, la plage des pods. Vide par défaut : chaque environnement les fournit.
 hardening_firewall_trusted_cidrs: []
 
+# Politique du trafic routé à travers le nœud (chaîne FORWARD). « deny » par défaut ; un nœud
+# Kubernetes doit la passer à « allow » : le trafic des pods traverse cette chaîne.
+hardening_firewall_routed_policy: deny
+
 # Ports TCP ouverts depuis n'importe quelle adresse, en plus de SSH.
 hardening_firewall_public_tcp_ports: []
 

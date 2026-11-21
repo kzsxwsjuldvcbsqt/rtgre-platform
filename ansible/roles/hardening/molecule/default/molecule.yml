@@ -37,6 +37,7 @@ provisioner:
           - 10.20.0.0/16
         hardening_firewall_public_tcp_ports:
           - 443
+        hardening_firewall_routed_policy: allow
 
 verifier:
   name: ansible

@@ -1,0 +1,36 @@
+---
+# Configure tous les nœuds du cluster. À lancer depuis ansible/, après scripts/bastion-ssh-config.sh :
+#   ansible-playbook playbooks/site.yml
+
+- name: Check the platform network settings
+  hosts: k8s_control_plane:k8s_worker
+  gather_facts: true
+  tasks:
+    - name: Check that the node address belongs to the virtual network
+      ansible.builtin.assert:
+        that:
+          - ansible_default_ipv4.address is ansible.utils.in_network(platform_vcn_cidr)
+        fail_msg: >-
+          {{ inventory_hostname }} ({{ ansible_default_ipv4.address }}) n'est pas dans {{ platform_vcn_cidr }} :
+          platform_vcn_cidr ne correspond plus à vcn_cidr de terraform/envs/prod/prod.auto.tfvars.
+        quiet: true
+
+    - name: Check that the Kubernetes ranges overlap neither each other nor the virtual network
+      ansible.builtin.assert:
+        that:
+          - not (platform_vcn_cidr | ansible.utils.network_in_network(kubernetes_pod_cidr))
+          - not (kubernetes_pod_cidr | ansible.utils.network_in_network(platform_vcn_cidr))
+          - not (platform_vcn_cidr | ansible.utils.network_in_network(kubernetes_service_cidr))
+          - not (kubernetes_service_cidr | ansible.utils.network_in_network(platform_vcn_cidr))
+          - not (kubernetes_pod_cidr | ansible.utils.network_in_network(kubernetes_service_cidr))
+          - not (kubernetes_service_cidr | ansible.utils.network_in_network(kubernetes_pod_cidr))
+        fail_msg: Les plages du réseau virtuel, des pods et des services se chevauchent.
+        quiet: true
+      run_once: true
+
+- name: Harden the nodes and prepare them for kubeadm
+  hosts: k8s_control_plane:k8s_worker
+  become: true
+  roles:
+    - role: hardening
+    - role: kubernetes_node
