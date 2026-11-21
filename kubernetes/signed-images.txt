@@ -1,0 +1,5 @@
+# Images qui doivent être référencées par leur empreinte et porter une signature cosign sans clé.
+# scripts/ci/verify-image-signatures.sh le vérifie avant toute fusion.
+#
+# préfixe de l'image | identité du certificat de signature | émetteur OIDC
+ghcr.io/kzsxwsjuldvcbsqt/rtgre | https://github.com/kzsxwsjuldvcbsqt/rtgre/.github/workflows/image.yml@refs/heads/main | https://token.actions.githubusercontent.com
