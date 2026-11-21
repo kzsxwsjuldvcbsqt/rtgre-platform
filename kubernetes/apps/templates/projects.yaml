@@ -20,6 +20,10 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: {{ $app.namespace }}
     {{- end }}
+    {{- range $app.extraNamespaces }}
+    - server: https://kubernetes.default.svc
+      namespace: {{ . }}
+    {{- end }}
     {{- end }}
   # Les composants de la plateforme installent des CRD, des rôles et des espaces de noms.
   clusterResourceWhitelist:
