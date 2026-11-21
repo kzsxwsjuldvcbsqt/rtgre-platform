@@ -77,3 +77,9 @@ variable "public_ingress_ports" {
   type        = list(number)
   default     = [80, 443]
 }
+
+variable "nodes_subnet_ssh_egress_port" {
+  description = "Port SSH que la liste de sécurité par défaut autorise en sortie vers le sous-réseau des nœuds, pour le point d'accès du Bastion. null : aucune sortie."
+  type        = number
+  default     = null
+}

@@ -51,10 +51,30 @@ resource "oci_core_route_table" "public" {
 
 # La liste de sécurité par défaut d'Oracle ouvre SSH à tout Internet. Elle est vidée :
 # tout le filtrage passe par les groupes de sécurité réseau, rôle par rôle.
+#
+# Seule exception : le point d'accès privé du service Bastion vit dans le sous-réseau des nœuds
+# sans NSG à lui, donc seule cette liste peut autoriser sa sortie vers le port SSH des nœuds.
 resource "oci_core_default_security_list" "this" {
   manage_default_resource_id = oci_core_vcn.this.default_security_list_id
   display_name               = "${var.name}-default-deny"
   freeform_tags              = var.freeform_tags
+
+  dynamic "egress_security_rules" {
+    for_each = var.nodes_subnet_ssh_egress_port == null ? [] : [var.nodes_subnet_ssh_egress_port]
+
+    content {
+      description      = "Sortie SSH vers les nœuds, pour le point d'accès du Bastion"
+      destination      = local.subnet_cidrs["nodes"]
+      destination_type = "CIDR_BLOCK"
+      protocol         = local.protocol.tcp
+      stateless        = false
+
+      tcp_options {
+        min = egress_security_rules.value
+        max = egress_security_rules.value
+      }
+    }
+  }
 }
 
 resource "oci_core_subnet" "this" {

@@ -34,6 +34,9 @@ module "network" {
   subnet_newbits       = var.subnet_newbits
   subnet_netnums       = var.subnet_netnums
   public_ingress_cidrs = var.public_ingress_cidrs
+
+  # Le Bastion joint les nœuds en SSH depuis le sous-réseau des nœuds.
+  nodes_subnet_ssh_egress_port = 22
 }
 
 module "compute" {
