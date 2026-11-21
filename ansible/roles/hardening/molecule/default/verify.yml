@@ -66,6 +66,17 @@
         that:
           - hardening_ufw_sysctl.stdout == 'net/ipv4/conf/all/log_martians=1'
 
+    - name: Read the filter rules
+      ansible.builtin.command: iptables -S
+      register: hardening_iptables
+      changed_when: false
+
+    - name: Check that the Oracle reject rules are gone
+      ansible.builtin.assert:
+        that:
+          - "'-A INPUT -j REJECT --reject-with icmp-host-prohibited' not in hardening_iptables.stdout_lines"
+          - "'-A FORWARD -j REJECT --reject-with icmp-host-prohibited' not in hardening_iptables.stdout_lines"
+
     - name: Gather installed packages
       ansible.builtin.package_facts:
 

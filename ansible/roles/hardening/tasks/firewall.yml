@@ -8,6 +8,20 @@
     purge: true
   when: hardening_firewall_remove_iptables_persistent
 
+# Retirer le paquet n'empêche que leur rechargement au prochain démarrage : les règles déjà
+# chargées restent actives. Leurs REJECT, placés avant les chaînes d'ufw, rejetteraient tout sauf
+# SSH (API Kubernetes, trafic des pods).
+- name: Remove the reject rules loaded by the Oracle image
+  ansible.builtin.iptables:
+    chain: "{{ item }}"
+    jump: REJECT
+    reject_with: icmp-host-prohibited
+    state: absent
+  loop:
+    - INPUT
+    - FORWARD
+  when: hardening_firewall_remove_iptables_persistent
+
 - name: Install ufw
   ansible.builtin.apt:
     name: ufw
