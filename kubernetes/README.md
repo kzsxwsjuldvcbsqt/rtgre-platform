@@ -8,13 +8,14 @@ Ce qui tourne dans le cluster est décrit ici et déployé par Argo CD ([ADR 001
 | [`argocd`](argocd) | Argo CD : le chart officiel `argo-cd`, figé dans `Chart.lock`, et les valeurs de la plateforme |
 | [`cert-manager`](cert-manager) | Certificats : cert-manager et ses émetteurs Let's Encrypt |
 | [`gateway`](gateway) | Passerelle du cluster : Traefik en contrôleur Gateway API, et son certificat |
+| [`kyverno`](kyverno) | Contrôle des images à la création des pods du site : dépôts déclarés, empreinte et signature |
 | [`logging`](logging) | Journaux des pods : Alloy les collecte, Loki les conserve treize jours |
 | [`monitoring`](monitoring) | Métriques, tableaux de bord et alertes : Prometheus, son opérateur, kube-state-metrics, Grafana et Alertmanager |
 | [`node-exporter`](node-exporter) | Métriques des nœuds, dans le seul espace de noms privilégié |
 | [`rtgre`](rtgre) | Le site rtgre.fr : génération horaire depuis ADE, et serveur web |
 | [`storage`](storage) | Volumes persistants locaux, déclarés un par un |
 
-[`signed-images.txt`](signed-images.txt) liste les images qui doivent être signées, et par qui. [`unused-images.txt`](unused-images.txt) liste celles qu'un chart cite sans jamais les lancer.
+[`kyverno/files/signed-images.txt`](kyverno/files/signed-images.txt) liste les images qui doivent être signées, et par qui : la CI le vérifie avant toute fusion, et le cluster à chaque création de pod. [`unused-images.txt`](unused-images.txt) liste celles qu'un chart cite sans jamais les lancer.
 
 Le réseau des pods, Cilium, n'est pas ici : Argo CD en a besoin pour démarrer, c'est donc Ansible qui l'installe ([rôle `cilium`](../ansible/roles/cilium)).
 
