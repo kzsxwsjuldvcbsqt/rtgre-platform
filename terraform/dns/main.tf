@@ -25,10 +25,10 @@ locals {
   }
 }
 
-# Courrier : une suppression par erreur ferait perdre des messages. Terraform la refuse, il faut
-# d'abord déplacer l'enregistrement dans var.records.
-resource "ovh_domain_zone_record" "mail" {
-  for_each = var.mail_records
+# Serveurs de noms et courrier : une suppression par erreur couperait le domaine ou ferait perdre
+# des messages. Terraform la refuse, il faut d'abord déplacer l'enregistrement dans var.records.
+resource "ovh_domain_zone_record" "protected" {
+  for_each = var.protected_records
 
   zone      = var.zone
   subdomain = each.value.subdomain
