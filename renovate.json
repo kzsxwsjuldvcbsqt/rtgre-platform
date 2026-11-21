@@ -124,6 +124,18 @@
       "dependencyDashboardApproval": true
     },
     {
+      "description": "Grafana : sa branche est choisie pour ses vulnérabilités connues (ADR 0016) ; une montée mineure ou majeure attend une approbation dans le tableau de bord",
+      "matchPackageNames": [
+        "docker.io/grafana/grafana",
+        "grafana/grafana"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
       "description": "Traefik et Gateway API vont ensemble : chaque version de Traefik prend en charge une version précise de Gateway API (ADR 0012). Une montée mineure ou majeure de l'un, et toute montée de l'autre, attendent une approbation dans le tableau de bord",
       "matchDepNames": [
         "traefik"
