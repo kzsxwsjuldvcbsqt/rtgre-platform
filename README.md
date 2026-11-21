@@ -63,3 +63,7 @@ pre-commit install
 ```
 
 Le workflow `Security` relance Trivy sur chaque pull request et chaque lundi : une vulnérabilité peut être publiée sur une dépendance inchangée. Le workflow `Quality` relance les mêmes contrôles sur chaque pull request, analyse tout l'historique à la recherche de secrets et vérifie que chaque message de commit suit [Conventional Commits](https://www.conventionalcommits.org/fr/).
+
+## Contribuer
+
+La façon de travailler, le format des messages de commit et la signature sont décrits dans [CONTRIBUTING.md](CONTRIBUTING.md). Une vulnérabilité se signale en privé : voir [SECURITY.md](SECURITY.md).
