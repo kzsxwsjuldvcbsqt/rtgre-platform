@@ -6,6 +6,16 @@
     update_cache: true
     cache_valid_time: 3600
 
+# Avec l'activation par socket d'Ubuntu 24.04, sshd ne démarre qu'à la première connexion : ce
+# dossier peut manquer juste après l'installation, et « sshd -t » échoue alors.
+- name: Ensure the SSH privilege separation directory exists
+  ansible.builtin.file:
+    path: /run/sshd
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Write the SSH hardening drop-in
   ansible.builtin.template:
     src: sshd-hardening.conf.j2
