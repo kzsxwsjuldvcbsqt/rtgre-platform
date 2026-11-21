@@ -12,6 +12,8 @@ repos:
       - id: check-merge-conflict
       - id: check-yaml
         args: [--allow-multiple-documents]
+        # Les gabarits Helm ne sont du YAML qu'une fois rendus : scripts/ci/validate-kubernetes.sh.
+        exclude: ^kubernetes/[^/]+/templates/
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: mixed-line-ending
@@ -81,7 +83,7 @@ repos:
         entry: trivy config --quiet .
         language: system
         pass_filenames: false
-        files: ^(terraform/|ansible/|\.github/|trivy\.yaml$|\.trivyignore\.yaml$)
+        files: ^(terraform/|ansible/|kubernetes/|\.github/|trivy\.yaml$|\.trivyignore\.yaml$)
 
       - id: shellcheck
         name: ShellCheck
