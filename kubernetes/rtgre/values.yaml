@@ -35,6 +35,21 @@ web:
     limits:
       memory: 64Mi
 
+# Conservation des journaux de visite : le serveur web est redémarré chaque semaine, la nuit, par
+# un script qui n'utilise que la bibliothèque standard de Python.
+logRetention:
+  image:
+    repository: docker.io/library/python
+    tag: 3.14.10-alpine3.24@sha256:5862d971d1f0ae26b258cefa4e893556b1d3aba81bd2ff30888704ad378bab67
+  # Le lundi à 4 h 30, à l'heure de generator.timeZone.
+  schedule: "30 4 * * 1"
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 64Mi
+
 # Utilisateur de l'image du générateur. Son groupe est aussi celui du volume (fsGroup) : le
 # serveur web le reçoit en groupe supplémentaire pour lire le site.
 user: 65532

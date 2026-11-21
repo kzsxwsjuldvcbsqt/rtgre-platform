@@ -6,10 +6,14 @@ metadata:
     {{- include "rtgre.labels" . | nindent 4 }}
     app.kubernetes.io/component: web
 spec:
-  # Le volume local n'existe que sur un nœud : un seul pod, remplacé avant d'être recréé.
+  # Un seul pod en service. À chaque changement, le nouveau démarre avant que l'ancien s'arrête :
+  # le volume local accepte les deux, puisqu'ils sont sur le même nœud.
   replicas: 1
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app.kubernetes.io/name: rtgre

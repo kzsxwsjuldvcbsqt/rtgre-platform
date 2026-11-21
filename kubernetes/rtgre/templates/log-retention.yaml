@@ -1,0 +1,114 @@
+# Conservation des journaux de visite : le pod du serveur web est remplacé chaque semaine, et ses
+# journaux disparaissent avec lui (ADR 0014). Même si un passage échoue, aucun journal ne
+# dépasse quatorze jours.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: rtgre-log-retention
+  labels:
+    {{- include "rtgre.labels" . | nindent 4 }}
+    app.kubernetes.io/component: log-retention
+automountServiceAccountToken: false
+---
+# Un seul droit : modifier le déploiement du serveur web, et lui seul.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: rtgre-log-retention
+  labels:
+    {{- include "rtgre.labels" . | nindent 4 }}
+    app.kubernetes.io/component: log-retention
+rules:
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    resourceNames:
+      - rtgre-web
+    verbs:
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rtgre-log-retention
+  labels:
+    {{- include "rtgre.labels" . | nindent 4 }}
+    app.kubernetes.io/component: log-retention
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: rtgre-log-retention
+subjects:
+  - kind: ServiceAccount
+    name: rtgre-log-retention
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rtgre-log-retention
+  labels:
+    {{- include "rtgre.labels" . | nindent 4 }}
+    app.kubernetes.io/component: log-retention
+data:
+  restart-web.py: |
+    {{- .Files.Get "files/restart-web.py" | nindent 4 }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: rtgre-log-retention
+  labels:
+    {{- include "rtgre.labels" . | nindent 4 }}
+    app.kubernetes.io/component: log-retention
+spec:
+  schedule: {{ .Values.logRetention.schedule | quote }}
+  timeZone: {{ .Values.generator.timeZone }}
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 300
+      template:
+        metadata:
+          labels:
+            {{- include "rtgre.labels" . | nindent 12 }}
+            app.kubernetes.io/component: log-retention
+        spec:
+          restartPolicy: Never
+          serviceAccountName: rtgre-log-retention
+          # Seul pod de l'espace de noms à recevoir un jeton de l'API de Kubernetes.
+          automountServiceAccountToken: true
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: {{ .Values.user }}
+            runAsGroup: {{ .Values.user }}
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: restart-web
+              image: {{ .Values.logRetention.image.repository }}:{{ .Values.logRetention.image.tag }}
+              command:
+                - python
+                - /scripts/restart-web.py
+              env:
+                - name: DEPLOYMENT
+                  value: rtgre-web
+                - name: PYTHONUNBUFFERED
+                  value: "1"
+              securityContext:
+                {{- include "rtgre.containerSecurityContext" . | nindent 16 }}
+              resources:
+                {{- toYaml .Values.logRetention.resources | nindent 16 }}
+              volumeMounts:
+                - name: script
+                  mountPath: /scripts
+                  readOnly: true
+          volumes:
+            - name: script
+              configMap:
+                name: rtgre-log-retention
