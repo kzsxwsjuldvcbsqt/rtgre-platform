@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: {{ .Values.project }}
+  namespace: {{ .Values.argocdNamespace }}
+spec:
+  description: Composants de la plateforme, déployés depuis ce dépôt uniquement.
+  sourceRepos:
+    - {{ .Values.repository.url }}
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: {{ .Values.argocdNamespace }}
+    {{- range $name, $app := .Values.applications }}
+    {{- if ne $app.namespace $.Values.argocdNamespace }}
+    - server: https://kubernetes.default.svc
+      namespace: {{ $app.namespace }}
+    {{- end }}
+    {{- end }}
+  # Les composants de la plateforme installent des CRD, des rôles et des espaces de noms.
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+---
+# Le projet par défaut d'Argo CD autorise tout. Il est vidé : une application créée sans
+# projet ne peut rien déployer.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: default
+  namespace: {{ .Values.argocdNamespace }}
+spec:
+  description: Projet par défaut, volontairement vide.
+  sourceRepos: []
+  destinations: []
+  clusterResourceWhitelist: []

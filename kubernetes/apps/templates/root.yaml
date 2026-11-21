@@ -1,0 +1,19 @@
+# Application racine : elle déploie ce chart, donc les projets, les applications et elle-même.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: {{ .Values.argocdNamespace }}
+spec:
+  project: {{ .Values.project }}
+  source:
+    repoURL: {{ .Values.repository.url }}
+    targetRevision: {{ .Values.repository.revision }}
+    path: {{ .Values.repository.path }}/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Values.argocdNamespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

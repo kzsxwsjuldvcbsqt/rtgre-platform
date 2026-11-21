@@ -1,0 +1,62 @@
+# Valeurs du chart officiel argo-cd. Installation minimale (ADR 0010) : pas de Dex, pas de
+# notifications, pas d'ApplicationSet, Redis sans haute disponibilité.
+argo-cd:
+  global:
+    # L'interface n'est pas exposée : elle s'ouvre par une redirection de port à travers le
+    # Bastion (docs/runbooks/acceder-a-argocd.md).
+    domain: localhost:8080
+    networkPolicy:
+      create: true
+      defaultDenyIngress: true
+
+  configs:
+    cm:
+      # Un seul compte, admin, joignable seulement à travers le Bastion.
+      admin.enabled: true
+      exec.enabled: false
+      statusbadge.enabled: false
+
+  dex:
+    enabled: false
+
+  notifications:
+    enabled: false
+
+  # L'application racine suffit à décrire les applications : pas de générateur.
+  applicationSet:
+    replicas: 0
+
+  # Les demandes réservent le minimum mesuré, les limites de mémoire protègent le nœud de
+  # travail (6 Go). Pas de limite de processeur : elle ralentirait les synchronisations sans
+  # protéger le nœud.
+  controller:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 768Mi
+
+  repoServer:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        memory: 512Mi
+
+  server:
+    resources:
+      requests:
+        cpu: 25m
+        memory: 96Mi
+      limits:
+        memory: 256Mi
+
+  redis:
+    resources:
+      requests:
+        cpu: 25m
+        memory: 32Mi
+      limits:
+        memory: 128Mi

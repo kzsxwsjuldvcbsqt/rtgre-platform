@@ -1,0 +1,10 @@
+apiVersion: v2
+name: argocd
+description: Argo CD de la plateforme, à partir du chart officiel et des valeurs de ce dépôt.
+type: application
+version: 0.1.0
+dependencies:
+  # Argo CD 3.6 est testé avec Kubernetes 1.34 à 1.37.
+  - name: argo-cd
+    version: 10.18.2
+    repository: oci://ghcr.io/argoproj/argo-helm

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: apps
+description: Application racine d'Argo CD, qui déclare les projets et les applications de la plateforme.
+type: application
+version: 0.1.0
