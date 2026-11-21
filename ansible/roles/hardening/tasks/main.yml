@@ -1,0 +1,14 @@
+---
+- name: Harden SSH
+  ansible.builtin.import_tasks: ssh.yml
+
+- name: Configure the local firewall
+  ansible.builtin.import_tasks: firewall.yml
+  when: hardening_firewall_enabled
+
+- name: Configure unattended security upgrades
+  ansible.builtin.import_tasks: upgrades.yml
+  when: hardening_unattended_upgrades_enabled
+
+- name: Harden kernel parameters
+  ansible.builtin.import_tasks: sysctl.yml

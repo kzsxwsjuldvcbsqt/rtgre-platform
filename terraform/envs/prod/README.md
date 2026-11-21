@@ -42,3 +42,13 @@ terraform apply prod.tfplan
 | GitHub Actions | `SecurityToken` | profil écrit par `.github/actions/oci-login` |
 
 Le backend et `terraform_remote_state` utilisent la même authentification que le provider.
+
+## Déploiement par la CI
+
+Le workflow `Terraform` décrit dans l'[ADR 0007](../../../docs/adr/0007-appliquer-la-prod-depuis-la-ci-apres-approbation.md) :
+
+1. sur chaque pull request qui touche la prod ou les modules, il publie le plan en commentaire ;
+2. après la fusion, il recalcule le plan sur `main` et l'enregistre ;
+3. s'il y a des changements, le job `Apply (prod)` attend une approbation dans l'onglet Actions, puis applique ce plan tel quel.
+
+En CI, la région, le bucket et le namespace viennent des variables du dépôt (`OCI_REGION`, `OCI_STATE_BUCKET`) et d'Oracle : `terraform.tfvars` et `backend.hcl` ne servent qu'au poste.

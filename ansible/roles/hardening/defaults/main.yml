@@ -1,0 +1,73 @@
+---
+# SSH -------------------------------------------------------------------------
+
+# Port d'écoute de sshd. Les nœuds ne l'exposent pas à Internet : l'accès passe par le service Bastion.
+hardening_ssh_port: 22
+
+# Seuls ces comptes peuvent ouvrir une session SSH.
+hardening_ssh_allowed_users:
+  - ubuntu
+
+# Options écrites dans /etc/ssh/sshd_config.d/. sshd retient la première valeur lue pour une option :
+# le fichier est préfixé par 10 pour passer avant ceux de l'image (60-cloudimg-settings.conf).
+hardening_ssh_options:
+  PermitRootLogin: "no"
+  PasswordAuthentication: "no"
+  KbdInteractiveAuthentication: "no"
+  PubkeyAuthentication: "yes"
+  AuthenticationMethods: publickey
+  MaxAuthTries: 3
+  LoginGraceTime: 30
+  ClientAliveInterval: 300
+  ClientAliveCountMax: 2
+  X11Forwarding: "no"
+  AllowAgentForwarding: "no"
+  AllowTcpForwarding: "no"
+  PermitUserEnvironment: "no"
+
+# Pare-feu local -----------------------------------------------------------------
+
+# Défense en profondeur derrière les groupes de sécurité réseau d'Oracle.
+hardening_firewall_enabled: true
+
+# Plages autorisées sans restriction de port : le réseau virtuel (trafic entre nœuds) et, une fois
+# Kubernetes installé, la plage des pods. Vide par défaut : chaque environnement les fournit.
+hardening_firewall_trusted_cidrs: []
+
+# Ports TCP ouverts depuis n'importe quelle adresse, en plus de SSH.
+hardening_firewall_public_tcp_ports: []
+
+# Les images Ubuntu d'Oracle Cloud chargent au démarrage des règles iptables (iptables-persistent)
+# qui rejettent tout sauf SSH. Elles sont retirées au profit d'ufw.
+hardening_firewall_remove_iptables_persistent: true
+
+# Mises à jour ------------------------------------------------------------------
+
+# Mises à jour de sécurité installées automatiquement.
+hardening_unattended_upgrades_enabled: true
+
+# Pas de redémarrage automatique : un nœud Kubernetes doit être vidé avant de redémarrer.
+hardening_unattended_upgrades_automatic_reboot: false
+
+# Noyau ------------------------------------------------------------------------
+
+# Paramètres écrits dans /etc/sysctl.d/. Ceux qui touchent au routage (ip_forward) relèvent du
+# rôle qui prépare Kubernetes, pas de celui-ci.
+hardening_sysctl:
+  kernel.kptr_restrict: 2
+  kernel.dmesg_restrict: 1
+  fs.protected_hardlinks: 1
+  fs.protected_symlinks: 1
+  net.ipv4.conf.all.accept_redirects: 0
+  net.ipv4.conf.default.accept_redirects: 0
+  net.ipv4.conf.all.send_redirects: 0
+  net.ipv4.conf.default.send_redirects: 0
+  net.ipv4.conf.all.accept_source_route: 0
+  net.ipv4.conf.default.accept_source_route: 0
+  net.ipv4.conf.all.log_martians: 1
+  net.ipv6.conf.all.accept_redirects: 0
+  net.ipv6.conf.default.accept_redirects: 0
+
+# Applique les paramètres au noyau en cours. Désactivé dans les tests en conteneur, qui partagent
+# le noyau de la machine hôte.
+hardening_sysctl_apply: true

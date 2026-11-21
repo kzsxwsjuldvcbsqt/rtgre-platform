@@ -1,0 +1,21 @@
+---
+# Reproduit les images Ubuntu d'Oracle Cloud, qui chargent des règles iptables au démarrage.
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Preseed iptables-persistent to skip its interactive questions
+      ansible.builtin.debconf:
+        name: iptables-persistent
+        question: "iptables-persistent/{{ item }}"
+        value: "false"
+        vtype: boolean
+      loop:
+        - autosave_v4
+        - autosave_v6
+
+    - name: Install iptables-persistent as on Oracle images
+      ansible.builtin.apt:
+        name: iptables-persistent
+        state: present
+        update_cache: true
