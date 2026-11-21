@@ -18,6 +18,13 @@ cilium_values:
   tunnelProtocol: vxlan
   operator:
     replicas: 1
+  # Les certificats (CA de Cilium, TLS de Hubble) sont générés dans le cluster par un Job puis
+  # renouvelés par un CronJob. Avec la méthode par défaut, helm template en génère de nouveaux à
+  # chaque rendu : chaque passage d'Ansible remplacerait la CA.
+  hubble:
+    tls:
+      auto:
+        method: cronJob
 
 # Kubeconfig d'administration sur le plan de contrôle.
 cilium_kubeconfig: /etc/kubernetes/admin.conf
