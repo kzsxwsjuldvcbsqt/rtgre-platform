@@ -1,0 +1,16 @@
+# Règles d'alerte de files/alerts.yaml. Chaque annotation « runbook » devient « runbook_url »,
+# le lien que le message d'alerte présente.
+{{- $rules := .Files.Get "files/alerts.yaml" | fromYaml }}
+{{- range $group := $rules.groups }}
+{{- range $rule := $group.rules }}
+{{- $runbook := required (printf "L'alerte %s n'a pas de runbook" $rule.alert) $rule.annotations.runbook }}
+{{- $_ := set $rule.annotations "runbook_url" (printf "%s/%s" $.Values.alerting.runbookBaseUrl $runbook) }}
+{{- $_ := unset $rule.annotations "runbook" }}
+{{- end }}
+{{- end }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: monitoring-alerts
+spec:
+  {{- toYaml $rules | nindent 2 }}

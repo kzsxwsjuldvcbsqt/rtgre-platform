@@ -225,3 +225,42 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
+---
+# Alertmanager ne reçoit que Prometheus, qui lui envoie les alertes et lit ses métriques, et ne
+# sort que vers Telegram.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: alertmanager
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: alertmanager
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: prometheus
+      toPorts:
+        - ports:
+            - port: "9093"
+              protocol: TCP
+            - port: "8080"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
+    - toFQDNs:
+        - matchName: {{ .Values.alerting.telegram.host }}
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

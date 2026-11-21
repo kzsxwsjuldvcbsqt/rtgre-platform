@@ -1,0 +1,147 @@
+# Règles d'alerte de la plateforme, au format de Prometheus. promtool les vérifie et les teste
+# (tests/alerts_test.yaml), puis templates/alerts.yaml les rend en PrometheusRule et change
+# chaque annotation « runbook », un fichier de docs/runbooks, en lien.
+#
+# severity: critical  les visiteurs sont touchés maintenant
+# severity: warning   ils le seront si rien n'est fait
+groups:
+  - name: site
+    rules:
+      - alert: SiteInjoignable
+        expr: probe_success{job="site"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.instance }} ne répond plus"
+          description: La sonde du cluster n'obtient plus de réponse valide en HTTPS depuis cinq minutes.
+          runbook: site-injoignable.md
+
+      - alert: GenerationEnEchec
+        expr: time() - kube_cronjob_status_last_successful_time{namespace="rtgre", cronjob="rtgre-generator"} > 3 * 3600
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Le site n'est plus régénéré
+          description: >-
+            Dernière génération réussie il y a {{ $value | humanizeDuration }}. Le site publié reste en ligne,
+            mais il date.
+          runbook: suivre-la-generation-du-site.md
+
+      - alert: CertificatExpireBientot
+        expr: certmanager_certificate_expiration_timestamp_seconds - time() < 14 * 86400
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Le certificat {{ $labels.exported_namespace }}/{{ $labels.name }} expire bientôt"
+          description: "Il expire dans {{ $value | humanizeDuration }}. Il aurait dû être renouvelé trente jours avant."
+          runbook: suivre-les-certificats.md
+
+      - alert: CertificatNonPret
+        expr: certmanager_certificate_ready_status{condition="True"} == 0
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Le certificat {{ $labels.exported_namespace }}/{{ $labels.name }} n'est pas prêt"
+          description: cert-manager n'arrive pas à l'obtenir ou à le renouveler depuis une heure.
+          runbook: suivre-les-certificats.md
+
+  - name: journaux
+    rules:
+      # Le serveur web est remplacé chaque semaine, et ses journaux de visite avec lui. Au-delà de
+      # huit jours, ce remplacement n'a pas eu lieu ; la limite promise est de quatorze (ADR 0014).
+      - alert: JournauxDeVisiteTropAnciens
+        expr: time() - min(kube_pod_start_time{namespace="rtgre", pod=~"rtgre-web-.*"}) > 8 * 86400
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: Les journaux de visite n'ont pas été supprimés cette semaine
+          description: >-
+            Le serveur web tourne depuis {{ $value | humanizeDuration }}. La limite promise aux visiteurs est de
+            quatorze jours.
+          runbook: retablir-la-conservation-des-journaux.md
+
+      - alert: ConservationDeLokiEnPanne
+        expr: time() - loki_compactor_apply_retention_last_successful_run_timestamp_seconds > 6 * 3600
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: Loki ne supprime plus les journaux anciens
+          description: >-
+            Dernière suppression réussie il y a {{ $value | humanizeDuration }}. Loki doit tout supprimer après
+            treize jours.
+          runbook: retablir-la-conservation-des-journaux.md
+
+  - name: plateforme
+    rules:
+      # Sous 15 % de place, le kubelet expulse des pods : l'alerte doit partir avant.
+      - alert: NoeudDisquePresquePlein
+        expr: >-
+          node_filesystem_avail_bytes{mountpoint="/", fstype!~"tmpfs|overlay"}
+          / node_filesystem_size_bytes{mountpoint="/", fstype!~"tmpfs|overlay"} < 0.25
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Le disque de {{ $labels.instance }} est presque plein"
+          description: >-
+            Il reste {{ $value | humanizePercentage }} de place. Ce disque porte aussi les volumes et les
+            images.
+          runbook: noeud-a-court-de-ressources.md
+
+      - alert: NoeudMemoirePresquePleine
+        expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.10
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "La mémoire de {{ $labels.instance }} est presque pleine"
+          description: "Il reste {{ $value | humanizePercentage }} de mémoire disponible."
+          runbook: noeud-a-court-de-ressources.md
+
+      - alert: PodEnBoucle
+        expr: increase(kube_pod_container_status_restarts_total[30m]) >= 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.namespace }}/{{ $labels.pod }} redémarre en boucle"
+          description: >-
+            Le conteneur {{ $labels.container }} a redémarré {{ $value | humanize }} fois en trente minutes.
+          runbook: diagnostiquer-un-pod.md
+
+      - alert: CibleInjoignable
+        expr: up == 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus ne joint plus {{ $labels.job }}"
+          description: >-
+            La cible {{ $labels.instance }} ne répond plus depuis un quart d'heure : ses métriques manquent.
+          runbook: diagnostiquer-un-pod.md
+
+      - alert: ApplicationDesynchronisee
+        expr: argocd_app_info{sync_status!="Synced"} == 1
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "L'application {{ $labels.name }} ne correspond plus au dépôt"
+          description: "Argo CD la voit « {{ $labels.sync_status }} » depuis trente minutes."
+          runbook: retablir-une-application-argocd.md
+
+      - alert: ApplicationDegradee
+        expr: argocd_app_info{health_status!="Healthy"} == 1
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "L'application {{ $labels.name }} n'est pas saine"
+          description: "Argo CD la voit « {{ $labels.health_status }} » depuis trente minutes."
+          runbook: retablir-une-application-argocd.md
