@@ -53,3 +53,23 @@ jobs:
       - name: Scan dependencies for known vulnerabilities
         if: matrix.scan == 'vulnerabilities'
         run: trivy fs --scanners vuln .
+
+  images:
+    name: Trivy (images)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned tools
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          version: ${{ env.MISE_VERSION }}
+
+      # Chaque image que les charts de kubernetes/ déploient, pour la plateforme des nœuds.
+      - name: Scan the deployed images for known vulnerabilities
+        run: scripts/ci/scan-images.sh

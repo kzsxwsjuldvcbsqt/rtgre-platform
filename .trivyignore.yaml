@@ -7,3 +7,157 @@ misconfigurations:
       Conteneurs de test Molecule : ils font tourner systemd et appliquent les rôles comme root sur un
       nœud. Ils ne sont jamais déployés.
     expired_at: 2027-11-21
+
+vulnerabilities:
+  # Images déployées par les charts de kubernetes/ (scripts/ci/scan-images.sh). Chaque exception
+  # attend une version que l'éditeur n'a pas encore publiée : à l'échéance, l'analyse échoue de
+  # nouveau et l'exception est réexaminée. « paths » la limite aux binaires concernés.
+
+  # Go : bibliothèque standard et golang.org/x/net, dans presque toutes les images écrites en Go.
+  - id: CVE-2026-97054
+    statement: &go >-
+      Dénis de service dans la bibliothèque standard de Go (réponses HTTP/1) et dans golang.org/x/net (analyse
+      HTML). Presque toutes les images écrites en Go les portent : Prometheus, son opérateur, Alertmanager, la
+      sonde, kube-state-metrics, cert-manager, Argo CD, Grafana, Loki et Alloy. Au 2026-11-21, aucune de leurs
+      dernières versions n'est reconstruite avec le correctif. Hors du solveur de défis de cert-manager, joignable
+      quelques secondes à chaque renouvellement, aucun de ces services ne reçoit de trafic d'Internet.
+    expired_at: 2027-01-31
+  - id: CVE-2026-78661
+    statement: *go
+    expired_at: 2027-01-31
+
+  # Argo CD et kube-state-metrics : anciennes versions de Go.
+  - id: CVE-2026-111943
+    paths:
+      - kube-state-metrics
+      - usr/bin/pebble
+      - usr/local/bin/kustomize
+    statement: &argocd-ksm >-
+      Outils embarqués dans l'image d'Argo CD 3.6.2 (pebble, git-lfs, kustomize) et binaire de kube-state-metrics
+      2.20.0, construits avec d'anciennes versions de Go et de ses modules. Le binaire d'Argo CD n'est pas
+      concerné. Ce sont les dernières versions publiées au 2026-11-21. Argo CD n'est joignable que par le Bastion,
+      et kube-state-metrics ne reçoit que Prometheus.
+    expired_at: 2027-01-31
+  - id: CVE-2026-56851
+    paths:
+      - kube-state-metrics
+      - usr/local/bin/git-lfs
+    statement: *argocd-ksm
+    expired_at: 2027-01-31
+  - id: CVE-2026-56854
+    paths:
+      - kube-state-metrics
+      - usr/local/bin/git-lfs
+    statement: *argocd-ksm
+    expired_at: 2027-01-31
+  - id: CVE-2026-78667
+    paths:
+      - kube-state-metrics
+      - usr/bin/pebble
+      - usr/local/bin/kustomize
+    statement: *argocd-ksm
+    expired_at: 2027-01-31
+  - id: CVE-2026-78669
+    paths:
+      - kube-state-metrics
+      - usr/bin/pebble
+      - usr/local/bin/git-lfs
+      - usr/local/bin/kustomize
+    statement: *argocd-ksm
+    expired_at: 2027-01-31
+  - id: CVE-2026-97031
+    paths:
+      - kube-state-metrics
+      - usr/bin/pebble
+      - usr/local/bin/kustomize
+    statement: *argocd-ksm
+    expired_at: 2027-01-31
+
+  # Argo CD : outils embarqués dans l'image.
+  - id: CVE-2026-33818
+    paths:
+      - usr/bin/pebble
+    statement: &argocd >-
+      Outils embarqués dans l'image d'Argo CD 3.6.2 (pebble, git-lfs, kustomize), construits avec d'anciennes
+      versions de Go. Le binaire d'Argo CD n'est pas concerné. 3.6.2 est la dernière version publiée au
+      2026-11-21, et Argo CD n'est joignable que par le Bastion.
+    expired_at: 2027-01-31
+  - id: CVE-2026-39821
+    paths:
+      - usr/bin/pebble
+    statement: *argocd
+    expired_at: 2027-01-31
+  - id: CVE-2026-46600
+    paths:
+      - usr/bin/pebble
+    statement: *argocd
+    expired_at: 2027-01-31
+  - id: CVE-2026-56853
+    paths:
+      - usr/bin/pebble
+    statement: *argocd
+    expired_at: 2027-01-31
+  - id: CVE-2026-56858
+    paths:
+      - usr/bin/pebble
+    statement: *argocd
+    expired_at: 2027-01-31
+  - id: CVE-2026-56859
+    paths:
+      - usr/bin/pebble
+    statement: *argocd
+    expired_at: 2027-01-31
+  - id: CVE-2026-56860
+    paths:
+      - usr/bin/pebble
+    statement: *argocd
+    expired_at: 2027-01-31
+  - id: CVE-2026-56862
+    paths:
+      - usr/bin/pebble
+    statement: *argocd
+    expired_at: 2027-01-31
+
+  # kube-state-metrics : ancienne version de gRPC.
+  - id: CVE-2026-84304
+    paths:
+      - kube-state-metrics
+    statement: &ksm >-
+      kube-state-metrics 2.20.0, dernière version publiée au 2026-11-21, est lié à une ancienne version de gRPC.
+      Il n'expose aucun service gRPC et ne reçoit que Prometheus.
+    expired_at: 2027-01-31
+  - id: CVE-2026-84445
+    paths:
+      - kube-state-metrics
+    statement: *ksm
+    expired_at: 2027-01-31
+  - id: GHSA-hrxh-6v49-42gf
+    paths:
+      - kube-state-metrics
+    statement: *ksm
+    expired_at: 2027-01-31
+
+  # Grafana : module Tempo.
+  - id: CVE-2026-21728
+    paths:
+      - usr/share/grafana/bin/grafana
+    statement: &grafana >-
+      Module Tempo lié dans Grafana 13.1.10, dernière version de la branche 13.1 ; les branches plus récentes
+      portent davantage de vulnérabilités (ADR 0016). Grafana n'interroge aucun Tempo, est en lecture seule et
+      n'est joignable que par le Bastion.
+    expired_at: 2027-01-31
+  - id: CVE-2026-28377
+    paths:
+      - usr/share/grafana/bin/grafana
+    statement: *grafana
+    expired_at: 2027-01-31
+
+  # cert-manager : go-jose.
+  - id: CVE-2026-116587
+    paths:
+      - app/cmd/controller/controller
+    statement: &cert-manager >-
+      Déni de service à la lecture d'une clé JWK, dans le contrôleur de cert-manager 1.21.3, dernière version
+      publiée au 2026-11-21. Le correctif est fusionné dans la branche release-1.21 : la prochaine version
+      corrective l'apportera.
+    expired_at: 2027-01-31

@@ -32,6 +32,10 @@ run = [
   "ansible-galaxy collection install --upgrade -r ansible/requirements.yml -p ansible/collections",
 ]
 
+[tasks.images-scan]
+description = "Analyse avec Trivy chaque image déployée par les charts de kubernetes/"
+run = "scripts/ci/scan-images.sh"
+
 [tasks.kubernetes-validate]
 description = "Vérifie les charts de kubernetes/ : helm lint, rendu, kubeconform, alertes et signature des images"
 run = [
