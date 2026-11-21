@@ -1,0 +1,27 @@
+---
+argument_specs:
+  main:
+    short_description: Installe ou met à jour Cilium sur le plan de contrôle.
+    options:
+      cilium_chart_version:
+        type: str
+        description: Version du chart Helm de Cilium.
+      cilium_chart_repository:
+        type: str
+        description: Dépôt Helm de Cilium.
+      cilium_kubernetes_version:
+        type: str
+        required: true
+        description: Version de Kubernetes visée, sans le préfixe v.
+      cilium_namespace:
+        type: str
+        description: Espace de noms de Cilium.
+      cilium_values:
+        type: dict
+        description: Valeurs du chart.
+      cilium_kubeconfig:
+        type: str
+        description: Kubeconfig d'administration sur le plan de contrôle.
+      cilium_manifest_path:
+        type: str
+        description: Emplacement du manifeste rendu sur le plan de contrôle.
