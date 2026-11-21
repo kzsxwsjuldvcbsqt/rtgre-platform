@@ -1,0 +1,11 @@
+apiVersion: v2
+name: gateway
+description: Passerelle du cluster, Traefik en contrôleur Gateway API, et ses règles réseau.
+type: application
+version: 0.1.0
+dependencies:
+  # Traefik 3.7 prend en charge Gateway API v1.6.3 (canal standard) : les CRD de l'application
+  # gateway-api, dans kubernetes/apps/values.yaml, doivent rester à cette version.
+  - name: traefik
+    version: 42.4.1
+    repository: oci://ghcr.io/traefik/helm

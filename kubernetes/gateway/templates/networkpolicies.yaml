@@ -1,0 +1,44 @@
+# Par défaut, rien n'entre dans l'espace de noms et rien n'en sort.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Traefik ne reçoit que le load balancer, et ne sort que vers l'API de Kubernetes, pour lire les
+# routes, et vers les applications exposées. Une politique de Cilium, car une NetworkPolicy ne
+# sait pas désigner l'API de Kubernetes, qui tourne sur un nœud.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: traefik
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: traefik
+  ingress:
+    - fromCIDR:
+        - {{ .Values.loadBalancerCidr }}
+      toPorts:
+        - ports:
+            - port: {{ .Values.traefik.ports.web.port | default 8000 | quote }}
+              protocol: TCP
+            - port: {{ .Values.traefik.ports.websecure.port | default 8443 | quote }}
+              protocol: TCP
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+    - toEndpoints:
+        - matchExpressions:
+            - key: k8s:io.kubernetes.pod.namespace
+              operator: In
+              values:
+                {{- toYaml .Values.routeNamespaces | nindent 16 }}

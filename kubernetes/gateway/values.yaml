@@ -1,0 +1,76 @@
+# Sous-réseau du load balancer, défini dans terraform/envs/prod/prod.auto.tfvars (vcn_cidr,
+# subnet_newbits et subnet_netnums). Seul ce sous-réseau joint la passerelle, et le PROXY
+# protocol n'est accepté que de lui.
+loadBalancerCidr: &loadBalancerCidr 10.20.10.0/24
+
+# Espaces de noms dont les routes peuvent s'attacher à la passerelle, et vers lesquels elle
+# a le droit de sortir.
+routeNamespaces: &routeNamespaces
+  - rtgre
+
+# Valeurs du chart officiel traefik (ADR 0012).
+traefik:
+  global:
+    # Aucune sortie vers Internet : ni recherche de version ni statistiques.
+    checkNewVersion: false
+    sendAnonymousUsage: false
+
+  # Traefik ne sert que Gateway API : ni Ingress ni ses propres IngressRoute.
+  providers:
+    kubernetesGateway:
+      enabled: true
+    kubernetesCRD:
+      enabled: false
+    kubernetesIngress:
+      enabled: false
+  ingressClass:
+    enabled: false
+  api:
+    dashboard: false
+
+  gatewayClass:
+    name: traefik
+
+  # Passerelle publique. Avec Traefik, le port d'une écoute est celui de son point d'entrée
+  # dans le pod, pas le port public : 8000 reçoit le port 80 du load balancer.
+  gateway:
+    name: public
+    listeners:
+      web:
+        port: 8000
+        protocol: HTTP
+        namespacePolicy:
+          from: Selector
+          selector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: *routeNamespaces
+
+  # Ports fixes des nœuds, que vise le load balancer (load_balancer_listeners dans
+  # terraform/envs/prod/prod.auto.tfvars). Il transmet l'adresse du client par le PROXY protocol.
+  ports:
+    web:
+      nodePort: 30080
+      proxyProtocol:
+        trustedIPs:
+          - *loadBalancerCidr
+    websecure:
+      nodePort: 30443
+      proxyProtocol:
+        trustedIPs:
+          - *loadBalancerCidr
+
+  service:
+    spec:
+      type: NodePort
+      # L'adresse du load balancer n'est pas masquée par le nœud : sans cela, Traefik ne
+      # reconnaîtrait pas la source autorisée à envoyer le PROXY protocol.
+      externalTrafficPolicy: Local
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 192Mi
