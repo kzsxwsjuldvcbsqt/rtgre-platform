@@ -1,0 +1,4 @@
+# Valeurs propres au poste : copier ce fichier en terraform.tfvars, qui n'est pas suivi par Git.
+region                  = "eu-paris-1"
+state_bucket            = "<sortie state_bucket du bootstrap>"
+objectstorage_namespace = "<sortie objectstorage_namespace du bootstrap>"
