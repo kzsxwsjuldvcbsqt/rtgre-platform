@@ -29,6 +29,15 @@ spec:
               protocol: TCP
             - port: {{ .Values.traefik.ports.websecure.port | default 8443 | quote }}
               protocol: TCP
+    # Prometheus lit les métriques (kubernetes/monitoring).
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: monitoring
+            app.kubernetes.io/name: prometheus
+      toPorts:
+        - ports:
+            - port: "9100"
+              protocol: TCP
   egress:
     - toEntities:
         - kube-apiserver

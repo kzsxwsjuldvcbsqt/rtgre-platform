@@ -82,6 +82,15 @@ traefik:
         trustedIPs:
           - *loadBalancerCidr
 
+  # Métriques de Traefik : requêtes, codes de réponse et durées, par écoute et par service. Elles
+  # ne contiennent aucune adresse de visiteur.
+  metrics:
+    prometheus:
+      service:
+        enabled: true
+      serviceMonitor:
+        enabled: true
+
   service:
     spec:
       type: NodePort
