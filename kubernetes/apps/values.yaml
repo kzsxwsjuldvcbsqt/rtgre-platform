@@ -21,6 +21,7 @@ argocdNamespace: argocd
 #   skipCrds        : true pour ne pas installer les CRD que le chart embarque
 #   source          : dépôt, révision et dossier d'une source extérieure, à la place du chart
 #                     de ce dépôt
+#   extraNamespaces : autres espaces de noms où le chart crée des objets
 applications:
   argocd:
     namespace: argocd
@@ -62,6 +63,23 @@ applications:
       # renovate-digest: datasource=github-tags depName=kubernetes-sigs/gateway-api
       targetRevision: c0836133e24073fcdcdbb1713aba3cc73a89d0b5 # v1.6.3
       path: config/crd/standard
+  # Métriques : Prometheus, son opérateur et kube-state-metrics. Le chart crée aussi, dans
+  # kube-system, le Service qui expose les métriques de CoreDNS. Retirer l'application ne
+  # supprime rien : ses CRD emporteraient les cibles et les règles des autres charts.
+  monitoring:
+    namespace: monitoring
+    namespaceLabels:
+      pod-security.kubernetes.io/enforce: restricted
+    extraNamespaces:
+      - kube-system
+    cascade: false
+    serverSideApply: true
+  # Métriques des nœuds. Seul espace de noms privilégié : node-exporter lit le système hôte.
+  node-exporter:
+    namespace: node-exporter
+    namespaceLabels:
+      pod-security.kubernetes.io/enforce: privileged
+    cascade: true
   rtgre:
     namespace: rtgre
     namespaceLabels:
