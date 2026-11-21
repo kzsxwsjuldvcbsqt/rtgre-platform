@@ -1,0 +1,9 @@
+---
+- name: Prepare the kernel
+  ansible.builtin.import_tasks: kernel.yml
+
+- name: Install and configure containerd
+  ansible.builtin.import_tasks: containerd.yml
+
+- name: Install the Kubernetes packages
+  ansible.builtin.import_tasks: packages.yml

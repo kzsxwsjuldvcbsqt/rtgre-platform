@@ -1,0 +1,41 @@
+---
+- name: Declare the kernel modules to load at boot
+  ansible.builtin.template:
+    src: modules-load.conf.j2
+    dest: /etc/modules-load.d/kubernetes.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Load the kernel modules now
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ kubernetes_node_kernel_modules }}"
+  when: kubernetes_node_load_modules
+
+- name: Set the kernel parameters required by Kubernetes
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value | string }}"
+    sysctl_file: /etc/sysctl.d/70-kubernetes.conf
+    sysctl_set: "{{ kubernetes_node_sysctl_apply }}"
+    reload: "{{ kubernetes_node_sysctl_apply }}"
+    state: present
+  loop: "{{ kubernetes_node_sysctl | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+
+- name: Disable swap
+  when: kubernetes_node_disable_swap
+  block:
+    - name: Turn swap off
+      ansible.builtin.command: swapoff --all
+      register: kubernetes_node_swapoff
+      changed_when: false
+
+    - name: Remove swap entries from fstab
+      ansible.builtin.replace:
+        path: /etc/fstab
+        regexp: '^([^#].*\sswap\s.*)$'
+        replace: '# \1'
