@@ -1,0 +1,23 @@
+# Inventaire dynamique : les nœuds sont lus dans Oracle Cloud à chaque exécution, jamais
+# recopiés. Seules les instances en marche créées par la configuration terraform/envs/prod
+# sont retenues, grâce aux tags posés par Terraform.
+plugin: oracle.oci.oci
+
+fetch_compute_hosts: true
+fetch_db_hosts: false
+primary_vnic_only: true
+
+hostname_format_preferences:
+  - hostname_label
+
+include_host_filters:
+  - "freeform_tags.get('stack') == 'envs/prod' and lifecycle_state == 'RUNNING'"
+
+# Groupes k8s_control_plane et k8s_worker, d'après le tag posé par le module compute.
+keyed_groups:
+  - key: freeform_tags['kubernetes-role']
+    prefix: k8s
+    separator: _
+
+compose:
+  ansible_host: private_ip
