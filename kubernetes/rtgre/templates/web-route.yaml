@@ -14,6 +14,12 @@ spec:
   hostnames:
     {{- toYaml .Values.hostnames | nindent 4 }}
   rules:
-    - backendRefs:
+    - filters:
+        - type: ResponseHeaderModifier
+          responseHeaderModifier:
+            set:
+              - name: Strict-Transport-Security
+                value: {{ .Values.hsts }}
+      backendRefs:
         - name: rtgre-web
           port: 80

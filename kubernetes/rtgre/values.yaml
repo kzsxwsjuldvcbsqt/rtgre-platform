@@ -51,9 +51,15 @@ site:
 gateway:
   namespace: gateway
   name: public
-  # Écoute HTTP de la passerelle.
-  listener: web
+  # Écoute HTTPS de la passerelle. En HTTP, elle redirige tout vers HTTPS.
+  listener: websecure
 
-# Noms sous lesquels le site répond.
+# Noms sous lesquels le site répond. Chacun doit aussi figurer dans le certificat de la
+# passerelle (certificate.dnsNames dans kubernetes/gateway/values.yaml).
 hostnames:
   - rtgre.fr
+  - test.rtgre.fr
+
+# En-tête HSTS : le navigateur n'utilise plus que HTTPS pour ce nom pendant cette durée. Même
+# valeur que GitHub Pages, un an.
+hsts: max-age=31556952
