@@ -6,7 +6,7 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | --- | --- | --- |
 | [0001](0001-consigner-les-decisions-d-architecture.md) | Consigner les décisions d'architecture | accepté |
 | [0002](0002-heberger-sur-oracle-cloud-always-free.md) | Héberger sur Oracle Cloud Always Free | accepté |
-| [0003](0003-monter-kubernetes-avec-kubeadm.md) | Monter Kubernetes avec kubeadm | proposé |
+| [0003](0003-monter-kubernetes-avec-kubeadm.md) | Monter Kubernetes avec kubeadm | accepté |
 | [0004](0004-stocker-le-state-avec-le-backend-oci.md) | Stocker le state avec le backend oci natif | accepté |
 | [0005](0005-authentifier-la-ci-par-federation-d-identite.md) | Authentifier la CI par fédération d'identité | accepté |
 | [0006](0006-sortir-par-la-passerelle-internet-sans-nat.md) | Sortir par la passerelle Internet, sans NAT | accepté |
