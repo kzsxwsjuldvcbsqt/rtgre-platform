@@ -1,0 +1,6 @@
+---
+# Valeurs de DEFAULT_FORWARD_POLICY dans /etc/default/ufw, par politique.
+hardening_firewall_forward_policies:
+  allow: ACCEPT
+  deny: DROP
+  reject: REJECT

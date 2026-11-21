@@ -41,7 +41,11 @@
     direction: incoming
     default: deny
 
+# Écrite dans /etc/default/ufw plutôt qu'avec le module ufw : tant que le routage IPv4 est
+# désactivé, ufw affiche « disabled (routed) » et le module n'applique pas la politique demandée.
 - name: Set the policy for routed traffic
-  community.general.ufw:
-    direction: routed
-    default: "{{ hardening_firewall_routed_policy }}"
+  ansible.builtin.lineinfile:
+    path: /etc/default/ufw
+    regexp: "^DEFAULT_FORWARD_POLICY="
+    line: 'DEFAULT_FORWARD_POLICY="{{ hardening_firewall_forward_policies[hardening_firewall_routed_policy] }}"'
+  notify: Reload ufw

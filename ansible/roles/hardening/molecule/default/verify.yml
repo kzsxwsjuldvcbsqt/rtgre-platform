@@ -41,11 +41,20 @@
         that:
           - "'Status: active' in hardening_ufw_status.stdout"
           - "'Default: deny (incoming)' in hardening_ufw_status.stdout"
-          - "'allow (routed)' in hardening_ufw_status.stdout"
           - hardening_ufw_status.stdout is search('22/tcp\\s+ALLOW IN\\s+Anywhere')
           - hardening_ufw_status.stdout is search('443/tcp\\s+ALLOW IN\\s+Anywhere')
           - hardening_ufw_status.stdout is search('Anywhere\\s+ALLOW IN\\s+10\\.20\\.0\\.0/16')
         fail_msg: "Pare-feu inattendu : {{ hardening_ufw_status.stdout }}"
+
+    - name: Read the routed traffic policy
+      ansible.builtin.command: grep -E '^DEFAULT_FORWARD_POLICY=' /etc/default/ufw
+      register: hardening_forward_policy
+      changed_when: false
+
+    - name: Check that routed traffic follows the requested policy
+      ansible.builtin.assert:
+        that:
+          - hardening_forward_policy.stdout == 'DEFAULT_FORWARD_POLICY="ACCEPT"'
 
     - name: Gather installed packages
       ansible.builtin.package_facts:
