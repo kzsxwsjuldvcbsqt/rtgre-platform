@@ -1,0 +1,16 @@
+# Tout ce qui arrive en HTTP est redirigé vers HTTPS, quel que soit le nom. Les défis de
+# Let's Encrypt y échappent : leurs routes, plus précises, passent avant.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: https-redirect
+spec:
+  parentRefs:
+    - name: {{ .Values.traefik.gateway.name }}
+      sectionName: web
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301

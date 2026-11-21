@@ -1,0 +1,21 @@
+# Certificat des noms publics. cert-manager le demande à Let's Encrypt, le range dans le Secret
+# que lit l'écoute HTTPS, et le renouvelle un mois avant son expiration.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: public
+  annotations:
+    # Le type Certificate vient de l'application cert-manager, peut-être pas encore déployée.
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  secretName: {{ .Values.certificate.secretName }}
+  issuerRef:
+    kind: ClusterIssuer
+    name: {{ .Values.certificate.issuer }}
+  dnsNames:
+    {{- toYaml .Values.certificate.dnsNames | nindent 4 }}
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    # Une nouvelle clé à chaque renouvellement.
+    rotationPolicy: Always

@@ -42,3 +42,25 @@ spec:
               operator: In
               values:
                 {{- toYaml .Values.routeNamespaces | nindent 16 }}
+    # Les défis de Let's Encrypt : cert-manager lance un pod éphémère dans cet espace de noms.
+    - toEndpoints:
+        - matchLabels:
+            acme.cert-manager.io/http01-solver: "true"
+---
+# Le pod d'un défi ne reçoit que Traefik, et ne sort nulle part.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: acme-solver
+spec:
+  endpointSelector:
+    matchLabels:
+      acme.cert-manager.io/http01-solver: "true"
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: traefik
+      toPorts:
+        - ports:
+            - port: "8089"
+              protocol: TCP
