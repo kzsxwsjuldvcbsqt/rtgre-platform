@@ -21,6 +21,7 @@ backend.hcl
 # Paramètres d'environnement, sans secret : suivis par Git.
 !terraform/envs/*/*.auto.tfvars
 !terraform/bootstrap/*.auto.tfvars
+!terraform/dns/*.auto.tfvars
 # Les modules ne figent pas leurs providers : la configuration appelante le fait.
 terraform/modules/**/.terraform.lock.hcl
 
