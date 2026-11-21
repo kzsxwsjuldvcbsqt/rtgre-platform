@@ -35,6 +35,17 @@ La prod est déployée par le workflow `Terraform` : plan commenté sur chaque p
 
 ## Qualité
 
+| Outil | Ce qu'il vérifie |
+| --- | --- |
+| gitleaks | Secrets, dans les fichiers indexés et dans tout l'historique |
+| terraform fmt, validate, tflint | Code Terraform |
+| ansible-lint (profil `production`) | Code Ansible |
+| yamllint | Fichiers YAML |
+| zizmor, actionlint | Sécurité et validité des workflows GitHub Actions |
+| ShellCheck | Scripts shell et blocs `run` des workflows |
+| conventional-pre-commit | Format des messages de commit |
+| Molecule | Rôles Ansible, dans un conteneur Ubuntu 24.04 |
+
 Les contrôles sont décrits dans `.pre-commit-config.yaml` et s'exécutent avant chaque commit une fois les hooks installés :
 
 ```bash
