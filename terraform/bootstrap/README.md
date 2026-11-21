@@ -7,6 +7,7 @@ Socle de la tenancy Oracle Cloud, appliqué une fois avant tout le reste :
 - l'application par défaut de ces tags à toute ressource créée dans le compartiment ;
 - un budget mensuel sur toute la tenancy, qui alerte par e-mail dès la première dépense réelle et quand la prévision du mois dépasse le budget ;
 - le bucket privé et versionné `rtgre-platform-tfstate`, qui conserve le state de toutes les configurations Terraform, celui du bootstrap compris ;
+- des quotas qui limitent toute la tenancy aux ressources de l'offre Always Free ([ADR 0008](../../docs/adr/0008-passer-en-paiement-a-l-usage-sous-quotas.md)), avec leurs valeurs dans `free-tier.auto.tfvars` ;
 - l'identité de la CI : un utilisateur de service en lecture seule sur le compartiment, que GitHub Actions emprunte en échangeant son jeton OIDC (voir l'[ADR 0005](../../docs/adr/0005-authentifier-la-ci-par-federation-d-identite.md)).
 
 ## Prérequis
@@ -79,6 +80,7 @@ Le state du bootstrap vit dans le bucket que le bootstrap crée. Sur une tenancy
 - GitHub émet un sujet OIDC immuable, qui inclut les identifiants numériques du propriétaire et du dépôt (`repo:<propriétaire>@<id>/<dépôt>@<id>`). Le préfixe exact se lit avec `gh api repos/<propriétaire>/<dépôt>/actions/oidc/customization/sub`, champ `sub_claim_prefix`.
 - Une règle d'emprunt s'écrit sans apostrophes autour de la valeur (`sub eq repo:…`). Avec `sub eq 'repo:…'`, la forme des exemples d'Oracle, l'échange échoue avec « No rules matched ».
 - La règle d'emprunt d'une confiance attend l'identifiant SCIM de l'utilisateur. Avec son OCID, l'API refuse la valeur (40 caractères au plus).
+- Les quotas sont en liste blanche : chaque famille est mise à zéro, puis seules les ressources gratuites sont autorisées. Les ARM ont une limite par domaine de disponibilité **et** une limite régionale : il faut autoriser les deux. Pour vérifier un quota sans rien créer : `oci limits resource-availability get --service-name compute --limit-name <limite> --compartment-id <tenancy> --availability-domain <domaine>`.
 - Le state est verrouillé pendant chaque exécution. Pour un verrou bloqué ou un state à restaurer, voir le runbook [Restaurer un state Terraform](../../docs/runbooks/restaurer-un-state-terraform.md).
 - Le bucket du state est protégé par `prevent_destroy`. Un `destroy` complet demande de retirer volontairement cette protection.
 - La suppression d'un compartiment prend du temps côté Oracle, et un espace de tags doit être retiré avant de pouvoir être supprimé : un `destroy` complet n'est pas instantané.
