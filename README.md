@@ -30,19 +30,22 @@ La seconde commande installe les dépendances Python et les collections d'Ansibl
 | [`terraform/envs/prod`](terraform/envs/prod) | Environnement de production, assemblé à partir des modules |
 | [`terraform/modules`](terraform/modules) | Modules réutilisables et leurs conventions |
 | [`ansible`](ansible) | Configuration des nœuds : inventaire dynamique, rôles et playbooks |
+| [`kubernetes`](kubernetes) | Ce qui tourne dans le cluster, déployé par Argo CD : un chart par application |
 | [`docs/adr`](docs/adr) | Décisions d'architecture |
 | [`docs/runbooks`](docs/runbooks) | Procédures d'exploitation |
 | [`scripts`](scripts) | Ouverture des sessions du Bastion, tentatives d'apply sans capacité, aides à la CI |
 
 ## Déploiement
 
-La prod est déployée par le workflow `Terraform` : plan commenté sur chaque pull request, puis apply du plan enregistré sur `main` après approbation dans l'environnement GitHub `production`. La CI s'authentifie auprès d'Oracle sans clé API, par échange de son jeton OIDC.
+L'infrastructure est déployée par le workflow `Terraform` : plan commenté sur chaque pull request, puis apply du plan enregistré sur `main` après approbation dans l'environnement GitHub `production`. La CI s'authentifie auprès d'Oracle sans clé API, par échange de son jeton OIDC.
+
+Le contenu du cluster est déployé en GitOps par Argo CD ([ADR 0010](docs/adr/0010-deployer-en-gitops-avec-argo-cd.md)). Il suit le dossier `kubernetes/` de `main` avec une clé de déploiement en lecture seule, applique chaque changement dans les minutes qui suivent sa fusion et annule toute modification manuelle. Son interface n'est pas exposée : elle s'ouvre à travers le Bastion ([runbook](docs/runbooks/acceder-a-argocd.md)).
 
 ## Dépendances
 
-Toutes les versions sont épinglées : outils dans `mise.toml`, providers Terraform, hooks pre-commit, actions GitHub par SHA, dépendances d'Ansible, images de test par empreinte, Kubernetes et Cilium.
+Toutes les versions sont épinglées : outils dans `mise.toml`, providers Terraform, hooks pre-commit, actions GitHub par SHA, dépendances d'Ansible, images de test par empreinte, Kubernetes, Cilium et le chart d'Argo CD.
 
-- **Renovate** (`renovate.json`) propose les mises à jour, regroupées par écosystème, chaque lundi matin. Les correctifs de sécurité arrivent sans attendre. Une montée mineure de Kubernetes ou de Cilium attend une approbation dans le tableau de bord des dépendances, car leur compatibilité doit être vérifiée ([ADR 0009](docs/adr/0009-reseau-des-pods-avec-cilium.md)).
+- **Renovate** (`renovate.json`) propose les mises à jour, regroupées par écosystème, chaque lundi matin. Les correctifs de sécurité arrivent sans attendre. Une montée mineure de Kubernetes, de Cilium ou d'Argo CD attend une approbation dans le tableau de bord des dépendances, car leur compatibilité doit être vérifiée ([ADR 0009](docs/adr/0009-reseau-des-pods-avec-cilium.md), [ADR 0010](docs/adr/0010-deployer-en-gitops-avec-argo-cd.md)).
 - **Les alertes Dependabot** signalent une vulnérabilité publiée sur une dépendance en place.
 - **Le workflow `Security`** analyse chaque lundi les dépendances avec Trivy.
 
@@ -60,6 +63,7 @@ Toutes les versions sont épinglées : outils dans `mise.toml`, providers Terraf
 | Trivy | Mauvaises configurations (Terraform, Dockerfile) et vulnérabilités des dépendances, HIGH et CRITICAL bloquantes ; exceptions datées dans `.trivyignore.yaml` |
 | conventional-pre-commit | Format des messages de commit |
 | Molecule | Rôles Ansible, dans un conteneur Ubuntu 24.04 |
+| helm lint, kubeconform | Charts de `kubernetes/`, rendus pour la version de Kubernetes du cluster (`mise run kubernetes-validate`) |
 
 Les contrôles sont décrits dans `.pre-commit-config.yaml` et s'exécutent avant chaque commit une fois les hooks installés :
 
