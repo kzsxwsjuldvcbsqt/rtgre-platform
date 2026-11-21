@@ -19,17 +19,14 @@
     state: present
   register: kubernetes_node_repository
 
-- name: Refresh the package lists after adding the repository
-  ansible.builtin.apt:
-    update_cache: true
-  when: kubernetes_node_repository is changed
-
 # allow_change_held_packages permet de changer la version de paquets déjà bloqués.
 - name: Install the Kubernetes packages at the requested version
   ansible.builtin.apt:
     name: "{{ kubernetes_node_packages | map('regex_replace', '$', '=' ~ kubernetes_node_version ~ '-*') | list }}"
     state: present
     allow_change_held_packages: true
+    # L'index n'est rafraîchi que si le dépôt vient d'être ajouté ou modifié.
+    update_cache: "{{ kubernetes_node_repository is changed }}"
 
 - name: Install the tools at the Kubernetes minor version
   ansible.builtin.apt:
