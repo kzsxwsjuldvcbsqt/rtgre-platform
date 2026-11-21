@@ -20,3 +20,4 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | [0014](0014-journaux-de-visite-sans-adresse-complete.md) | Journaux de visite sans adresse complète | accepté |
 | [0015](0015-metriques-avec-prometheus-et-son-operateur.md) | Métriques avec Prometheus et son opérateur | accepté |
 | [0016](0016-grafana-en-lecture-seule-sans-compte.md) | Grafana en lecture seule, sans compte | accepté |
+| [0017](0017-journaux-avec-loki-et-alloy.md) | Journaux avec Loki et Alloy | accepté |

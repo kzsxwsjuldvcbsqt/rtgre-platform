@@ -63,6 +63,12 @@ applications:
       # renovate-digest: datasource=github-tags depName=kubernetes-sigs/gateway-api
       targetRevision: c0836133e24073fcdcdbb1713aba3cc73a89d0b5 # v1.6.3
       path: config/crd/standard
+  # Journaux : Loki les conserve, Alloy les lit par l'API de Kubernetes.
+  logging:
+    namespace: logging
+    namespaceLabels:
+      pod-security.kubernetes.io/enforce: restricted
+    cascade: true
   # Métriques : Prometheus, son opérateur et kube-state-metrics. Le chart crée aussi, dans
   # kube-system, le Service qui expose les métriques de CoreDNS. Retirer l'application ne
   # supprime rien : ses CRD emporteraient les cibles et les règles des autres charts.

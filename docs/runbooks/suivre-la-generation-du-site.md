@@ -44,7 +44,7 @@ Si le nom d'ADE change, il se corrige à deux endroits : la configuration du sit
 ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre logs deploy/rtgre-web -c nginx
 ```
 
-Chaque ligne porte le réseau du visiteur, jamais son adresse ([ADR 0014](../adr/0014-journaux-de-visite-sans-adresse-complete.md)). Les journaux repartent de zéro chaque lundi à 4 h 30, quand le CronJob `rtgre-log-retention` remplace le pod. Pour le faire sans attendre :
+Chaque ligne porte le réseau du visiteur, jamais son adresse ([ADR 0014](../adr/0014-journaux-de-visite-sans-adresse-complete.md)). Les mêmes lignes se consultent dans Grafana, où Loki les garde treize jours ([README de `kubernetes/logging`](../../kubernetes/logging/README.md)). Les journaux repartent de zéro chaque lundi à 4 h 30, quand le CronJob `rtgre-log-retention` remplace le pod. Pour le faire sans attendre :
 
 ```bash
 ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre create job --from=cronjob/rtgre-log-retention conservation-manuelle

@@ -12,6 +12,13 @@ directory: /var/lib/kubernetes-local-volumes
 #   capacity : taille annoncée (un volume local n'applique pas de quota)
 #   claim    : seule demande autorisée à s'y lier
 volumes:
+  # Journaux conservés par Loki.
+  loki:
+    node: wk-1
+    capacity: 5Gi
+    claim:
+      namespace: logging
+      name: data-loki-0
   # Données de Prometheus : la demande porte le nom que lui donne l'opérateur.
   prometheus:
     node: wk-1

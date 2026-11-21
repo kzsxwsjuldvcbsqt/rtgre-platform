@@ -41,7 +41,7 @@ Elle part du cluster, résout le nom public et passe par le load balancer : elle
 | Tableau | Contenu |
 | --- | --- |
 | Plateforme | Nœuds prêts, pods, processeur, mémoire, disque et charge par nœud, consommation par espace de noms, applications Argo CD, certificats, redémarrages |
-| rtgre | Site joignable, temps de réponse, jours restants du certificat, trafic à la passerelle, génération horaire, âge des journaux de visite |
+| rtgre | Site joignable, temps de réponse, jours restants du certificat, trafic à la passerelle, requêtes servies et réseaux distincts sur 24 heures, génération horaire, âge des journaux de visite |
 
 Ils sont dans [`files/dashboards`](files/dashboards), générés par [`scripts/grafana-dashboards.py`](../../scripts/grafana-dashboards.py). Pour en modifier un : changer le script, le relancer, vérifier la requête dans Prometheus, puis ouvrir une pull request.
 

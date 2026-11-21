@@ -121,7 +121,7 @@ spec:
             - port: "10250"
               protocol: TCP
 ---
-# Grafana n'interroge que Prometheus, et ne reçoit que lui, pour ses propres métriques. Son
+# Grafana n'interroge que Prometheus et Loki, et ne reçoit que Prometheus, pour ses métriques. Son
 # interface s'ouvre par une redirection de port, qui ne passe pas par ces règles.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
@@ -147,8 +147,17 @@ spec:
         - ports:
             - port: "9090"
               protocol: TCP
-    # Résolution du nom de service de Prometheus. Tous les noms sont admis : le résolveur essaie
-    # plusieurs suffixes, et de toute façon Grafana ne peut joindre que Prometheus.
+    # Loki, pour les journaux (kubernetes/logging).
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: logging
+            app.kubernetes.io/name: loki
+      toPorts:
+        - ports:
+            - port: "3100"
+              protocol: TCP
+    # Résolution des noms de service de Prometheus et de Loki. Tous les noms sont admis : le résolveur essaie
+    # plusieurs suffixes, et de toute façon Grafana ne peut joindre qu'eux.
     - toEndpoints:
         - matchLabels:
             k8s:io.kubernetes.pod.namespace: kube-system

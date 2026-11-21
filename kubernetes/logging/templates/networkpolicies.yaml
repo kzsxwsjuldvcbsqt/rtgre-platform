@@ -1,0 +1,79 @@
+# Par défaut, rien n'entre dans l'espace de noms et rien n'en sort.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Loki reçoit les journaux d'Alloy, les requêtes de Grafana et la collecte de Prometheus. Il ne
+# sort nulle part.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: loki
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: loki
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: alloy
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: {{ .Values.clients.namespace }}
+            {{- toYaml .Values.clients.grafana | nindent 12 }}
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: {{ .Values.clients.namespace }}
+            {{- toYaml .Values.clients.prometheus | nindent 12 }}
+      toPorts:
+        - ports:
+            - port: {{ .Values.loki.port | quote }}
+              protocol: TCP
+---
+# Alloy lit les journaux par l'API de Kubernetes et ne les envoie qu'à Loki.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: alloy
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: alloy
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: {{ .Values.clients.namespace }}
+            {{- toYaml .Values.clients.prometheus | nindent 12 }}
+      toPorts:
+        - ports:
+            - port: {{ .Values.alloy.port | quote }}
+              protocol: TCP
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: loki
+      toPorts:
+        - ports:
+            - port: {{ .Values.loki.port | quote }}
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
