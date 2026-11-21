@@ -51,6 +51,16 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( registryUrl=(?<registryUrl>\\S+))?( extractVersion=(?<extractVersion>\\S+))?\\s+[A-Za-z0-9_]+: ['\"]?(?<currentValue>[^'\"\\s]+)['\"]?"
       ]
+    },
+    {
+      "customType": "regex",
+      "description": "Révisions Git épinglées par leur commit dans les valeurs des charts, avec la version en commentaire",
+      "managerFilePatterns": [
+        "/^kubernetes/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "# renovate-digest: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+targetRevision: (?<currentDigest>[a-f0-9]{40}) # (?<currentValue>\\S+)"
+      ]
     }
   ],
   "packageRules": [
@@ -99,6 +109,24 @@
       "matchUpdateTypes": [
         "minor",
         "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Traefik et Gateway API vont ensemble : chaque version de Traefik prend en charge une version précise de Gateway API (ADR 0012). Une montée mineure ou majeure de l'un, et toute montée de l'autre, attendent une approbation dans le tableau de bord",
+      "matchDepNames": [
+        "traefik"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "CRD de Gateway API : jamais sans la version de Traefik qui les prend en charge",
+      "matchDepNames": [
+        "kubernetes-sigs/gateway-api"
       ],
       "dependencyDashboardApproval": true
     },
