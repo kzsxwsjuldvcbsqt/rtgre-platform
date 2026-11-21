@@ -38,12 +38,14 @@ resource "oci_network_load_balancer_backend_set" "this" {
   }
 }
 
+# Pas de nom : Oracle en compose un avec l'instance et le port. Un nom doit être unique dans tout
+# le load balancer, pas seulement dans son groupe : le nom de l'instance, repris pour chaque
+# écoute, était refusé à la seconde.
 resource "oci_network_load_balancer_backend" "this" {
   for_each = local.backends
 
   network_load_balancer_id = oci_network_load_balancer_network_load_balancer.this.id
   backend_set_name         = oci_network_load_balancer_backend_set.this[each.value.listener].name
-  name                     = each.value.backend
   target_id                = var.backends[each.value.backend]
   port                     = var.listeners[each.value.listener].backend_port
 }
