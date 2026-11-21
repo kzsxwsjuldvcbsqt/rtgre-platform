@@ -1,0 +1,71 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: false
+  vars_files:
+    - ../../defaults/main.yml
+  tasks:
+    - name: Gather installed packages
+      ansible.builtin.package_facts:
+
+    - name: Check the Kubernetes packages version
+      ansible.builtin.assert:
+        that:
+          - item in ansible_facts.packages
+          - ansible_facts.packages[item][0].version is match(kubernetes_node_version ~ '-')
+        fail_msg: "{{ item }} n'est pas installé à la version {{ kubernetes_node_version }}."
+      loop: "{{ kubernetes_node_packages }}"
+
+    - name: Read the held packages
+      ansible.builtin.command: apt-mark showhold
+      register: kubernetes_node_held
+      changed_when: false
+
+    - name: Check that the Kubernetes packages are held
+      ansible.builtin.assert:
+        that:
+          - kubernetes_node_packages | difference(kubernetes_node_held.stdout_lines) | length == 0
+
+    - name: Read the effective containerd configuration
+      ansible.builtin.command: containerd config dump
+      register: kubernetes_node_containerd_config
+      changed_when: false
+
+    - name: Check that runc uses systemd cgroups and the expected pause image
+      ansible.builtin.assert:
+        that:
+          - kubernetes_node_containerd_config.stdout is search('SystemdCgroup = true')
+          - >-
+            kubernetes_node_containerd_config.stdout
+            is search("sandbox = '" ~ kubernetes_node_pause_image ~ "'")
+
+    - name: Check that containerd answers on its CRI socket
+      ansible.builtin.command: crictl info
+      changed_when: false
+
+    - name: List the images kubeadm expects
+      ansible.builtin.command: kubeadm config images list --kubernetes-version "v{{ kubernetes_node_version }}"
+      register: kubernetes_node_kubeadm_images
+      changed_when: false
+
+    - name: Check that the pause image matches the one kubeadm expects
+      ansible.builtin.assert:
+        that:
+          - kubernetes_node_pause_image in kubernetes_node_kubeadm_images.stdout_lines
+        fail_msg: >-
+          kubeadm attend : {{ kubernetes_node_kubeadm_images.stdout_lines | select('search', 'pause') | list }}
+
+    - name: Read the kernel configuration files
+      ansible.builtin.slurp:
+        src: "{{ item }}"
+      register: kubernetes_node_kernel_files
+      loop:
+        - /etc/modules-load.d/kubernetes.conf
+        - /etc/sysctl.d/70-kubernetes.conf
+
+    - name: Check the kernel configuration files
+      ansible.builtin.assert:
+        that:
+          - "'br_netfilter' in kubernetes_node_kernel_files.results[0].content | b64decode"
+          - "'net.ipv4.ip_forward=1' in kubernetes_node_kernel_files.results[1].content | b64decode"
