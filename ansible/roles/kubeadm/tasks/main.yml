@@ -1,0 +1,21 @@
+---
+- name: Check the kubeadm settings
+  ansible.builtin.assert:
+    that:
+      - kubeadm_node_role in ['control-plane', 'worker']
+      - kubeadm_control_plane_host | length > 0
+      - kubeadm_kubernetes_version | length > 0
+      - kubeadm_pod_cidr | length > 0
+      - kubeadm_service_cidr | length > 0
+    fail_msg: >-
+      kubeadm_node_role, kubeadm_control_plane_host, kubeadm_kubernetes_version, kubeadm_pod_cidr
+      et kubeadm_service_cidr doivent être définis.
+    quiet: true
+
+- name: Initialize the control plane
+  ansible.builtin.include_tasks: control_plane.yml
+  when: kubeadm_node_role == 'control-plane'
+
+- name: Join the worker to the cluster
+  ansible.builtin.include_tasks: worker.yml
+  when: kubeadm_node_role == 'worker'

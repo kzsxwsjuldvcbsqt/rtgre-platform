@@ -24,4 +24,14 @@ hardening_firewall_routed_policy: allow
 
 # Kubernetes ---------------------------------------------------------------------
 
-kubernetes_node_version: "1.37.2"
+# Cilium 1.20 n'est testé qu'avec Kubernetes 1.33 à 1.36 : la dernière 1.36 est retenue (ADR 0009).
+kubernetes_node_version: "1.36.6"
+
+kubeadm_cluster_name: rtgre-platform
+kubeadm_kubernetes_version: "{{ kubernetes_node_version }}"
+kubeadm_pod_cidr: "{{ kubernetes_pod_cidr }}"
+kubeadm_service_cidr: "{{ kubernetes_service_cidr }}"
+kubeadm_control_plane_host: "{{ groups['k8s_control_plane'] | first }}"
+kubeadm_node_role: "{{ freeform_tags['kubernetes-role'] }}"
+
+cilium_kubernetes_version: "{{ kubernetes_node_version }}"

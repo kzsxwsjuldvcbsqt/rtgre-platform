@@ -34,3 +34,32 @@
   roles:
     - role: hardening
     - role: kubernetes_node
+
+- name: Initialize the control plane and the pod network
+  hosts: k8s_control_plane
+  become: true
+  pre_tasks:
+    - name: Check that the cluster has exactly one control plane
+      ansible.builtin.assert:
+        that:
+          - groups['k8s_control_plane'] | length == 1
+        fail_msg: Le cluster doit avoir exactement un plan de contrôle (ADR 0003).
+        quiet: true
+  roles:
+    - role: kubeadm
+    - role: cilium
+
+- name: Join the workers
+  hosts: k8s_worker
+  become: true
+  roles:
+    - role: kubeadm
+
+- name: Check that every node is ready
+  hosts: k8s_control_plane
+  become: true
+  tasks:
+    - name: Wait for all nodes to be ready
+      ansible.builtin.command: >-
+        kubectl --kubeconfig /etc/kubernetes/admin.conf wait --for=condition=Ready nodes --all --timeout=300s
+      changed_when: false

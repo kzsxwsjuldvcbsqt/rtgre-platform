@@ -1,0 +1,25 @@
+---
+- name: Check whether the node already joined the cluster
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: kubeadm_kubelet_conf
+
+- name: Join the cluster
+  when: not kubeadm_kubelet_conf.stat.exists
+  block:
+    # Le jeton n'est créé que pour un nœud qui doit joindre, et n'est valable que quelques minutes.
+    - name: Create a short-lived join command on the control plane
+      ansible.builtin.command: >-
+        kubeadm token create --print-join-command --ttl {{ kubeadm_join_token_ttl }}
+      delegate_to: "{{ kubeadm_control_plane_host }}"
+      register: kubeadm_join_command
+      changed_when: true
+      no_log: true
+
+    - name: Join the node to the cluster
+      ansible.builtin.command: >-
+        {{ kubeadm_join_command.stdout }}
+        --node-name {{ inventory_hostname }}
+        --cri-socket {{ kubeadm_cri_socket }}
+      changed_when: true
+      no_log: true

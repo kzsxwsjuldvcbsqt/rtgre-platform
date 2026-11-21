@@ -2,7 +2,7 @@
 # Kubernetes ------------------------------------------------------------------
 
 # Version exacte de kubeadm, kubelet et kubectl. Le dépôt apt suivi est celui de sa version mineure.
-kubernetes_node_version: "1.37.2"
+kubernetes_node_version: "1.36.6"
 
 # Paquets Kubernetes installés, puis bloqués contre les mises à jour automatiques : une montée de
 # version passe par kubeadm upgrade, nœud par nœud.

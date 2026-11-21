@@ -1,0 +1,5 @@
+---
+# Le plan de contrôle n'a qu'un OCPU, sous les 2 que kubeadm exige : écart assumé par l'ADR 0003,
+# à confirmer par la mesure de #21.
+kubeadm_ignore_preflight_errors:
+  - NumCPU

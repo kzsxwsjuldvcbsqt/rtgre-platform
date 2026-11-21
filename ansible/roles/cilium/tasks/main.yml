@@ -1,0 +1,88 @@
+---
+# Le chart est rendu sur le poste de contrôle avec helm, puis appliqué par kubectl sur le plan
+# de contrôle : aucun outil supplémentaire n'est installé sur les nœuds.
+
+- name: Check the Kubernetes version
+  ansible.builtin.assert:
+    that:
+      - cilium_kubernetes_version | length > 0
+    fail_msg: cilium_kubernetes_version doit être défini.
+    quiet: true
+
+- name: Create a working directory on the control machine
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: cilium
+  delegate_to: localhost
+  become: false
+  register: cilium_workdir
+  changed_when: false
+
+- name: Write the chart values on the control machine
+  ansible.builtin.copy:
+    content: "{{ cilium_values | to_nice_yaml(indent=2) }}"
+    dest: "{{ cilium_workdir.path }}/values.yaml"
+    mode: "0600"
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
+- name: Render the chart on the control machine
+  ansible.builtin.command: >-
+    helm template cilium cilium
+    --repo {{ cilium_chart_repository }}
+    --version {{ cilium_chart_version }}
+    --namespace {{ cilium_namespace }}
+    --kube-version {{ cilium_kubernetes_version }}
+    --values {{ cilium_workdir.path }}/values.yaml
+  delegate_to: localhost
+  become: false
+  register: cilium_rendered
+  changed_when: false
+
+- name: Remove the working directory
+  ansible.builtin.file:
+    path: "{{ cilium_workdir.path }}"
+    state: absent
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
+- name: Create the add-ons directory
+  ansible.builtin.file:
+    path: "{{ cilium_manifest_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Copy the rendered manifest to the control plane
+  ansible.builtin.copy:
+    content: "{{ cilium_rendered.stdout }}\n"
+    dest: "{{ cilium_manifest_path }}"
+    owner: root
+    group: root
+    mode: "0600"
+  register: cilium_manifest
+
+# kubectl diff renvoie 0 sans écart et 1 avec écart. À la première installation, il échoue avec
+# NotFound : les espaces de noms du chart (cilium-secrets) n'existent pas encore pour la simulation.
+- name: Compare the cluster with the manifest
+  ansible.builtin.command: >-
+    kubectl --kubeconfig {{ cilium_kubeconfig }} diff --server-side -f {{ cilium_manifest_path }}
+  register: cilium_diff
+  changed_when: false
+  failed_when: cilium_diff.rc not in [0, 1] and 'NotFound' not in cilium_diff.stderr
+
+- name: Apply the manifest
+  ansible.builtin.command: >-
+    kubectl --kubeconfig {{ cilium_kubeconfig }} apply --server-side --force-conflicts
+    -f {{ cilium_manifest_path }}
+  when: cilium_diff.rc != 0
+  changed_when: true
+
+- name: Wait for the Cilium agents to be ready
+  ansible.builtin.command: >-
+    kubectl --kubeconfig {{ cilium_kubeconfig }} -n {{ cilium_namespace }}
+    rollout status daemonset/cilium --timeout=300s
+  changed_when: false

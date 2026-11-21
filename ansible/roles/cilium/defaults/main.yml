@@ -1,0 +1,33 @@
+---
+# Version du chart Helm de Cilium. Cilium 1.20 est testé avec Kubernetes 1.33 à 1.36 (ADR 0009).
+cilium_chart_version: "1.20.5"
+cilium_chart_repository: https://helm.cilium.io
+
+# Version de Kubernetes visée, transmise à helm template pour choisir les bons objets.
+cilium_kubernetes_version: ""
+
+cilium_namespace: kube-system
+
+# Valeurs du chart. L'IPAM « kubernetes » utilise les plages attribuées aux nœuds par kubeadm
+# (podSubnet) : la plage par défaut de Cilium, 10.0.0.0/8, chevaucherait le réseau virtuel.
+cilium_values:
+  ipam:
+    mode: kubernetes
+  kubeProxyReplacement: false
+  routingMode: tunnel
+  tunnelProtocol: vxlan
+  operator:
+    replicas: 1
+  # Les certificats (CA de Cilium, TLS de Hubble) sont générés dans le cluster par un Job puis
+  # renouvelés par un CronJob. Avec la méthode par défaut, helm template en génère de nouveaux à
+  # chaque rendu : chaque passage d'Ansible remplacerait la CA.
+  hubble:
+    tls:
+      auto:
+        method: cronJob
+
+# Kubeconfig d'administration sur le plan de contrôle.
+cilium_kubeconfig: /etc/kubernetes/admin.conf
+
+# Emplacement du manifeste rendu sur le plan de contrôle.
+cilium_manifest_path: /etc/kubernetes/addons/cilium.yaml
