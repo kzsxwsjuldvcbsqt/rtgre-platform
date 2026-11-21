@@ -34,7 +34,7 @@ scrape:
       port: 9100
     - namespace: cert-manager
       labels:
-        app.kubernetes.io/component: controller
+        app.kubernetes.io/instance: cert-manager
       port: 9402
     - namespace: argocd
       labels:
