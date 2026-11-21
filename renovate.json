@@ -21,6 +21,7 @@
   "semanticCommitType": "chore",
   "semanticCommitScope": "deps",
   "commitMessageAction": "met à jour",
+  "commitMessageTopic": "{{depName}}",
   "commitMessageExtra": "vers {{#if isPinDigest}}{{{newDigestShort}}}{{else}}{{#if isMajor}}{{prettyNewMajor}}{{else}}{{#if isSingleVersion}}{{prettyNewVersion}}{{else}}{{#if newValue}}{{{newValue}}}{{else}}{{{newDigestShort}}}{{/if}}{{/if}}{{/if}}{{/if}}",
   "vulnerabilityAlerts": {
     "enabled": true,
@@ -120,6 +121,31 @@
       "description": "L'image pause suit kubeadm, pas sa propre dernière version : le test Molecule les compare",
       "matchPackageNames": [
         "registry.k8s.io/pause"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Python : une version mineure (3.13 vers 3.15) doit être compatible avec ansible-core, ansible-lint et Molecule ; elle attend une approbation dans le tableau de bord",
+      "matchDepNames": [
+        "python"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Image de test Molecule : elle doit rester sur la version d'Ubuntu des nœuds (24.04). Seules ses nouvelles empreintes, qui apportent les correctifs de l'image, sont proposées",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchDepNames": [
+        "ubuntu"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
       ],
       "enabled": false
     }
