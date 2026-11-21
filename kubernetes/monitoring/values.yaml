@@ -50,6 +50,10 @@ scrape:
       labels:
         app.kubernetes.io/name: argocd-application-controller
       port: 8082
+    - namespace: kyverno
+      labels:
+        app.kubernetes.io/component: admission-controller
+      port: 8000
     - namespace: logging
       labels:
         app.kubernetes.io/name: loki

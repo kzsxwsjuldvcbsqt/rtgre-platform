@@ -95,8 +95,11 @@ applications:
     namespaceLabels:
       pod-security.kubernetes.io/enforce: privileged
     cascade: true
+  # Le site. Ses images sont contrôlées à la création de chaque pod : dépôts déclarés, empreinte
+  # et signature (kubernetes/kyverno).
   rtgre:
     namespace: rtgre
     namespaceLabels:
       pod-security.kubernetes.io/enforce: restricted
+      rtgre.fr/verified-images: required
     cascade: true
