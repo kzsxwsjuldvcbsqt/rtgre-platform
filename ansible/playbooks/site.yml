@@ -63,3 +63,10 @@
       ansible.builtin.command: >-
         kubectl --kubeconfig /etc/kubernetes/admin.conf wait --for=condition=Ready nodes --all --timeout=300s
       changed_when: false
+
+# Argo CD a besoin d'un nœud de travail prêt : il passe après la jonction.
+- name: Hand the cluster over to Argo CD
+  hosts: k8s_control_plane
+  become: true
+  roles:
+    - role: argocd

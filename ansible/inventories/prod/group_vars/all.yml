@@ -36,3 +36,7 @@ kubeadm_control_plane_host: "{{ groups['k8s_control_plane'] | first }}"
 kubeadm_node_role: "{{ freeform_tags['kubernetes-role'] }}"
 
 cilium_kubernetes_version: "{{ kubernetes_node_version }}"
+
+argocd_kubernetes_version: "{{ kubernetes_node_version }}"
+# Une clé de déploiement par cluster : son titre le désigne dans le dépôt GitHub.
+argocd_deploy_key_title: "argocd-{{ kubeadm_cluster_name }}"

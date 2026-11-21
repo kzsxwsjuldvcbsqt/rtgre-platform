@@ -1,0 +1,27 @@
+---
+# Charts du dépôt, sur le poste de contrôle : Argo CD lui-même, et l'application racine.
+argocd_chart_path: "{{ playbook_dir }}/../../kubernetes/argocd"
+argocd_apps_chart_path: "{{ playbook_dir }}/../../kubernetes/apps"
+
+# Nom de la release : celui de l'application Argo CD qui reprend ensuite l'installation.
+argocd_release_name: argocd
+
+# Version de Kubernetes visée, transmise à helm template pour choisir les bons objets.
+argocd_kubernetes_version: ""
+
+# Kubeconfig d'administration sur le plan de contrôle.
+argocd_kubeconfig: /etc/kubernetes/admin.conf
+
+# Secret qui porte la clé de déploiement, et titre de cette clé dans le dépôt GitHub.
+argocd_repository_secret_name: argocd-repo-platform
+argocd_deploy_key_title: argocd
+
+# Composants attendus avant de déclarer les applications.
+argocd_workloads:
+  - statefulset/argocd-application-controller
+  - deployment/argocd-repo-server
+  - deployment/argocd-server
+  - deployment/argocd-redis
+
+argocd_rollout_timeout: 600s
+argocd_sync_timeout: 600s

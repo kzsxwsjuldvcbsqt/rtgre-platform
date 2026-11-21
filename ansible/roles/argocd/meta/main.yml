@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: kzsxwsjuldvcbsqt
+  role_name: argocd
+  namespace: rtgre_platform
+  description: Amorce Argo CD et son application racine, puis lui laisse la main sur le cluster.
+  license: MIT
+  min_ansible_version: "2.22"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - noble
+
+dependencies: []

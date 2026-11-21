@@ -1,0 +1,202 @@
+---
+# Le rôle amorce Argo CD : il installe le chart, crée la clé de déploiement, puis déclare
+# l'application racine. Ensuite, Argo CD se gère lui-même depuis le dépôt : tant que
+# l'application racine existe, le rôle ne touche plus à l'installation.
+
+- name: Check the Kubernetes version
+  ansible.builtin.assert:
+    that:
+      - argocd_kubernetes_version | length > 0
+    fail_msg: argocd_kubernetes_version doit être défini.
+    quiet: true
+
+# Le dépôt suivi et l'espace de noms ne sont écrits qu'à un endroit : les valeurs du chart apps.
+- name: Read the settings of the root application
+  ansible.builtin.set_fact:
+    argocd_apps_values: "{{ lookup('ansible.builtin.file', argocd_apps_chart_path ~ '/values.yaml') | from_yaml }}"
+
+- name: Derive the repository and the namespace
+  ansible.builtin.set_fact:
+    argocd_repository_url: "{{ argocd_apps_values.repository.url }}"
+    argocd_github_repository: >-
+      {{ argocd_apps_values.repository.url | regex_replace('^git@github\.com:(.+)\.git$', '\1') }}
+    argocd_namespace: "{{ argocd_apps_values.argocdNamespace }}"
+
+- name: Check that the repository is read over SSH from GitHub
+  ansible.builtin.assert:
+    that:
+      - argocd_repository_url is match('^git@github\.com:[^/]+/[^/]+\.git$')
+    fail_msg: "{{ argocd_repository_url }} n'est pas de la forme git@github.com:<propriétaire>/<dépôt>.git."
+    quiet: true
+
+- name: Check whether Argo CD already manages itself
+  ansible.builtin.command: >-
+    kubectl --kubeconfig {{ argocd_kubeconfig }} --namespace {{ argocd_namespace }}
+    get applications.argoproj.io root --output name
+  register: argocd_root
+  changed_when: false
+  failed_when:
+    - argocd_root.rc != 0
+    - "'NotFound' not in argocd_root.stderr"
+    - "'the server doesn\\'t have a resource type' not in argocd_root.stderr"
+
+- name: Install Argo CD
+  when: argocd_root.rc != 0
+  block:
+    - name: Download the chart dependencies on the control machine
+      ansible.builtin.command: helm dependency build {{ argocd_chart_path }}
+      delegate_to: localhost
+      become: false
+      changed_when: false
+
+    - name: Render the chart on the control machine
+      ansible.builtin.command: >-
+        helm template {{ argocd_release_name }} {{ argocd_chart_path }}
+        --namespace {{ argocd_namespace }}
+        --kube-version {{ argocd_kubernetes_version }}
+      delegate_to: localhost
+      become: false
+      register: argocd_rendered
+      changed_when: false
+
+    - name: Create the namespace
+      ansible.builtin.command: kubectl --kubeconfig {{ argocd_kubeconfig }} apply --filename -
+      args:
+        stdin: "{{ {'apiVersion': 'v1', 'kind': 'Namespace', 'metadata': {'name': argocd_namespace}} | to_json }}"
+      register: argocd_namespace_created
+      changed_when: "'created' in argocd_namespace_created.stdout"
+
+    # Le gestionnaire de champs est celui d'Argo CD : quand son application reprend ces objets,
+    # elle en est déjà propriétaire, sans conflit.
+    - name: Apply the chart
+      ansible.builtin.command: >-
+        kubectl --kubeconfig {{ argocd_kubeconfig }} --namespace {{ argocd_namespace }}
+        apply --server-side --force-conflicts --field-manager argocd-controller --filename -
+      args:
+        stdin: "{{ argocd_rendered.stdout }}"
+      changed_when: true
+
+    - name: Wait for the Argo CD components
+      ansible.builtin.command: >-
+        kubectl --kubeconfig {{ argocd_kubeconfig }} --namespace {{ argocd_namespace }}
+        rollout status {{ item }} --timeout {{ argocd_rollout_timeout }}
+      loop: "{{ argocd_workloads }}"
+      changed_when: false
+
+- name: Check whether the repository credentials exist
+  ansible.builtin.command: >-
+    kubectl --kubeconfig {{ argocd_kubeconfig }} --namespace {{ argocd_namespace }}
+    get secret {{ argocd_repository_secret_name }} --output name
+  register: argocd_repository_secret
+  changed_when: false
+  failed_when:
+    - argocd_repository_secret.rc != 0
+    - "'NotFound' not in argocd_repository_secret.stderr"
+
+# La clé privée n'existe que le temps de ces tâches, sur le poste de contrôle, puis dans le
+# Secret du cluster. Elle n'entre jamais dans Git. Sa partie publique devient une clé de
+# déploiement du dépôt, en lecture seule (comportement par défaut de gh).
+- name: Create the deploy key and the repository credentials
+  when: argocd_repository_secret.rc != 0
+  block:
+    - name: Create a working directory on the control machine
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: argocd
+      delegate_to: localhost
+      become: false
+      register: argocd_workdir
+
+    - name: Generate the key pair
+      ansible.builtin.command: >-
+        ssh-keygen -q -t ed25519 -N "" -C {{ argocd_deploy_key_title }}
+        -f {{ argocd_workdir.path }}/deploy-key
+      args:
+        creates: "{{ argocd_workdir.path }}/deploy-key"
+      delegate_to: localhost
+      become: false
+
+    - name: List the deploy keys of the repository
+      ansible.builtin.command: gh repo deploy-key list --repo {{ argocd_github_repository }} --json id,title
+      delegate_to: localhost
+      become: false
+      register: argocd_deploy_keys
+      changed_when: false
+
+    - name: Remove the previous deploy key
+      ansible.builtin.command: gh repo deploy-key delete {{ item.id }} --repo {{ argocd_github_repository }}
+      # Sans aucune clé, gh n'écrit rien du tout plutôt qu'une liste vide.
+      loop: >-
+        {{ argocd_deploy_keys.stdout | default('[]', true) | from_json
+           | selectattr('title', 'equalto', argocd_deploy_key_title) }}
+      loop_control:
+        label: "{{ item.title }}"
+      delegate_to: localhost
+      become: false
+      changed_when: true
+
+    - name: Register the public key as a read-only deploy key
+      ansible.builtin.command: >-
+        gh repo deploy-key add {{ argocd_workdir.path }}/deploy-key.pub
+        --repo {{ argocd_github_repository }} --title {{ argocd_deploy_key_title }}
+      delegate_to: localhost
+      become: false
+      changed_when: true
+
+    - name: Store the private key in the cluster
+      ansible.builtin.command: kubectl --kubeconfig {{ argocd_kubeconfig }} apply --filename -
+      args:
+        stdin: "{{ argocd_repository_secret_manifest | to_json }}"
+      vars:
+        argocd_repository_secret_manifest:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: "{{ argocd_repository_secret_name }}"
+            namespace: "{{ argocd_namespace }}"
+            labels:
+              argocd.argoproj.io/secret-type: repository
+          stringData:
+            type: git
+            url: "{{ argocd_repository_url }}"
+            sshPrivateKey: "{{ lookup('ansible.builtin.file', argocd_workdir.path ~ '/deploy-key', rstrip=false) }}"
+      no_log: true
+      changed_when: true
+  always:
+    - name: Remove the working directory
+      ansible.builtin.file:
+        path: "{{ argocd_workdir.path }}"
+        state: absent
+      delegate_to: localhost
+      become: false
+      when: argocd_workdir.path is defined
+
+- name: Declare the root application
+  when: argocd_root.rc != 0
+  block:
+    - name: Render the root application on the control machine
+      ansible.builtin.command: helm template root {{ argocd_apps_chart_path }} --namespace {{ argocd_namespace }}
+      delegate_to: localhost
+      become: false
+      register: argocd_apps_rendered
+      changed_when: false
+
+    - name: Apply the root application
+      ansible.builtin.command: kubectl --kubeconfig {{ argocd_kubeconfig }} apply --filename -
+      args:
+        stdin: "{{ argocd_apps_rendered.stdout }}"
+      changed_when: true
+
+- name: Wait for the applications to match the repository
+  ansible.builtin.command: >-
+    kubectl --kubeconfig {{ argocd_kubeconfig }} --namespace {{ argocd_namespace }}
+    wait applications.argoproj.io --all
+    --for jsonpath={.status.sync.status}=Synced --timeout {{ argocd_sync_timeout }}
+  changed_when: false
+
+- name: Wait for the applications to be healthy
+  ansible.builtin.command: >-
+    kubectl --kubeconfig {{ argocd_kubeconfig }} --namespace {{ argocd_namespace }}
+    wait applications.argoproj.io --all
+    --for jsonpath={.status.health.status}=Healthy --timeout {{ argocd_sync_timeout }}
+  changed_when: false
