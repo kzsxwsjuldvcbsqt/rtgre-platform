@@ -1,5 +1,8 @@
 [tools]
 actionlint = "1.7.12"
+# amtool et promtool vérifient la configuration d'Alertmanager et les règles d'alerte.
+"aqua:prometheus/alertmanager" = "0.35.0"
+"aqua:prometheus/prometheus" = "3.16.0"
 cosign = "3.1.4"
 gh = "2.103.3"
 gitleaks = "8.30.1"
@@ -30,5 +33,9 @@ run = [
 ]
 
 [tasks.kubernetes-validate]
-description = "Vérifie les charts de kubernetes/ : helm lint, rendu, kubeconform et signature des images"
-run = ["scripts/ci/validate-kubernetes.sh", "scripts/ci/verify-image-signatures.sh"]
+description = "Vérifie les charts de kubernetes/ : helm lint, rendu, kubeconform, alertes et signature des images"
+run = [
+  "scripts/ci/validate-kubernetes.sh",
+  "scripts/ci/validate-alerting.sh",
+  "scripts/ci/verify-image-signatures.sh",
+]
