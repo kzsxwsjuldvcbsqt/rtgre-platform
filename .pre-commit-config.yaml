@@ -60,3 +60,18 @@ repos:
         language: system
         files: ^ansible/
         pass_filenames: false
+
+  # ShellCheck et actionlint viennent de mise.toml, aux mêmes versions sur le poste et en CI.
+  # actionlint passe aussi les blocs « run » des workflows à ShellCheck.
+  - repo: https://github.com/rhysd/actionlint
+    rev: 914e7df21a07ef503a81201c76d2b11c789d3fca  # frozen: v1.7.12
+    hooks:
+      - id: actionlint-system
+
+  - repo: local
+    hooks:
+      - id: shellcheck
+        name: ShellCheck
+        entry: shellcheck
+        language: system
+        types: [shell]
