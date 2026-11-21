@@ -27,6 +27,16 @@ scrape:
       labels:
         app.kubernetes.io/name: prometheus-blackbox-exporter
       port: 9115
+    # Alertmanager : Prometheus lui envoie les alertes et lit ses métriques, puis celles du
+    # conteneur qui recharge sa configuration.
+    - namespace: monitoring
+      labels:
+        app.kubernetes.io/name: alertmanager
+      port: 9093
+    - namespace: monitoring
+      labels:
+        app.kubernetes.io/name: alertmanager
+      port: 8080
     # Passerelle, certificats et Argo CD : chacun laisse entrer Prometheus dans son chart.
     - namespace: gateway
       labels:
@@ -55,6 +65,17 @@ probes:
   targets:
     - https://rtgre.fr/
     - https://www.rtgre.fr/
+
+# Alertes (ADR 0018). Les règles sont dans files/alerts.yaml.
+alerting:
+  # Chaque alerte renvoie à un runbook de ce dossier.
+  runbookBaseUrl: https://github.com/kzsxwsjuldvcbsqt/rtgre-platform/blob/main/docs/runbooks
+  telegram:
+    # Seule adresse qu'Alertmanager peut joindre hors du cluster.
+    host: api.telegram.org
+    # Secret créé hors du dépôt par scripts/alertmanager-telegram.sh : le jeton du bot (bot-token)
+    # et la discussion qui reçoit les alertes (chat-id).
+    secretName: &telegramSecret alertmanager-telegram
 
 # Valeurs du chart officiel prometheus-blackbox-exporter.
 prometheus-blackbox-exporter:
@@ -183,9 +204,79 @@ kube-prometheus-stack:
       limits:
         memory: 384Mi
 
-  # Ce que l'étape suivante apportera : les alertes et leurs règles.
+  # Alertmanager envoie les alertes sur Telegram. Tant que le Secret n'existe pas, il tourne
+  # sans pouvoir envoyer : le volume est facultatif.
   alertmanager:
-    enabled: false
+    enabled: true
+    config:
+      global:
+        resolve_timeout: 5m
+      inhibit_rules: []
+      route:
+        receiver: telegram
+        # Un message par alerte, qui regroupe ses occurrences (deux nœuds, plusieurs pods).
+        group_by:
+          - alertname
+        group_wait: 30s
+        group_interval: 5m
+        # Une alerte qui dure est rappelée chaque jour ; toutes les deux heures si les visiteurs
+        # sont touchés.
+        repeat_interval: 24h
+        routes:
+          - matchers:
+              - severity = critical
+            repeat_interval: 2h
+      receivers:
+        - name: telegram
+          telegram_configs:
+            - bot_token_file: /etc/alertmanager/telegram/bot-token
+              chat_id_file: /etc/alertmanager/telegram/chat-id
+              parse_mode: HTML
+              send_resolved: true
+              message: '{{ template "rtgre.telegram" . }}'
+      templates:
+        - /etc/alertmanager/config/*.tmpl
+    # Le message : ce qui se passe, puis le lien vers le runbook.
+    templateFiles:
+      rtgre.tmpl: |-
+        {{ define "rtgre.telegram" -}}
+        {{ if eq .Status "firing" -}}
+        🔴 <b>{{ .CommonLabels.alertname }}</b>
+        {{ range .Alerts.Firing }}
+        {{ .Annotations.summary }}
+        {{ .Annotations.description }}
+        {{ end }}
+        <a href="{{ .CommonAnnotations.runbook_url }}">Que faire</a>
+        {{- else -}}
+        🟢 Résolu : <b>{{ .CommonLabels.alertname }}</b>
+        {{ range .Alerts }}
+        {{ .Annotations.summary }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+    # Alertmanager ne parle pas à l'API de Kubernetes : il n'en reçoit aucun jeton.
+    serviceAccount:
+      automountServiceAccountToken: false
+    alertmanagerSpec:
+      automountServiceAccountToken: false
+      volumes:
+        - name: telegram
+          secret:
+            secretName: *telegramSecret
+            optional: true
+      volumeMounts:
+        - name: telegram
+          mountPath: /etc/alertmanager/telegram
+          readOnly: true
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          memory: 96Mi
+
+  # Les règles par défaut du chart visent des composants que ce cluster n'expose pas : celles de
+  # la plateforme sont écrites ici (files/alerts.yaml).
   defaultRules:
     create: false
 

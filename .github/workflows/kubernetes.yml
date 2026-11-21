@@ -7,7 +7,10 @@ on:
     paths:
       - kubernetes/**
       - scripts/ci/validate-kubernetes.sh
+      - scripts/ci/validate-alerting.sh
       - scripts/ci/verify-image-signatures.sh
+      # Chaque alerte cite un runbook, qui doit exister.
+      - docs/runbooks/**
       - ansible/inventories/prod/group_vars/all.yml
       - mise.toml
       - .github/workflows/kubernetes.yml
@@ -17,7 +20,10 @@ on:
     paths:
       - kubernetes/**
       - scripts/ci/validate-kubernetes.sh
+      - scripts/ci/validate-alerting.sh
       - scripts/ci/verify-image-signatures.sh
+      # Chaque alerte cite un runbook, qui doit exister.
+      - docs/runbooks/**
       - ansible/inventories/prod/group_vars/all.yml
       - mise.toml
       - .github/workflows/kubernetes.yml
@@ -52,6 +58,26 @@ jobs:
       # Rend chaque chart pour la version de Kubernetes du cluster et valide les objets obtenus.
       - name: Lint, render and validate the charts
         run: scripts/ci/validate-kubernetes.sh
+
+  alerts:
+    name: Alerts (promtool, amtool)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned tools
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          version: ${{ env.MISE_VERSION }}
+
+      # Règles vérifiées et testées, runbooks présents, configuration d'Alertmanager valide.
+      - name: Check and test the alerting rules and the Alertmanager configuration
+        run: scripts/ci/validate-alerting.sh
 
   images:
     name: Images (cosign)

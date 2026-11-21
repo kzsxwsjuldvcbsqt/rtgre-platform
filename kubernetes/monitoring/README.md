@@ -1,6 +1,6 @@
-# Métriques
+# Métriques et alertes
 
-Prometheus collecte les métriques du cluster et les garde quinze jours ([ADR 0015](../../docs/adr/0015-metriques-avec-prometheus-et-son-operateur.md)).
+Prometheus collecte les métriques du cluster et les garde quinze jours ([ADR 0015](../../docs/adr/0015-metriques-avec-prometheus-et-son-operateur.md)). Il évalue aussi les règles d'alerte, qu'Alertmanager envoie sur Telegram ([ADR 0018](../../docs/adr/0018-alertes-avec-alertmanager-et-telegram.md)).
 
 | Composant | Rôle |
 | --- | --- |
@@ -9,6 +9,7 @@ Prometheus collecte les métriques du cluster et les garde quinze jours ([ADR 00
 | kube-state-metrics | Expose l'état des objets du cluster : pods, déploiements, tâches |
 | Sonde (blackbox exporter) | Interroge le site en HTTPS chaque minute, comme un visiteur |
 | Grafana | Affiche les tableaux de bord du dépôt, en lecture seule et sans compte ([ADR 0016](../../docs/adr/0016-grafana-en-lecture-seule-sans-compte.md)) |
+| Alertmanager | Regroupe les alertes et les envoie sur Telegram, seule adresse qu'il peut joindre |
 | [`node-exporter`](../node-exporter) | Métriques des nœuds, dans sa propre application |
 
 ## Ce qui est collecté
@@ -36,11 +37,42 @@ Elle part du cluster, résout le nom public et passe par le load balancer : elle
 1. Dans le chart du composant, un ServiceMonitor, et une règle réseau qui laisse entrer les pods de Prometheus (`app.kubernetes.io/name: prometheus`, espace de noms `monitoring`) sur le port des métriques.
 2. Ici, une entrée dans `scrape.pods` de [`values.yaml`](values.yaml) : Prometheus ne sort que vers ce qui y figure.
 
+## Alertes
+
+Les règles sont dans [`files/alerts.yaml`](files/alerts.yaml), au format de Prometheus. Recevoir les alertes, en essayer une ou en faire taire une : [runbook](../../docs/runbooks/recevoir-les-alertes.md).
+
+| Alerte | Se déclenche quand | Runbook |
+| --- | --- | --- |
+| `SiteInjoignable` | La sonde échoue depuis 5 minutes | [site-injoignable](../../docs/runbooks/site-injoignable.md) |
+| `GenerationEnEchec` | Aucune génération réussie depuis 3 heures | [suivre-la-generation-du-site](../../docs/runbooks/suivre-la-generation-du-site.md) |
+| `CertificatExpireBientot` | Un certificat expire dans moins de 14 jours | [suivre-les-certificats](../../docs/runbooks/suivre-les-certificats.md) |
+| `CertificatNonPret` | Un certificat n'est pas prêt depuis 1 heure | [suivre-les-certificats](../../docs/runbooks/suivre-les-certificats.md) |
+| `JournauxDeVisiteTropAnciens` | Le serveur web n'a pas été remplacé depuis 8 jours | [retablir-la-conservation-des-journaux](../../docs/runbooks/retablir-la-conservation-des-journaux.md) |
+| `ConservationDeLokiEnPanne` | Loki n'a rien supprimé depuis 6 heures | [retablir-la-conservation-des-journaux](../../docs/runbooks/retablir-la-conservation-des-journaux.md) |
+| `NoeudDisquePresquePlein` | Moins de 25 % de place sur un nœud | [noeud-a-court-de-ressources](../../docs/runbooks/noeud-a-court-de-ressources.md) |
+| `NoeudMemoirePresquePleine` | Moins de 10 % de mémoire disponible sur un nœud | [noeud-a-court-de-ressources](../../docs/runbooks/noeud-a-court-de-ressources.md) |
+| `PodEnBoucle` | Un conteneur redémarre 3 fois en 30 minutes | [diagnostiquer-un-pod](../../docs/runbooks/diagnostiquer-un-pod.md) |
+| `CibleInjoignable` | Prometheus ne joint plus une cible depuis 15 minutes | [diagnostiquer-un-pod](../../docs/runbooks/diagnostiquer-un-pod.md) |
+| `ApplicationDesynchronisee` | Une application Argo CD diffère du dépôt depuis 30 minutes | [retablir-une-application-argocd](../../docs/runbooks/retablir-une-application-argocd.md) |
+| `ApplicationDegradee` | Une application Argo CD n'est pas saine depuis 30 minutes | [retablir-une-application-argocd](../../docs/runbooks/retablir-une-application-argocd.md) |
+
+Seule la première est `critical`, rappelée toutes les deux heures. Les autres sont `warning`, rappelées chaque jour.
+
+### Ajouter une alerte
+
+1. La règle, dans `files/alerts.yaml`, avec son niveau, un résumé, une description et l'annotation `runbook`, le nom d'un fichier de [`docs/runbooks`](../../docs/runbooks).
+2. Son test, dans [`tests/alerts_test.yaml`](tests/alerts_test.yaml) : un instant où elle se tait, un instant où elle se déclenche.
+3. Vérifier :
+
+```bash
+scripts/ci/validate-alerting.sh
+```
+
 ## Tableaux de bord
 
 | Tableau | Contenu |
 | --- | --- |
-| Plateforme | Nœuds prêts, pods, processeur, mémoire, disque et charge par nœud, consommation par espace de noms, applications Argo CD, certificats, redémarrages |
+| Plateforme | Nœuds prêts, pods, processeur, mémoire, disque et charge par nœud, consommation par espace de noms, applications Argo CD, certificats, alertes en cours, redémarrages |
 | rtgre | Site joignable, temps de réponse, jours restants du certificat, trafic à la passerelle, requêtes servies et réseaux distincts sur 24 heures, génération horaire, âge des journaux de visite |
 
 Ils sont dans [`files/dashboards`](files/dashboards), générés par [`scripts/grafana-dashboards.py`](../../scripts/grafana-dashboards.py). Pour en modifier un : changer le script, le relancer, vérifier la requête dans Prometheus, puis ouvrir une pull request.
@@ -75,4 +107,6 @@ Puis ouvrir <http://localhost:8080>. La page « Target health » liste les cible
 
 - **Conservation bornée deux fois** : quinze jours, et 4 Go, sur un volume de 5 Go. Le disque du nœud ne peut pas se remplir de métriques.
 - **Toute cible déclarée est candidate**, quel que soit son chart : Prometheus ne filtre pas sur une étiquette de release. Le filtre est la règle réseau.
+- **Des règles d'alerte écrites pour ce cluster**, plutôt que celles du chart : douze, chacune avec son test et son runbook.
+- **Alertmanager sans volume ni jeton de l'API** : il ne garde que des silences, et n'a rien à demander à Kubernetes.
 - **Retirer l'application ne supprime rien** : ses CRD emporteraient les cibles et les règles des autres charts.

@@ -1,0 +1,250 @@
+# Tests des règles d'alerte : promtool test rules kubernetes/monitoring/tests/alerts_test.yaml
+# Dans un test, time() vaut le temps écoulé depuis le début : une date « 0 » est donc le début.
+rule_files:
+  - ../files/alerts.yaml
+
+evaluation_interval: 1m
+
+tests:
+  - name: Le site ne répond plus
+    interval: 1m
+    input_series:
+      - series: probe_success{job="site", instance="https://rtgre.fr/"}
+        values: 1x9 0x20
+      - series: probe_success{job="site", instance="https://www.rtgre.fr/"}
+        values: 1x30
+    alert_rule_test:
+      # Quatre minutes de panne : trop tôt.
+      - eval_time: 14m
+        alertname: SiteInjoignable
+      - eval_time: 16m
+        alertname: SiteInjoignable
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              job: site
+              instance: https://rtgre.fr/
+            exp_annotations:
+              summary: https://rtgre.fr/ ne répond plus
+              description: La sonde du cluster n'obtient plus de réponse valide en HTTPS depuis cinq minutes.
+              runbook: site-injoignable.md
+
+  - name: Le site n'est plus régénéré
+    interval: 1m
+    input_series:
+      - series: kube_cronjob_status_last_successful_time{namespace="rtgre", cronjob="rtgre-generator"}
+        values: 0x400
+      # La conservation, hebdomadaire, ne doit pas déclencher cette alerte.
+      - series: kube_cronjob_status_last_successful_time{namespace="rtgre", cronjob="rtgre-log-retention"}
+        values: 0x400
+    alert_rule_test:
+      # Deux générations manquées : pas encore.
+      - eval_time: 2h30m
+        alertname: GenerationEnEchec
+      - eval_time: 3h10m
+        alertname: GenerationEnEchec
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              namespace: rtgre
+              cronjob: rtgre-generator
+            exp_annotations:
+              summary: Le site n'est plus régénéré
+              description: Dernière génération réussie il y a 3h 10m 0s. Le site publié reste en ligne, mais il date.
+              runbook: suivre-la-generation-du-site.md
+
+  - name: Un certificat n'est pas renouvelé
+    interval: 1m
+    input_series:
+      # Expire au bout de vingt jours.
+      - series: certmanager_certificate_expiration_timestamp_seconds{exported_namespace="gateway", name="public"}
+        values: 1728000x10200
+      - series: certmanager_certificate_ready_status{exported_namespace="gateway", name="public", condition="True"}
+        values: 1x5760 0x4000
+      - series: certmanager_certificate_ready_status{exported_namespace="gateway", name="public", condition="False"}
+        values: 0x5760 1x4000
+    alert_rule_test:
+      # Quinze jours avant l'expiration.
+      - eval_time: 5d
+        alertname: CertificatExpireBientot
+      - eval_time: 7d
+        alertname: CertificatExpireBientot
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              exported_namespace: gateway
+              name: public
+            exp_annotations:
+              summary: Le certificat gateway/public expire bientôt
+              description: Il expire dans 13d 0h 0m 0s. Il aurait dû être renouvelé trente jours avant.
+              runbook: suivre-les-certificats.md
+      - eval_time: 4d30m
+        alertname: CertificatNonPret
+      - eval_time: 4d1h10m
+        alertname: CertificatNonPret
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              exported_namespace: gateway
+              name: public
+              condition: "True"
+            exp_annotations:
+              summary: Le certificat gateway/public n'est pas prêt
+              description: cert-manager n'arrive pas à l'obtenir ou à le renouveler depuis une heure.
+              runbook: suivre-les-certificats.md
+
+  - name: Les journaux ne sont plus supprimés
+    interval: 1m
+    input_series:
+      - series: kube_pod_start_time{namespace="rtgre", pod="rtgre-web-5c9f7d-abcde"}
+        values: 0x12000
+      - series: loki_compactor_apply_retention_last_successful_run_timestamp_seconds{namespace="logging"}
+        values: 0x12000
+    alert_rule_test:
+      # Remplacé il y a une semaine : la tâche du lundi n'a pas encore de retard.
+      - eval_time: 7d12h
+        alertname: JournauxDeVisiteTropAnciens
+      - eval_time: 8d2h
+        alertname: JournauxDeVisiteTropAnciens
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: Les journaux de visite n'ont pas été supprimés cette semaine
+              description: >-
+                Le serveur web tourne depuis 8d 2h 0m 0s. La limite promise aux visiteurs est de quatorze jours.
+              runbook: retablir-la-conservation-des-journaux.md
+      - eval_time: 5h
+        alertname: ConservationDeLokiEnPanne
+      - eval_time: 7h
+        alertname: ConservationDeLokiEnPanne
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              namespace: logging
+            exp_annotations:
+              summary: Loki ne supprime plus les journaux anciens
+              description: Dernière suppression réussie il y a 7h 0m 0s. Loki doit tout supprimer après treize jours.
+              runbook: retablir-la-conservation-des-journaux.md
+
+  - name: Un nœud manque de disque ou de mémoire
+    interval: 1m
+    input_series:
+      - series: node_filesystem_size_bytes{instance="wk-1", mountpoint="/", fstype="ext4"}
+        values: 100x60
+      - series: node_filesystem_avail_bytes{instance="wk-1", mountpoint="/", fstype="ext4"}
+        values: 50x19 10x40
+      # Un système de fichiers en mémoire, même plein, ne compte pas.
+      - series: node_filesystem_size_bytes{instance="wk-1", mountpoint="/", fstype="tmpfs"}
+        values: 100x60
+      - series: node_filesystem_avail_bytes{instance="wk-1", mountpoint="/", fstype="tmpfs"}
+        values: 0x60
+      - series: node_memory_MemTotal_bytes{instance="cp-1"}
+        values: 1000x60
+      - series: node_memory_MemAvailable_bytes{instance="cp-1"}
+        values: 500x19 50x40
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: NoeudDisquePresquePlein
+      - eval_time: 36m
+        alertname: NoeudDisquePresquePlein
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              instance: wk-1
+              mountpoint: /
+              fstype: ext4
+            exp_annotations:
+              summary: Le disque de wk-1 est presque plein
+              description: Il reste 10% de place. Ce disque porte aussi les volumes et les images.
+              runbook: noeud-a-court-de-ressources.md
+      - eval_time: 30m
+        alertname: NoeudMemoirePresquePleine
+      - eval_time: 36m
+        alertname: NoeudMemoirePresquePleine
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              instance: cp-1
+            exp_annotations:
+              summary: La mémoire de cp-1 est presque pleine
+              description: Il reste 5% de mémoire disponible.
+              runbook: noeud-a-court-de-ressources.md
+
+  - name: Un pod redémarre en boucle, une cible ne répond plus
+    interval: 1m
+    input_series:
+      - series: kube_pod_container_status_restarts_total{namespace="rtgre", pod="rtgre-web-1", container="nginx"}
+        values: 0x10 1+1x4 5x60
+      # Un seul redémarrage n'est pas une boucle.
+      - series: kube_pod_container_status_restarts_total{namespace="logging", pod="loki-0", container="loki"}
+        values: 0x10 1x60
+      - series: up{job="node-exporter", instance="10.20.20.32:9100"}
+        values: 1x10 0x60
+      - series: up{job="kubelet", instance="10.20.20.32:10250"}
+        values: 1x70
+    alert_rule_test:
+      - eval_time: 12m
+        alertname: PodEnBoucle
+      - eval_time: 22m
+        alertname: PodEnBoucle
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              namespace: rtgre
+              pod: rtgre-web-1
+              container: nginx
+            exp_annotations:
+              summary: rtgre/rtgre-web-1 redémarre en boucle
+              description: Le conteneur nginx a redémarré 5 fois en trente minutes.
+              runbook: diagnostiquer-un-pod.md
+      - eval_time: 20m
+        alertname: CibleInjoignable
+      - eval_time: 27m
+        alertname: CibleInjoignable
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              job: node-exporter
+              instance: 10.20.20.32:9100
+            exp_annotations:
+              summary: Prometheus ne joint plus node-exporter
+              description: "La cible 10.20.20.32:9100 ne répond plus depuis un quart d'heure : ses métriques manquent."
+              runbook: diagnostiquer-un-pod.md
+
+  - name: Une application Argo CD n'est plus synchronisée ou plus saine
+    interval: 1m
+    input_series:
+      - series: argocd_app_info{name="rtgre", sync_status="Synced", health_status="Healthy"}
+        values: 1x10 _x60
+      - series: argocd_app_info{name="rtgre", sync_status="OutOfSync", health_status="Degraded"}
+        values: _x10 1x60
+      - series: argocd_app_info{name="storage", sync_status="Synced", health_status="Healthy"}
+        values: 1x70
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: ApplicationDesynchronisee
+      - eval_time: 42m
+        alertname: ApplicationDesynchronisee
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              name: rtgre
+              sync_status: OutOfSync
+              health_status: Degraded
+            exp_annotations:
+              summary: L'application rtgre ne correspond plus au dépôt
+              description: Argo CD la voit « OutOfSync » depuis trente minutes.
+              runbook: retablir-une-application-argocd.md
+      - eval_time: 42m
+        alertname: ApplicationDegradee
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              name: rtgre
+              sync_status: OutOfSync
+              health_status: Degraded
+            exp_annotations:
+              summary: L'application rtgre n'est pas saine
+              description: Argo CD la voit « Degraded » depuis trente minutes.
+              runbook: retablir-une-application-argocd.md

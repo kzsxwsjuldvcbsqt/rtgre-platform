@@ -2,6 +2,8 @@
 
 Le certificat des noms publics est obtenu et renouvelé par cert-manager ([ADR 0013](../adr/0013-certificats-par-cert-manager-et-lets-encrypt.md)). Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
 
+Deux alertes y renvoient : `CertificatNonPret`, quand cert-manager échoue depuis une heure, et `CertificatExpireBientot`, à quatorze jours de l'expiration. Pour l'une comme pour l'autre, commencer par « Un certificat n'arrive pas ». Elles couvrent aussi les certificats internes de l'espace de noms `monitoring` : remplacer alors `gateway` et `public` par l'espace de noms et le nom que donne l'alerte.
+
 ## Voir l'état
 
 ```bash

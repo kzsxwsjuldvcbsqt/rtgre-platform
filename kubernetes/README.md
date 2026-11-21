@@ -9,7 +9,7 @@ Ce qui tourne dans le cluster est décrit ici et déployé par Argo CD ([ADR 001
 | [`cert-manager`](cert-manager) | Certificats : cert-manager et ses émetteurs Let's Encrypt |
 | [`gateway`](gateway) | Passerelle du cluster : Traefik en contrôleur Gateway API, et son certificat |
 | [`logging`](logging) | Journaux des pods : Alloy les collecte, Loki les conserve treize jours |
-| [`monitoring`](monitoring) | Métriques et tableaux de bord : Prometheus, son opérateur, kube-state-metrics et Grafana |
+| [`monitoring`](monitoring) | Métriques, tableaux de bord et alertes : Prometheus, son opérateur, kube-state-metrics, Grafana et Alertmanager |
 | [`node-exporter`](node-exporter) | Métriques des nœuds, dans le seul espace de noms privilégié |
 | [`rtgre`](rtgre) | Le site rtgre.fr : génération horaire depuis ADE, et serveur web |
 | [`storage`](storage) | Volumes persistants locaux, déclarés un par un |

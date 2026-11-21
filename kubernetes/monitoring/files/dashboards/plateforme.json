@@ -587,7 +587,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
+        "w": 6,
         "x": 0,
         "y": 28
       },
@@ -648,8 +648,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
-        "x": 8,
+        "w": 6,
+        "x": 6,
         "y": 28
       },
       "targets": [
@@ -701,6 +701,67 @@
     },
     {
       "type": "stat",
+      "title": "Alertes en cours",
+      "description": "Chacune est aussi envoyée sur Telegram, avec son runbook.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 28
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count(ALERTS{alertstate=\"firing\"}) or vector(0)",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "id": 13
+    },
+    {
+      "type": "stat",
       "title": "Données de Prometheus sur le disque",
       "description": "Bornées à 4 Go, sur un volume de 5 Go.",
       "datasource": {
@@ -709,8 +770,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
-        "x": 16,
+        "w": 6,
+        "x": 18,
         "y": 28
       },
       "targets": [
@@ -758,7 +819,7 @@
         "graphMode": "none",
         "textMode": "auto"
       },
-      "id": 13
+      "id": 14
     },
     {
       "type": "timeseries",
@@ -810,7 +871,7 @@
           "sort": "desc"
         }
       },
-      "id": 14
+      "id": 15
     }
   ]
 }
