@@ -2,5 +2,8 @@ dependencies:
 - name: kube-prometheus-stack
   repository: oci://ghcr.io/prometheus-community/charts
   version: 93.4.1
-digest: sha256:4dbe22aa1aa5daa0ecffd1cbd2dfad0810230965b6d1ccefd00cfbed3802e8c2
-generated: "2026-11-21T21:58:48.516987724+01:00"
+- name: prometheus-blackbox-exporter
+  repository: oci://ghcr.io/prometheus-community/charts
+  version: 11.21.3
+digest: sha256:1f5c4ccaa150ca0b75b4f0171b45c3cba1f081376dd9d995815ac69d4416c8b4
+generated: "2026-11-21T22:35:19.51278269+01:00"

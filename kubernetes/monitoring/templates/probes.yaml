@@ -1,0 +1,15 @@
+# Prometheus fait interroger chaque adresse par la sonde, une fois par minute.
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: site
+spec:
+  jobName: site
+  interval: 60s
+  module: http_2xx
+  prober:
+    url: monitoring-blackbox.{{ .Release.Namespace }}.svc:9115
+  targets:
+    staticConfig:
+      static:
+        {{- toYaml .Values.probes.targets | nindent 8 }}
