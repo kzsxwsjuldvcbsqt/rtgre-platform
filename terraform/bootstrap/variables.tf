@@ -106,3 +106,19 @@ variable "github_apply_environment" {
     error_message = "github_apply_environment ne doit contenir que des lettres, des chiffres, des points, des tirets ou des tirets bas."
   }
 }
+
+variable "free_tier_quotas" {
+  description = "Limites de l'offre Always Free appliquées en quotas à toute la tenancy."
+  type = object({
+    a1_ocpus                = number
+    a1_memory_in_gbs        = number
+    block_storage_in_gbs    = number
+    block_backups           = number
+    object_storage_in_bytes = number
+  })
+
+  validation {
+    condition     = alltrue([for value in values(var.free_tier_quotas) : value >= 0 && floor(value) == value])
+    error_message = "Chaque quota doit être un entier positif ou nul."
+  }
+}
