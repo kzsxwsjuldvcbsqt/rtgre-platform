@@ -30,6 +30,11 @@ argo-cd:
   # travail (6 Go). Pas de limite de processeur : elle ralentirait les synchronisations sans
   # protéger le nœud.
   controller:
+    # Métriques : état de synchronisation et de santé de chaque application.
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
     resources:
       requests:
         cpu: 100m

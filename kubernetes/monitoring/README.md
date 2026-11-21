@@ -7,6 +7,7 @@ Prometheus collecte les métriques du cluster et les garde quinze jours ([ADR 00
 | Prometheus | Collecte les cibles chaque minute, sur un volume local déclaré dans [`storage`](../storage) |
 | Opérateur | Traduit les objets ServiceMonitor et PrometheusRule en configuration de Prometheus |
 | kube-state-metrics | Expose l'état des objets du cluster : pods, déploiements, tâches |
+| Sonde (blackbox exporter) | Interroge le site en HTTPS chaque minute, comme un visiteur |
 | Grafana | Affiche les tableaux de bord du dépôt, en lecture seule et sans compte ([ADR 0016](../../docs/adr/0016-grafana-en-lecture-seule-sans-compte.md)) |
 | [`node-exporter`](../node-exporter) | Métriques des nœuds, dans sa propre application |
 
@@ -19,8 +20,16 @@ Prometheus collecte les métriques du cluster et les garde quinze jours ([ADR 00
 | `coredns` | Résolutions DNS du cluster |
 | `kube-state-metrics` | État des objets, dernière réussite des tâches planifiées |
 | `prometheus-node-exporter` | Processeur, mémoire, disque et réseau des deux nœuds |
+| `site` | Disponibilité, temps de réponse et expiration du certificat de rtgre.fr et de www.rtgre.fr |
+| `gateway-traefik-metrics` | Requêtes, codes de réponse et durées à la passerelle, sans aucune adresse de visiteur |
+| `cert-manager` | État et date d'expiration de chaque certificat |
+| `argocd-application-controller-metrics` | Synchronisation et santé de chaque application |
 
 Le planificateur, le gestionnaire de contrôleurs, etcd et kube-proxy ne le sont pas : kubeadm ne les fait écouter que sur la boucle locale du plan de contrôle.
+
+## La sonde du site
+
+Elle part du cluster, résout le nom public et passe par le load balancer : elle voit donc ce que voit un visiteur, hormis une panne du réseau entre lui et Oracle. Ses adresses sont dans `probes.targets`, et elle ne peut joindre qu'elles. Une réponse en clair, un certificat invalide ou un code autre que 200 après redirections comptent comme un échec.
 
 ## Ajouter une cible
 
@@ -31,8 +40,8 @@ Le planificateur, le gestionnaire de contrôleurs, etcd et kube-proxy ne le sont
 
 | Tableau | Contenu |
 | --- | --- |
-| Plateforme | Nœuds prêts, pods, processeur, mémoire, disque et charge par nœud, consommation par espace de noms, redémarrages |
-| rtgre | Dernière génération réussie, durée des générations, serveur web, âge des journaux de visite |
+| Plateforme | Nœuds prêts, pods, processeur, mémoire, disque et charge par nœud, consommation par espace de noms, applications Argo CD, certificats, redémarrages |
+| rtgre | Site joignable, temps de réponse, jours restants du certificat, trafic à la passerelle, génération horaire, âge des journaux de visite |
 
 Ils sont dans [`files/dashboards`](files/dashboards), générés par [`scripts/grafana-dashboards.py`](../../scripts/grafana-dashboards.py). Pour en modifier un : changer le script, le relancer, vérifier la requête dans Prometheus, puis ouvrir une pull request.
 

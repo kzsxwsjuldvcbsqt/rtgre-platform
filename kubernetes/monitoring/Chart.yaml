@@ -7,3 +7,7 @@ dependencies:
   - name: kube-prometheus-stack
     version: 93.4.1
     repository: oci://ghcr.io/prometheus-community/charts
+  # Sonde HTTP : elle interroge le site comme le ferait un visiteur.
+  - name: prometheus-blackbox-exporter
+    version: 11.21.3
+    repository: oci://ghcr.io/prometheus-community/charts

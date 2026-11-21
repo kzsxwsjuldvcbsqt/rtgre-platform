@@ -14,7 +14,9 @@ policy=$repo/kubernetes/signed-images.txt
 images=$(
   for chart in "$repo"/kubernetes/*/; do
     helm dependency build "$chart" > /dev/null
-    helm template "$(basename "$chart")" "$chart"
+    # Mêmes API que scripts/ci/validate-kubernetes.sh : le rendu doit être celui du cluster.
+    helm template "$(basename "$chart")" "$chart" --api-versions monitoring.coreos.com/v1 \
+      --api-versions cert-manager.io/v1 --api-versions gateway.networking.k8s.io/v1
   done | sed -n 's/^ *\(- \)\{0,1\}image: *"\{0,1\}\([^" ]*\)"\{0,1\} *$/\2/p' | sort -u
 )
 
