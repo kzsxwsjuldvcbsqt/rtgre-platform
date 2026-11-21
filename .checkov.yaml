@@ -1,0 +1,11 @@
+# Configuration de Checkov : seul le Terraform du dépôt est analysé. Les Dockerfile et
+# manifestes relèvent de Trivy (trivy.yaml).
+framework:
+  - terraform
+quiet: true
+compact: true
+skip-path:
+  - .venv
+  - ansible/collections
+  - \.terraform
+  - \.cache

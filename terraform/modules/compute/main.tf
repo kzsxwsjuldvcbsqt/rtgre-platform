@@ -36,6 +36,7 @@ locals {
 resource "oci_core_instance" "node" {
   for_each = var.nodes
 
+  # checkov:skip=CKV_OCI_4:Le chiffrement en transit force la recréation des nœuds ; il sera activé au prochain remplacement (#45).
   compartment_id      = var.compartment_id
   availability_domain = local.availability_domain
   fault_domain        = local.fault_domain_by_node[each.key]
@@ -66,6 +67,12 @@ resource "oci_core_instance" "node" {
 
   metadata = {
     ssh_authorized_keys = join("\n", var.ssh_authorized_keys)
+  }
+
+  # Seul le service de métadonnées v2 (en-tête d'autorisation obligatoire) reste actif : le v1 peut
+  # être exploité par une requête forgée depuis le nœud (SSRF) pour lire ses identifiants.
+  instance_options {
+    are_legacy_imds_endpoints_disabled = true
   }
 
   agent_config {

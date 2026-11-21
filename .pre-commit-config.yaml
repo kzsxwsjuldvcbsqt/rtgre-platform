@@ -32,6 +32,10 @@ repos:
       - id: terraform_fmt
       - id: terraform_validate
       - id: terraform_tflint
+      # Checkov vient de mise.toml : il couvre les règles propres à Oracle Cloud (CKV_OCI_*).
+      - id: terraform_checkov
+        args:
+          - --args=--config-file __GIT_WORKING_DIR__/.checkov.yaml
 
   - repo: https://github.com/adrienverge/yamllint
     rev: cba56bcde1fdd01c1deb3f945e69764c291a6530  # frozen: v1.38.0
@@ -70,6 +74,15 @@ repos:
 
   - repo: local
     hooks:
+      # Mauvaises configurations (Terraform, Dockerfile, manifestes) : règles et exceptions dans
+      # trivy.yaml et .trivyignore.yaml. Les vulnérabilités sont analysées par le workflow Security.
+      - id: trivy-config
+        name: Trivy (configuration)
+        entry: trivy config --quiet .
+        language: system
+        pass_filenames: false
+        files: ^(terraform/|ansible/|\.github/|trivy\.yaml$|\.trivyignore\.yaml$)
+
       - id: shellcheck
         name: ShellCheck
         entry: shellcheck

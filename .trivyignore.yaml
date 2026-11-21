@@ -1,0 +1,9 @@
+# Exceptions de Trivy : chacune est justifiée et expire, pour être réexaminée.
+misconfigurations:
+  - id: DS-0002
+    paths:
+      - ansible/roles/*/molecule/default/Dockerfile.j2
+    statement: >-
+      Conteneurs de test Molecule : ils font tourner systemd et appliquent les rôles comme root sur un
+      nœud. Ils ne sont jamais déployés.
+    expired_at: 2027-11-21

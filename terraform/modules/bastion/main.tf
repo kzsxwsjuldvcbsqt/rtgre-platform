@@ -13,6 +13,7 @@ resource "oci_bastion_bastion" "this" {
 
 # SSH n'entre sur les nœuds que depuis le point d'accès privé du Bastion.
 resource "oci_core_network_security_group_security_rule" "nodes_ingress_ssh_from_bastion" {
+  # checkov:skip=CKV_OCI_21:Règles avec état voulues : une règle sans état exige d'écrire aussi la règle de retour, source d'erreurs.
   network_security_group_id = var.target_nsg_id
   description               = "SSH depuis le Bastion uniquement"
   direction                 = "INGRESS"
