@@ -1,17 +1,29 @@
-# Les signatures sont exigées dans les espaces de noms qui portent cette étiquette. Elle se pose
+# Les images sont contrôlées dans les espaces de noms qui portent cette étiquette. Elle se pose
 # là où l'espace de noms est déclaré : namespaceLabels, dans kubernetes/apps/values.yaml.
 verifiedNamespaces:
-  label: &verifiedLabel rtgre.fr/signed-images
+  label: &verifiedLabel rtgre.fr/verified-images
   value: &verifiedValue required
 
+# Images admises dans ces espaces de noms sans signature : celles que leur éditeur ne signe pas.
+# Les images à signature exigée, et leurs signataires, sont dans files/signed-images.txt. Tout
+# autre dépôt est refusé.
+unsignedImages:
+  - docker.io/library/nginx
+
+verification:
+  # Délai laissé à Kyverno pour répondre à l'API de Kubernetes.
+  timeoutSeconds: 20
+  # Journal de transparence où chaque signature est inscrite. La preuve d'inscription voyage
+  # avec la signature : Kyverno la vérifie sans l'interroger.
+  transparencyLog: https://rekor.sigstore.dev
+
 # Seuls noms que Kyverno peut joindre hors du cluster, en HTTPS : le registre des images signées,
-# puis Sigstore, pour ses certificats racines et son journal de transparence.
+# puis Sigstore, pour ses certificats racines.
 egress:
   hosts:
     - ghcr.io
     - pkg-containers.githubusercontent.com
     - tuf-repo-cdn.sigstore.dev
-    - rekor.sigstore.dev
 
 # Valeurs du chart officiel kyverno (ADR 0019).
 kyverno:

@@ -1,5 +1,6 @@
 # Images qui doivent être référencées par leur empreinte et porter une signature cosign sans clé.
-# scripts/ci/verify-image-signatures.sh le vérifie avant toute fusion.
+# scripts/ci/verify-image-signatures.sh le vérifie avant toute fusion, et Kyverno à chaque
+# création de pod dans un espace de noms étiqueté (templates/signed-images.yaml).
 #
 # préfixe de l'image | identité du certificat de signature | émetteur OIDC
 ghcr.io/kzsxwsjuldvcbsqt/rtgre | https://github.com/kzsxwsjuldvcbsqt/rtgre/.github/workflows/image.yml@refs/heads/main | https://token.actions.githubusercontent.com

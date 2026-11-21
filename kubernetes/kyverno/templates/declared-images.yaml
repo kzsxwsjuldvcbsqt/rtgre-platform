@@ -1,0 +1,53 @@
+# Politique native de Kubernetes, évaluée par l'API elle-même, même si Kyverno est arrêté : dans
+# les espaces de noms étiquetés, toute image vient d'un dépôt déclaré et porte son empreinte.
+# Kyverno vérifie ensuite la signature de celles qui doivent en porter une.
+{{- $repositories := .Values.unsignedImages }}
+{{- range (include "kyverno.signedImages" . | fromYaml).images }}
+{{- $repositories = append $repositories .prefix }}
+{{- end }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: declared-images
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups:
+          - ""
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+          - pods/ephemeralcontainers
+  variables:
+    - name: repositories
+      expression: {{ toJson $repositories | quote }}
+    - name: images
+      expression: >-
+        object.spec.containers.map(c, c.image)
+        + (has(object.spec.initContainers) ? object.spec.initContainers.map(c, c.image) : [])
+        + (has(object.spec.ephemeralContainers) ? object.spec.ephemeralContainers.map(c, c.image) : [])
+    - name: refused
+      expression: >-
+        variables.images.filter(i, !i.contains("@sha256:")
+        || !variables.repositories.exists(r, i.startsWith(r + ":") || i.startsWith(r + "@")))
+  validations:
+    - expression: size(variables.refused) == 0
+      messageExpression: >-
+        "image d'un dépôt non déclaré, ou sans empreinte : " + variables.refused.join(", ")
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: declared-images
+spec:
+  policyName: declared-images
+  validationActions:
+    - Deny
+  matchResources:
+    namespaceSelector:
+      {{- include "kyverno.verifiedNamespaces" . | nindent 6 }}

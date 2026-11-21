@@ -63,8 +63,8 @@ applications:
       # renovate-digest: datasource=github-tags depName=kubernetes-sigs/gateway-api
       targetRevision: c0836133e24073fcdcdbb1713aba3cc73a89d0b5 # v1.6.3
       path: config/crd/standard
-  # Signature des images, vérifiée à la création des pods dans les espaces de noms qui portent
-  # l'étiquette rtgre.fr/signed-images. Retirer l'application ne supprime rien : ses webhooks
+  # Images contrôlées à la création des pods, signature comprise, dans les espaces de noms qui
+  # portent l'étiquette rtgre.fr/verified-images. Retirer l'application ne supprime rien : ses webhooks
   # resteraient sans personne pour leur répondre (kubernetes/kyverno/README.md).
   kyverno:
     namespace: kyverno
