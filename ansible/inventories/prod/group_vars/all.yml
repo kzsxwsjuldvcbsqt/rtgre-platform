@@ -40,3 +40,14 @@ cilium_kubernetes_version: "{{ kubernetes_node_version }}"
 argocd_kubernetes_version: "{{ kubernetes_node_version }}"
 # Une clé de déploiement par cluster : son titre le désigne dans le dépôt GitHub.
 argocd_deploy_key_title: "argocd-{{ kubeadm_cluster_name }}"
+
+# Stockage -----------------------------------------------------------------------
+
+# Les volumes locaux ne sont déclarés que dans les valeurs du chart storage : chaque nœud crée
+# les dossiers des volumes qu'il porte.
+platform_storage_values: >-
+  {{ lookup('ansible.builtin.file', playbook_dir ~ '/../../kubernetes/storage/values.yaml') | from_yaml }}
+local_volumes_directory: "{{ platform_storage_values.directory }}"
+local_volumes_names: >-
+  {{ platform_storage_values.volumes | dict2items
+     | selectattr('value.node', 'equalto', inventory_hostname) | map(attribute='key') }}
