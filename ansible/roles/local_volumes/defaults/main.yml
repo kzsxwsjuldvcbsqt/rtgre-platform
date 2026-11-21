@@ -1,0 +1,6 @@
+---
+# Dossier qui contient un sous-dossier par volume local.
+local_volumes_directory: /var/lib/kubernetes-local-volumes
+
+# Noms des volumes portés par ce nœud. Chacun devient un sous-dossier.
+local_volumes_names: []

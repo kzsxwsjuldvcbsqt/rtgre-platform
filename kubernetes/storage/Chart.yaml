@@ -1,0 +1,5 @@
+apiVersion: v2
+name: storage
+description: Volumes persistants locaux de la plateforme, déclarés un par un.
+type: application
+version: 0.1.0

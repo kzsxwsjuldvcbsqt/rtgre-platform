@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: kzsxwsjuldvcbsqt
+  role_name: local_volumes
+  namespace: rtgre_platform
+  description: Crée sur un nœud les dossiers des volumes persistants locaux de Kubernetes.
+  license: MIT
+  min_ansible_version: "2.22"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - noble
+
+dependencies: []

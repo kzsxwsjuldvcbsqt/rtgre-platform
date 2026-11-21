@@ -1,0 +1,29 @@
+---
+dependency:
+  name: galaxy
+  enabled: false
+
+driver:
+  name: docker
+
+platforms:
+  - name: local-volumes-noble
+    # Nom du tag local construit par le pilote ; l'image de base est épinglée dans Dockerfile.j2.
+    image: ubuntu:24.04
+    dockerfile: Dockerfile.j2
+    pre_build_image: false
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_COLLECTIONS_PATH: ${MOLECULE_PROJECT_DIRECTORY}/../../collections
+    ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..
+  inventory:
+    host_vars:
+      local-volumes-noble:
+        local_volumes_names:
+          - site
+          - metrics
+
+verifier:
+  name: ansible

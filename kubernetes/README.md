@@ -6,6 +6,7 @@ Ce qui tourne dans le cluster est décrit ici et déployé par Argo CD ([ADR 001
 | --- | --- |
 | [`apps`](apps) | Application racine : le projet `platform`, et une application Argo CD par entrée de ses valeurs, elle-même comprise |
 | [`argocd`](argocd) | Argo CD : le chart officiel `argo-cd`, figé dans `Chart.lock`, et les valeurs de la plateforme |
+| [`storage`](storage) | Volumes persistants locaux, déclarés un par un |
 
 Le réseau des pods, Cilium, n'est pas ici : Argo CD en a besoin pour démarrer, c'est donc Ansible qui l'installe ([rôle `cilium`](../ansible/roles/cilium)).
 
@@ -20,6 +21,20 @@ mise run kubernetes-validate
 ```
 
 Le dépôt suivi et sa branche ne sont écrits qu'à un endroit : `repository` dans `apps/values.yaml`.
+
+## Essayer une branche avant de la fusionner
+
+L'application racine suit `main` : une application nouvelle n'existe donc qu'après la fusion. Pour la voir tourner avant, depuis la branche, une fois poussée :
+
+```bash
+scripts/argocd-try-branch.sh feat/ma-branche
+```
+
+Le script suspend la synchronisation de l'application racine, puis pointe les projets et les applications sur la branche. Après la fusion, depuis `main` à jour, la même commande sans argument remet tout sur la révision du dépôt :
+
+```bash
+scripts/argocd-try-branch.sh
+```
 
 ## Amorçage
 

@@ -1,0 +1,8 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Values.storageClass }}
+provisioner: kubernetes.io/no-provisioner
+# Le volume n'est lié qu'au moment où un pod le demande, sur le nœud qui le porte.
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
