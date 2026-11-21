@@ -13,6 +13,14 @@ group_vars=$repo/ansible/inventories/prod/group_vars/all.yml
 version=${KUBERNETES_VERSION:-$(sed -n 's/^kubernetes_node_version: "\(.*\)"$/\1/p' "$group_vars")}
 : "${version:?kubernetes_node_version est introuvable dans $group_vars}"
 
+# API que le cluster connaît en plus de celles de Kubernetes : certains charts ne rendent leurs
+# objets (ServiceMonitor, par exemple) que si elles sont annoncées, comme le fait Argo CD.
+api_versions=(
+  --api-versions monitoring.coreos.com/v1
+  --api-versions cert-manager.io/v1
+  --api-versions gateway.networking.k8s.io/v1
+)
+
 for chart in "$repo"/kubernetes/*/; do
   name=$(basename "$chart")
   echo "== $name (Kubernetes $version)"
@@ -20,6 +28,6 @@ for chart in "$repo"/kubernetes/*/; do
   helm lint --quiet "$chart"
   # Les objets d'Argo CD (Application, AppProject) n'ont pas de schéma publié : ils sont comptés
   # comme ignorés, les autres sont validés strictement.
-  helm template "$name" "$chart" --namespace "$name" --kube-version "$version" |
+  helm template "$name" "$chart" --namespace "$name" --kube-version "$version" "${api_versions[@]}" |
     kubeconform -strict -summary -ignore-missing-schemas -kubernetes-version "$version"
 done
