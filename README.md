@@ -46,6 +46,8 @@ Le trafic web entre par le Network Load Balancer gratuit d'Oracle, déclaré dan
 
 Prometheus collecte les métriques des nœuds et du cluster ([ADR 0015](docs/adr/0015-metriques-avec-prometheus-et-son-operateur.md), [`kubernetes/monitoring`](kubernetes/monitoring)). Grafana les affiche dans deux tableaux de bord décrits dans le dépôt, en lecture seule et sans compte ([ADR 0016](docs/adr/0016-grafana-en-lecture-seule-sans-compte.md)). Les journaux des pods sont collectés par Alloy et conservés treize jours par Loki ([ADR 0017](docs/adr/0017-journaux-avec-loki-et-alloy.md)). Comme celle d'Argo CD, ces interfaces ne s'ouvrent qu'à travers le Bastion.
 
+Douze règles d'alerte, testées dans la CI, préviennent le propriétaire sur Telegram : site injoignable, génération en échec, certificat non renouvelé, nœud saturé, pod en boucle, application désynchronisée, journaux gardés trop longtemps ([ADR 0018](docs/adr/0018-alertes-avec-alertmanager-et-telegram.md)). Chaque message renvoie au [runbook](docs/runbooks) de l'alerte.
+
 Le site est généré dans le cluster par l'image que publie le dépôt rtgre ([`kubernetes/rtgre`](kubernetes/rtgre)). Quand rtgre publie une nouvelle image, Renovate propose sa nouvelle empreinte et la fusionne de lui-même une fois la CI verte : celle-ci vérifie que l'image est signée par le workflow de rtgre.
 
 ## Dépendances
