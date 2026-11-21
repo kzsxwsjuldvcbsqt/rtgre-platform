@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# Format de containerd 2.x (version 3) : seules les valeurs qui diffèrent des défauts sont écrites.
+version = 3
+
+# kubelet utilise le pilote cgroup systemd : runc doit utiliser le même.
+[plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc.options]
+  SystemdCgroup = true
+
+# Même image « pause » que kubeadm, pour éviter qu'il en télécharge une seconde.
+[plugins.'io.containerd.cri.v1.images'.pinned_images]
+  sandbox = '{{ kubernetes_node_pause_image }}'

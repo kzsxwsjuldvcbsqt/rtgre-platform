@@ -1,0 +1,40 @@
+---
+argument_specs:
+  main:
+    short_description: Prépare un nœud pour kubeadm.
+    description:
+      - Charge les modules et fixe les paramètres noyau requis, installe et configure containerd,
+        puis installe kubeadm, kubelet et kubectl à une version figée et bloquée.
+    options:
+      kubernetes_node_version:
+        type: str
+        description: Version exacte des paquets Kubernetes, par exemple 1.37.2.
+      kubernetes_node_packages:
+        type: list
+        elements: str
+        description: Paquets Kubernetes installés et bloqués.
+      kubernetes_node_apt_repository_url:
+        type: str
+        description: URL du dépôt apt de Kubernetes ; {minor} est remplacé par la version mineure.
+      kubernetes_node_pause_image:
+        type: str
+        description: Image « pause » des sandboxes de pods, identique à celle attendue par kubeadm.
+      kubernetes_node_containerd_socket:
+        type: str
+        description: Socket CRI de containerd.
+      kubernetes_node_kernel_modules:
+        type: list
+        elements: str
+        description: Modules noyau déclarés au démarrage.
+      kubernetes_node_load_modules:
+        type: bool
+        description: Charge aussi les modules dans le noyau en cours.
+      kubernetes_node_sysctl:
+        type: dict
+        description: Paramètres noyau écrits dans /etc/sysctl.d/70-kubernetes.conf.
+      kubernetes_node_sysctl_apply:
+        type: bool
+        description: Applique aussi les paramètres au noyau en cours.
+      kubernetes_node_disable_swap:
+        type: bool
+        description: Désactive le swap et le retire de fstab.
