@@ -30,7 +30,7 @@ flowchart LR
 - **Journaux de visite sans adresse complète** ([ADR 0014](../../docs/adr/0014-journaux-de-visite-sans-adresse-complete.md)) : nginx ne garde que le réseau du visiteur, un /24 en IPv4 et un /48 en IPv6, et aucun journal ne dépasse quatorze jours.
 - **Redémarrage sans coupure** : le nouveau pod démarre avant l'arrêt de l'ancien, et nginx sert encore dix secondes après la demande d'arrêt, le temps que la passerelle se détourne de lui.
 - **Comme GitHub Pages** : mêmes codes de réponse, mêmes types de contenu, même durée de cache, `/page` sert `page.html`. nginx ajoute trois en-têtes de sécurité.
-- **En HTTPS, avec HSTS**, sous `test.rtgre.fr` pour l'instant : rtgre.fr désigne toujours GitHub Pages, jusqu'à la bascule.
+- **En HTTPS, avec HSTS**, sous `rtgre.fr` depuis la bascule du 21 novembre 2026. `www.rtgre.fr` renvoie vers lui, et `test.rtgre.fr` reste disponible pour valider une modification. GitHub Pages reste déployé en secours ([runbook](../../docs/runbooks/basculer-rtgre-fr.md)).
 
 ## Mise à jour de l'image
 

@@ -42,7 +42,9 @@ curl -s -o /dev/null -w '%{http_code}\n' https://test.rtgre.fr/
 terraform apply
 ```
 
-3. Si le certificat de la passerelle ne couvre pas encore `rtgre.fr` et `www.rtgre.fr`, les ajouter à `certificate.dnsNames` dans `kubernetes/gateway/values.yaml` **juste après** l'étape 2 : Let's Encrypt ne valide un nom que s'il désigne déjà le cluster ([ADR 0013](../adr/0013-certificats-par-cert-manager-et-lets-encrypt.md)). Le certificat arrive en une minute environ. Lors d'un retour vers le cluster, il est déjà là : rien à faire.
+3. Si le certificat de la passerelle ne couvre pas encore `rtgre.fr` et `www.rtgre.fr`, les ajouter à `certificate.dnsNames` dans `kubernetes/gateway/values.yaml` **juste après** l'étape 2 : Let's Encrypt ne valide un nom que s'il désigne déjà le cluster ([ADR 0013](../adr/0013-certificats-par-cert-manager-et-lets-encrypt.md)). Une fois la pull request fusionnée, le certificat arrive en moins d'une minute. Lors d'un retour vers le cluster, il est déjà là : rien à faire.
+
+   Cette pull request ne peut pas être préparée avant celle de l'étape 2 : `main` exige une branche à jour, et la fusion de l'étape 2 la rend en retard. Il faut alors la mettre à jour (`gh pr update-branch`) et attendre de nouveau sa CI. Mieux vaut l'ouvrir après l'étape 2, ou vérifier son état avant de compter dessus.
 
 4. Vérifier :
 
@@ -54,6 +56,15 @@ dig +short @ns111.ovh.net rtgre.fr MX
 ```
 
 Une seule adresse, celle du load balancer ; `server: nginx` ; `www` qui renvoie vers `https://rtgre.fr/x` ; les trois MX inchangés.
+
+## Bascule du 21 novembre 2026
+
+- 21 h 33 : changement du DNS, propagé aux serveurs d'OVH en moins de dix secondes.
+- 21 h 42 : certificat prêt pour `rtgre.fr` et `www.rtgre.fr`.
+
+Entre les deux, pendant neuf minutes, un visiteur qui résolvait déjà la nouvelle adresse voyait une erreur de certificat. Une minute aurait suffi : la pull request du certificat, préparée d'avance, était en retard sur `main` après la fusion de celle du DNS, et sa fusion a été refusée sans que l'erreur soit lue. D'où la remarque de l'étape 3.
+
+Le retour arrière a ensuite été joué pour de vrai : 9 secondes pour que la zone désigne de nouveau GitHub Pages, qui servait le site avec un certificat valide, puis 8 secondes pour revenir au cluster. Les MX n'ont changé à aucun moment.
 
 ## Ce qu'il faut savoir
 
