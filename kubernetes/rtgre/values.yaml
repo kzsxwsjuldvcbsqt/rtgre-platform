@@ -47,6 +47,13 @@ site:
   # Point de montage : le générateur publie dans <mountPath>/dist.
   mountPath: /srv/site
 
-# Espace de noms de la passerelle autorisée à joindre le serveur web. Vide tant qu'aucune
-# passerelle n'existe : rien n'entre.
-gatewayNamespace: ""
+# Passerelle qui expose le site (kubernetes/gateway) : elle seule joint le serveur web.
+gateway:
+  namespace: gateway
+  name: public
+  # Écoute HTTP de la passerelle.
+  listener: web
+
+# Noms sous lesquels le site répond.
+hostnames:
+  - rtgre.fr
