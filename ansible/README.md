@@ -55,11 +55,12 @@ Le kubeconfig d'administration ne quitte pas le nœud.
 | --- | --- |
 | [`hardening`](roles/hardening) | Socle de sécurité : SSH, pare-feu, mises à jour, noyau |
 | [`kubernetes_node`](roles/kubernetes_node) | Préparation pour kubeadm : noyau, containerd, paquets Kubernetes |
+| [`local_volumes`](roles/local_volumes) | Dossiers des volumes persistants locaux portés par le nœud |
 | [`kubeadm`](roles/kubeadm) | Initialisation du plan de contrôle et jonction des nœuds |
 | [`cilium`](roles/cilium) | Réseau des pods (CNI) |
 | [`argocd`](roles/argocd) | Amorçage d'Argo CD, de sa clé de déploiement et de son application racine |
 
-Les rôles qui configurent un nœud seul, `hardening` et `kubernetes_node`, ont un scénario Molecule (`roles/<rôle>/molecule/default`), lancé en local avec `molecule test` depuis le dossier du rôle, et dans la CI par le workflow `Ansible`. Molecule a besoin de Docker et de `rsync`. Les rôles `kubeadm`, `cilium` et `argocd` ont besoin d'un vrai cluster : ils sont contrôlés par ansible-lint, puis vérifiés sur les nœuds.
+Les rôles qui configurent un nœud seul, `hardening`, `kubernetes_node` et `local_volumes`, ont un scénario Molecule (`roles/<rôle>/molecule/default`), lancé en local avec `molecule test` depuis le dossier du rôle, et dans la CI par le workflow `Ansible`. Molecule a besoin de Docker et de `rsync`. Les rôles `kubeadm`, `cilium` et `argocd` ont besoin d'un vrai cluster : ils sont contrôlés par ansible-lint, puis vérifiés sur les nœuds.
 
 ## Qualité
 
