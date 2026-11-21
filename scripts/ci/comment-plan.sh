@@ -5,6 +5,9 @@
 # dossier courant.
 set -euo pipefail
 
+: "${PR_NUMBER:?PR_NUMBER doit être défini.}"
+: "${CHANGES:?CHANGES doit valoir true ou false.}"
+
 # Un commentaire GitHub est limité à 65 536 caractères : le plan est tronqué au-delà.
 max_plan_chars=60000
 plan=$(sed -n '/Terraform will perform\|No changes\|Changes to Outputs/,$p' plan.log)

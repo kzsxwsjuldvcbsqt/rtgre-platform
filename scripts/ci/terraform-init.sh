@@ -6,6 +6,9 @@
 # ~/.oci/config doit avoir été écrit par l'action oci-login.
 set -euo pipefail
 
+: "${TF_VAR_state_bucket:?TF_VAR_state_bucket doit être défini (variable OCI_STATE_BUCKET du dépôt).}"
+: "${TF_VAR_region:?TF_VAR_region doit être défini (variable OCI_REGION du dépôt).}"
+
 namespace=$(oci os ns get --auth security_token --query data --raw-output)
 echo "TF_VAR_objectstorage_namespace=$namespace" >> "$GITHUB_ENV"
 
