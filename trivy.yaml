@@ -1,0 +1,13 @@
+# Configuration de Trivy, lue par « trivy config » et « trivy fs » depuis la racine du dépôt.
+severity:
+  - HIGH
+  - CRITICAL
+exit-code: 1
+ignorefile: .trivyignore.yaml
+scan:
+  # Code tiers téléchargé localement : analysé par ses propres auteurs, pas par ce dépôt.
+  skip-dirs:
+    - .venv
+    - ansible/collections
+    - ansible/.ansible
+    - "**/.terraform"
