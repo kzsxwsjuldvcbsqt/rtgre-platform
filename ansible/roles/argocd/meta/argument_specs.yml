@@ -1,0 +1,37 @@
+---
+argument_specs:
+  main:
+    short_description: Amorce Argo CD, sa clé de déploiement et son application racine.
+    options:
+      argocd_chart_path:
+        type: path
+        description: Chart d'Argo CD dans le dépôt, sur le poste de contrôle.
+      argocd_apps_chart_path:
+        type: path
+        description: Chart de l'application racine dans le dépôt, sur le poste de contrôle.
+      argocd_release_name:
+        type: str
+        description: Nom de la release, identique à celui de l'application Argo CD qui la reprend.
+      argocd_kubernetes_version:
+        type: str
+        required: true
+        description: Version de Kubernetes visée, sans le préfixe v.
+      argocd_kubeconfig:
+        type: str
+        description: Kubeconfig d'administration sur le plan de contrôle.
+      argocd_repository_secret_name:
+        type: str
+        description: Nom du Secret qui porte la clé de déploiement.
+      argocd_deploy_key_title:
+        type: str
+        description: Titre de la clé de déploiement dans le dépôt GitHub.
+      argocd_workloads:
+        type: list
+        elements: str
+        description: Composants d'Argo CD attendus avant de déclarer les applications.
+      argocd_rollout_timeout:
+        type: str
+        description: Délai accordé au démarrage des composants.
+      argocd_sync_timeout:
+        type: str
+        description: Délai accordé à la synchronisation des applications.

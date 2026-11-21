@@ -3,3 +3,11 @@
 # à confirmer par la mesure de #21.
 kubeadm_ignore_preflight_errors:
   - NumCPU
+
+# L'interface d'Argo CD n'est pas exposée : elle s'ouvre par une redirection de port SSH vers
+# une redirection kubectl, sur ce port de la boucle locale (docs/runbooks/acceder-a-argocd.md).
+# sshd n'autorise que cette redirection-là ; les nœuds de travail n'en autorisent aucune.
+platform_argocd_forward_port: 8080
+hardening_ssh_extra_options:
+  AllowTcpForwarding: local
+  PermitOpen: "127.0.0.1:{{ platform_argocd_forward_port }}"

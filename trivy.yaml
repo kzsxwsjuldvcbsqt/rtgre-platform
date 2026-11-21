@@ -11,5 +11,6 @@ scan:
     - ansible/collections
     - ansible/.ansible
     - "**/.terraform"
+    - kubernetes/*/charts
     # Cache de pre-commit, placé dans le dépôt par la CI : il contient les dépôts des hooks.
     - .cache

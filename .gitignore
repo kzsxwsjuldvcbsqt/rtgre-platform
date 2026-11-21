@@ -55,3 +55,6 @@ __pycache__/
 .vscode/
 *.swp
 .DS_Store
+
+# Helm : les charts tiers sont retéléchargés à partir de Chart.lock.
+kubernetes/*/charts/

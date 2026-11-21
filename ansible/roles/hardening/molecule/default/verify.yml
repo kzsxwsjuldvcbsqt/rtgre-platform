@@ -19,6 +19,9 @@
           - "'allowusers ubuntu' in hardening_sshd_effective.stdout_lines"
           - "'maxauthtries 3' in hardening_sshd_effective.stdout_lines"
           - "'x11forwarding no' in hardening_sshd_effective.stdout_lines"
+          - "'allowagentforwarding no' in hardening_sshd_effective.stdout_lines"
+          - "'allowtcpforwarding local' in hardening_sshd_effective.stdout_lines"
+          - "'permitopen 127.0.0.1:8080' in hardening_sshd_effective.stdout_lines"
         fail_msg: La configuration effective de sshd ne correspond pas au rôle.
 
     - name: Check that the SSH service is running

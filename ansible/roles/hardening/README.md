@@ -16,7 +16,7 @@ Toutes les variables sont dans `defaults/main.yml` et décrites dans `meta/argum
 - **Le fichier SSH est préfixé par 10** : sshd retient la première valeur lue pour une option, et l'image apporte déjà `60-cloudimg-settings.conf`.
 - **`/run/sshd` est créé par le rôle** : avec l'activation par socket d'Ubuntu 24.04, il n'existe qu'après la première connexion, et `sshd -t` échoue sans lui.
 - **Pas de redémarrage automatique** : un nœud Kubernetes doit être vidé (`kubectl drain`) avant de redémarrer.
-- **`AllowTcpForwarding no`** : l'accès à l'API Kubernetes passera par une session de redirection de port du service Bastion, qui se connecte directement au port visé, pas par un tunnel SSH sur le nœud.
+- **`AllowTcpForwarding no`** par défaut : un nœud ne sert pas de rebond. `hardening_ssh_extra_options` permet une exception par groupe. Le plan de contrôle en a une seule : la redirection locale vers le port de la boucle locale où s'ouvre l'interface d'Argo CD (`AllowTcpForwarding local` et `PermitOpen`), voir [acceder-a-argocd](../../../docs/runbooks/acceder-a-argocd.md).
 - **Pas de règle sur le routage** (`ip_forward`) : il relève du rôle qui prépare Kubernetes.
 
 ## Exemple

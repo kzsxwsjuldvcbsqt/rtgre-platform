@@ -25,6 +25,9 @@ hardening_ssh_options:
   AllowTcpForwarding: "no"
   PermitUserEnvironment: "no"
 
+# Options propres à un groupe de nœuds : elles complètent ou remplacent celles du dessus.
+hardening_ssh_extra_options: {}
+
 # Pare-feu local -----------------------------------------------------------------
 
 # Défense en profondeur derrière les groupes de sécurité réseau d'Oracle.

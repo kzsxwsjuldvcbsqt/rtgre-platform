@@ -4,6 +4,6 @@
 
 Port {{ hardening_ssh_port }}
 AllowUsers {{ hardening_ssh_allowed_users | join(' ') }}
-{% for option, value in hardening_ssh_options | dictsort %}
+{% for option, value in hardening_ssh_options | combine(hardening_ssh_extra_options) | dictsort %}
 {{ option }} {{ value }}
 {% endfor %}

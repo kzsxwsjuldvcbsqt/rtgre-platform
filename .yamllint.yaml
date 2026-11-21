@@ -11,3 +11,8 @@ rules:
     check-keys: false
   comments:
     min-spaces-from-content: 1
+
+# Les gabarits Helm ne sont du YAML qu'une fois rendus : scripts/ci/validate-kubernetes.sh.
+ignore: |
+  kubernetes/*/templates/
+  kubernetes/*/charts/

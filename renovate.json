@@ -75,6 +75,17 @@
       "groupName": "Kubernetes et Cilium"
     },
     {
+      "description": "Argo CD : une montée mineure ou majeure du chart peut changer de version d'Argo CD, à vérifier contre sa matrice de versions de Kubernetes (ADR 0010) ; elle attend une approbation dans le tableau de bord",
+      "matchDepNames": [
+        "argo-cd"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
       "description": "Providers Terraform",
       "matchManagers": [
         "terraform"

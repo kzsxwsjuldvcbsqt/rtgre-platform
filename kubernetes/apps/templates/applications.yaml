@@ -1,0 +1,37 @@
+{{- range $name, $app := .Values.applications }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.argocdNamespace }}
+  {{- if $app.cascade }}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  {{- end }}
+spec:
+  project: {{ $.Values.project }}
+  source:
+    repoURL: {{ $.Values.repository.url }}
+    targetRevision: {{ $.Values.repository.revision }}
+    path: {{ $.Values.repository.path }}/{{ $name }}
+    helm:
+      releaseName: {{ $name }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ $app.namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    {{- with $app.namespaceLabels }}
+    managedNamespaceMetadata:
+      labels:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    syncOptions:
+      - CreateNamespace=true
+      {{- if $app.serverSideApply }}
+      - ServerSideApply=true
+      {{- end }}
+{{- end }}

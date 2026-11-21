@@ -1,0 +1,28 @@
+# Dépôt que suit Argo CD. Il y accède en SSH avec une clé de déploiement en lecture seule,
+# que le rôle Ansible argocd crée à l'amorçage.
+repository:
+  url: git@github.com:kzsxwsjuldvcbsqt/rtgre-platform.git
+  revision: main
+  # Dossier des charts de la plateforme dans le dépôt.
+  path: kubernetes
+
+# Projet Argo CD qui regroupe les applications de la plateforme.
+project: platform
+
+# Espace de noms où tourne Argo CD et où vivent ses objets Application.
+argocdNamespace: argocd
+
+# Applications de la plateforme. Chaque clé est le nom de l'application, et aussi celui du
+# dossier de son chart sous repository.path.
+#   namespace       : espace de noms de destination
+#   namespaceLabels : étiquettes posées sur cet espace de noms (niveau Pod Security, etc.)
+#   cascade         : true supprime les ressources quand l'application disparaît du dépôt
+#   serverSideApply : true pour les objets trop grands pour l'annotation de kubectl (CRD)
+applications:
+  argocd:
+    namespace: argocd
+    namespaceLabels:
+      pod-security.kubernetes.io/enforce: restricted
+    # Argo CD ne se désinstalle pas lui-même si son application est retirée par erreur.
+    cascade: false
+    serverSideApply: true
