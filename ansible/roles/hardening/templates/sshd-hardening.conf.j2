@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+# Rôle hardening : sshd retient la première valeur lue pour une option, ce fichier passe donc
+# avant ceux de l'image.
+
+Port {{ hardening_ssh_port }}
+AllowUsers {{ hardening_ssh_allowed_users | join(' ') }}
+{% for option, value in hardening_ssh_options | dictsort %}
+{{ option }} {{ value }}
+{% endfor %}

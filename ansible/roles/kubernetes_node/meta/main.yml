@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: kzsxwsjuldvcbsqt
+  role_name: kubernetes_node
+  namespace: rtgre_platform
+  description: Prépare un nœud Ubuntu pour kubeadm (noyau, containerd, paquets Kubernetes).
+  license: MIT
+  min_ansible_version: "2.22"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - noble
+
+dependencies: []

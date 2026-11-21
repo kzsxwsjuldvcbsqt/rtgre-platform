@@ -25,6 +25,9 @@ terraform/modules/**/.terraform.lock.hcl
 
 # Ansible
 *.retry
+ansible/collections/
+# Cache d'ansible-lint.
+ansible/.ansible/
 .vault-pass*
 ansible/inventories/**/generated/
 

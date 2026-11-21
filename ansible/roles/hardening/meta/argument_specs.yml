@@ -1,0 +1,44 @@
+---
+argument_specs:
+  main:
+    short_description: Applique le socle de sécurité d'un nœud.
+    description:
+      - Durcit sshd, active un pare-feu ufw en refus par défaut, installe les mises à jour de sécurité
+        automatiques et fixe des paramètres noyau.
+    options:
+      hardening_ssh_port:
+        type: int
+        description: Port d'écoute de sshd.
+      hardening_ssh_allowed_users:
+        type: list
+        elements: str
+        description: Comptes autorisés à ouvrir une session SSH.
+      hardening_ssh_options:
+        type: dict
+        description: Options de sshd écrites dans le fichier de configuration du rôle.
+      hardening_firewall_enabled:
+        type: bool
+        description: Active le pare-feu local.
+      hardening_firewall_trusted_cidrs:
+        type: list
+        elements: str
+        description: Plages autorisées sans restriction de port.
+      hardening_firewall_public_tcp_ports:
+        type: list
+        elements: int
+        description: Ports TCP ouverts depuis n'importe quelle adresse, en plus de SSH.
+      hardening_firewall_remove_iptables_persistent:
+        type: bool
+        description: Retire les règles iptables chargées au démarrage par les images Oracle.
+      hardening_unattended_upgrades_enabled:
+        type: bool
+        description: Installe automatiquement les mises à jour de sécurité.
+      hardening_unattended_upgrades_automatic_reboot:
+        type: bool
+        description: Autorise le redémarrage automatique après une mise à jour.
+      hardening_sysctl:
+        type: dict
+        description: Paramètres noyau écrits dans /etc/sysctl.d/60-hardening.conf.
+      hardening_sysctl_apply:
+        type: bool
+        description: Applique aussi les paramètres au noyau en cours.

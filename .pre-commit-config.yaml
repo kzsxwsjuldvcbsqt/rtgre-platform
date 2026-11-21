@@ -50,3 +50,13 @@ repos:
       - id: conventional-pre-commit
         stages: [commit-msg]
         args: [build, chore, ci, docs, feat, fix, perf, refactor, revert, test]
+
+  # ansible-lint a besoin des collections du projet : il tourne avec l'environnement de mise.
+  - repo: local
+    hooks:
+      - id: ansible-lint
+        name: ansible-lint
+        entry: bash -c 'cd ansible && ansible-lint'
+        language: system
+        files: ^ansible/
+        pass_filenames: false

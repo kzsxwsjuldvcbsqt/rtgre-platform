@@ -1,0 +1,42 @@
+---
+dependency:
+  name: galaxy
+  enabled: false
+
+driver:
+  name: docker
+
+# Conteneur Ubuntu 24.04 avec systemd, pour tester les services (ssh, ufw) comme sur un nœud.
+platforms:
+  - name: hardening-noble
+    # Nom du tag local construit par le pilote ; l'image de base est épinglée dans Dockerfile.j2.
+    image: ubuntu:24.04
+    dockerfile: Dockerfile.j2
+    pre_build_image: false
+    privileged: true
+    cgroupns_mode: host
+    command: /lib/systemd/systemd
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    tmpfs:
+      - /run
+      - /run/lock
+      - /tmp
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_COLLECTIONS_PATH: ${MOLECULE_PROJECT_DIRECTORY}/../../collections
+    ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..
+  inventory:
+    host_vars:
+      hardening-noble:
+        # Le conteneur partage le noyau de la machine hôte : les paramètres ne sont qu'écrits.
+        hardening_sysctl_apply: false
+        hardening_firewall_trusted_cidrs:
+          - 10.20.0.0/16
+        hardening_firewall_public_tcp_ports:
+          - 443
+
+verifier:
+  name: ansible
