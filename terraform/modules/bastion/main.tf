@@ -1,9 +1,10 @@
 # Le service Bastion d'Oracle ouvre des sessions SSH temporaires vers les nœuds, sans aucun port
 # exposé sur Internet (ADR 0006). Il est gratuit.
 resource "oci_bastion_bastion" "this" {
-  compartment_id               = var.compartment_id
-  name                         = var.name
-  bastion_type                 = "standard"
+  compartment_id = var.compartment_id
+  name           = var.name
+  # En majuscules, comme l'API le renvoie : en minuscules, chaque plan recréait le Bastion.
+  bastion_type                 = "STANDARD"
   target_subnet_id             = var.target_subnet_id
   client_cidr_block_allow_list = var.client_cidr_block_allow_list
   max_session_ttl_in_seconds   = var.max_session_ttl_in_seconds
