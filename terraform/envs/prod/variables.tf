@@ -68,3 +68,40 @@ variable "public_ingress_cidrs" {
   description = "Plages autorisées à joindre le load balancer depuis Internet."
   type        = list(string)
 }
+
+variable "node_shape" {
+  description = "Forme flexible des nœuds."
+  type        = string
+}
+
+variable "node_image" {
+  description = "Système et version de l'image des nœuds."
+  type = object({
+    operating_system         = string
+    operating_system_version = string
+  })
+}
+
+variable "ssh_authorized_keys" {
+  description = "Clés SSH publiques autorisées sur les nœuds."
+  type        = list(string)
+}
+
+variable "nodes" {
+  description = "Nœuds du cluster, par nom d'hôte."
+  type = map(object({
+    role                    = string
+    ocpus                   = number
+    memory_in_gbs           = number
+    boot_volume_size_in_gbs = number
+  }))
+}
+
+variable "free_tier_limits" {
+  description = "Limites de l'offre Always Free pour les nœuds."
+  type = object({
+    ocpus               = number
+    memory_in_gbs       = number
+    block_volume_in_gbs = number
+  })
+}

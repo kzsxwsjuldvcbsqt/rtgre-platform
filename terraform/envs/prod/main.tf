@@ -35,3 +35,19 @@ module "network" {
   subnet_netnums       = var.subnet_netnums
   public_ingress_cidrs = var.public_ingress_cidrs
 }
+
+module "compute" {
+  source = "../../modules/compute"
+
+  compartment_id                 = local.compartment_id
+  name                           = var.name
+  freeform_tags                  = local.freeform_tags
+  shape                          = var.node_shape
+  image_operating_system         = var.node_image.operating_system
+  image_operating_system_version = var.node_image.operating_system_version
+  subnet_id                      = module.network.subnet_ids["nodes"]
+  nsg_ids                        = [module.network.nsg_ids["nodes"]]
+  ssh_authorized_keys            = var.ssh_authorized_keys
+  nodes                          = var.nodes
+  free_tier_limits               = var.free_tier_limits
+}

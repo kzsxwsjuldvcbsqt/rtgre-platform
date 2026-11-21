@@ -22,3 +22,13 @@ output "network" {
     nsg_ids      = module.network.nsg_ids
   }
 }
+
+output "nodes" {
+  description = "Nœuds du cluster : OCID, rôle, domaine de panne et adresses."
+  value       = module.compute.nodes
+}
+
+output "node_image" {
+  description = "Image utilisée pour les nouveaux nœuds."
+  value       = module.compute.image
+}
