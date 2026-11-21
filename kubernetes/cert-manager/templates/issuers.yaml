@@ -1,0 +1,26 @@
+{{- range $name, $server := .Values.issuers }}
+---
+# Sans adresse de contact : Let's Encrypt n'en demande pas, et n'envoie plus d'avis d'expiration.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ $name }}
+  annotations:
+    # Le type ClusterIssuer arrive avec ce même chart : Argo CD ne le connaît pas encore quand
+    # il prépare la première synchronisation.
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  acme:
+    server: {{ $server }}
+    privateKeySecretRef:
+      name: {{ $name }}-account-key
+    solvers:
+      - http01:
+          gatewayHTTPRoute:
+            parentRefs:
+              - kind: Gateway
+                namespace: {{ $.Values.gateway.namespace }}
+                name: {{ $.Values.gateway.name }}
+                sectionName: {{ $.Values.gateway.listener }}
+{{- end }}

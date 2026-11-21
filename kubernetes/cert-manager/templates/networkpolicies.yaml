@@ -1,0 +1,83 @@
+# Par défaut, rien n'entre dans l'espace de noms et rien n'en sort.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Les trois composants lisent et écrivent dans l'API de Kubernetes.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: to-kube-apiserver
+spec:
+  endpointSelector: {}
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "6443"
+              protocol: TCP
+---
+# L'API de Kubernetes appelle le webhook pour valider les certificats et les émetteurs. Elle
+# tourne sur le plan de contrôle : ses appels arrivent d'un nœud.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: webhook-from-kube-apiserver
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: webhook
+  ingress:
+    - fromEntities:
+        - kube-apiserver
+        - remote-node
+      toPorts:
+        - ports:
+            - port: {{ index .Values "cert-manager" "webhook" "securePort" | default 10250 | quote }}
+              protocol: TCP
+---
+# Le contrôleur ne sort que vers Let's Encrypt, en HTTPS, et vers les noms de la zone, en HTTP,
+# pour vérifier un défi avant de le soumettre. Les requêtes DNS passent par le proxy de Cilium,
+# qui apprend ainsi les adresses de ces noms.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: controller-to-acme
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: controller
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
+    - toFQDNs:
+        {{- range $name, $server := .Values.issuers }}
+        - matchName: {{ (urlParse $server).host }}
+        {{- end }}
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    - toFQDNs:
+        - matchName: {{ .Values.zone }}
+        - matchPattern: "*.{{ .Values.zone }}"
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP

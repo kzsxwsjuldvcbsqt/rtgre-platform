@@ -1,0 +1,66 @@
+# Émetteurs Let's Encrypt, par nom : l'adresse de leur annuaire ACME. L'émetteur de test délivre
+# des certificats non reconnus, avec des limites larges : il sert à valider avant de demander un
+# vrai certificat.
+issuers:
+  letsencrypt-staging: https://acme-staging-v02.api.letsencrypt.org/directory
+  letsencrypt-production: https://acme-v02.api.letsencrypt.org/directory
+
+# Passerelle par laquelle Let's Encrypt vérifie qu'un nom est bien servi par le cluster
+# (défi HTTP-01) : kubernetes/gateway.
+gateway:
+  namespace: gateway
+  name: public
+  # Écoute HTTP.
+  listener: web
+
+# Zone des noms à certifier. Avant de demander un certificat, cert-manager vérifie lui-même que
+# le nom répond : c'est sa seule sortie HTTP autorisée.
+zone: rtgre.fr
+
+# Valeurs du chart officiel cert-manager.
+cert-manager:
+  crds:
+    enabled: true
+    keep: true
+
+  global:
+    leaderElection:
+      # Par défaut dans kube-system : ici, tout reste dans l'espace de noms de cert-manager.
+      namespace: cert-manager
+
+  # Les défis HTTP-01 passent par une HTTPRoute de Gateway API.
+  config:
+    apiVersion: controller.config.cert-manager.io/v1alpha1
+    kind: ControllerConfiguration
+    enableGatewayAPI: true
+
+  # Vérification ponctuelle après installation : Argo CD suit déjà l'état des composants.
+  startupapicheck:
+    enabled: false
+
+  # Les métriques seront collectées avec l'observabilité (phase 5).
+  prometheus:
+    enabled: false
+
+  resources:
+    requests:
+      cpu: 10m
+      memory: 48Mi
+    limits:
+      memory: 192Mi
+
+  webhook:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 96Mi
+
+  cainjector:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 48Mi
+      limits:
+        memory: 192Mi

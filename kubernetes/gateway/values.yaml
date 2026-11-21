@@ -8,6 +8,15 @@ loadBalancerCidr: &loadBalancerCidr 10.20.10.0/24
 routeNamespaces: &routeNamespaces
   - rtgre
 
+# Certificat des noms publics, demandé à cert-manager (kubernetes/cert-manager). Chaque nom doit
+# déjà désigner le load balancer : Let's Encrypt le vérifie en HTTP, et un seul nom en échec
+# bloque tout le certificat.
+certificate:
+  secretName: &tlsSecret public-tls
+  issuer: letsencrypt-production
+  dnsNames:
+    - test.rtgre.fr
+
 # Valeurs du chart officiel traefik (ADR 0012).
 traefik:
   global:
@@ -32,13 +41,23 @@ traefik:
     name: traefik
 
   # Passerelle publique. Avec Traefik, le port d'une écoute est celui de son point d'entrée
-  # dans le pod, pas le port public : 8000 reçoit le port 80 du load balancer.
+  # dans le pod, pas le port public : 8000 et 8443 reçoivent les ports 80 et 443 du load balancer.
   gateway:
     name: public
     listeners:
+      # HTTP : seulement la redirection vers HTTPS et les défis de Let's Encrypt, dont les
+      # routes sont dans cet espace de noms.
       web:
         port: 8000
         protocol: HTTP
+        namespacePolicy:
+          from: Same
+      # HTTPS : les applications.
+      websecure:
+        port: 8443
+        protocol: HTTPS
+        certificateRefs:
+          - name: *tlsSecret
         namespacePolicy:
           from: Selector
           selector:

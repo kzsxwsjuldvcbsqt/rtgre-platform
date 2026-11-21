@@ -27,7 +27,7 @@ flowchart LR
 - **Sortie filtrée par nom** : une NetworkPolicy ne filtre que des adresses, et celles d'ADE peuvent changer. La politique de Cilium autorise le nom `generator.adeHost`, et son proxy DNS refuse tout autre nom. Les pods demandent ce nom tel quel (`ndots: 1`) : un refus sur un domaine de recherche du cluster arrêterait la résolution.
 - **Aucune adresse IP dans les journaux** de nginx.
 - **Comme GitHub Pages** : mêmes codes de réponse, mêmes types de contenu, même durée de cache, `/page` sert `page.html`. nginx ajoute trois en-têtes de sécurité.
-- **Exposé en HTTP seulement pour l'instant**, par l'adresse du load balancer : rtgre.fr désigne toujours GitHub Pages. Le HTTPS puis la bascule du nom suivent.
+- **En HTTPS, avec HSTS**, sous `test.rtgre.fr` pour l'instant : rtgre.fr désigne toujours GitHub Pages, jusqu'à la bascule.
 
 ## Mise à jour de l'image
 

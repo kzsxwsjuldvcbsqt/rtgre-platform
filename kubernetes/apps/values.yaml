@@ -34,6 +34,14 @@ applications:
   storage:
     namespace: argocd
     cascade: true
+  # Certificats : cert-manager et ses émetteurs Let's Encrypt. Retirer l'application ne
+  # supprime rien : ses CRD emporteraient les certificats.
+  cert-manager:
+    namespace: cert-manager
+    namespaceLabels:
+      pod-security.kubernetes.io/enforce: restricted
+    cascade: false
+    serverSideApply: true
   # Passerelle du cluster : Traefik en contrôleur Gateway API. Ses propres CRD (IngressRoute)
   # ne sont pas installées : il ne sert que Gateway API.
   gateway:

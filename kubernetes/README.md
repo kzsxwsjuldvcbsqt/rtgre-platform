@@ -6,7 +6,8 @@ Ce qui tourne dans le cluster est décrit ici et déployé par Argo CD ([ADR 001
 | --- | --- |
 | [`apps`](apps) | Application racine : le projet `platform`, et une application Argo CD par entrée de ses valeurs, elle-même comprise |
 | [`argocd`](argocd) | Argo CD : le chart officiel `argo-cd`, figé dans `Chart.lock`, et les valeurs de la plateforme |
-| [`gateway`](gateway) | Passerelle du cluster : Traefik en contrôleur Gateway API |
+| [`cert-manager`](cert-manager) | Certificats : cert-manager et ses émetteurs Let's Encrypt |
+| [`gateway`](gateway) | Passerelle du cluster : Traefik en contrôleur Gateway API, et son certificat |
 | [`rtgre`](rtgre) | Le site rtgre.fr : génération horaire depuis ADE, et serveur web |
 | [`storage`](storage) | Volumes persistants locaux, déclarés un par un |
 
