@@ -34,7 +34,7 @@ flowchart LR
 
 ## Mise à jour de l'image
 
-L'image du générateur est référencée par son empreinte. Quand le dépôt rtgre en publie une nouvelle, Renovate propose la nouvelle empreinte, et la fusionne de lui-même une fois la CI verte. Le job « Images (cosign) » n'accepte qu'une image signée par le workflow `image.yml` de rtgre sur sa branche principale ([`signed-images.txt`](../signed-images.txt)). La vérification au moment de créer le pod reste à faire (#65).
+L'image du générateur est référencée par son empreinte. Quand le dépôt rtgre en publie une nouvelle, Renovate propose la nouvelle empreinte, et la fusionne de lui-même une fois la CI verte. Le job « Images (cosign) » n'accepte qu'une image signée par le workflow `image.yml` de rtgre sur sa branche principale ([`signed-images.txt`](../kyverno/files/signed-images.txt)). Le cluster vérifie la même signature à chaque création de pod, et n'admet dans cet espace de noms que les dépôts déclarés ([`kyverno`](../kyverno)).
 
 ## Exploitation
 

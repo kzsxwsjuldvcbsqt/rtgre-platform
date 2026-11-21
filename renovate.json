@@ -124,6 +124,17 @@
       "dependencyDashboardApproval": true
     },
     {
+      "description": "Kyverno : il décide de la création des pods du site (ADR 0019) ; une montée mineure ou majeure du chart attend une approbation dans le tableau de bord",
+      "matchDepNames": [
+        "kyverno"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
       "description": "Grafana : sa branche est choisie pour ses vulnérabilités connues (ADR 0016) ; une montée mineure ou majeure attend une approbation dans le tableau de bord",
       "matchPackageNames": [
         "docker.io/grafana/grafana",

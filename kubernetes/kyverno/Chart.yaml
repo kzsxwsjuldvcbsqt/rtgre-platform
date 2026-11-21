@@ -1,0 +1,9 @@
+apiVersion: v2
+name: kyverno
+description: Kyverno, qui vérifie la signature des images à la création des pods, et ses règles réseau.
+type: application
+version: 0.1.0
+dependencies:
+  - name: kyverno
+    version: 3.10.0
+    repository: oci://ghcr.io/kyverno/charts

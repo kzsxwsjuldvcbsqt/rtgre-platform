@@ -63,6 +63,15 @@ applications:
       # renovate-digest: datasource=github-tags depName=kubernetes-sigs/gateway-api
       targetRevision: c0836133e24073fcdcdbb1713aba3cc73a89d0b5 # v1.6.3
       path: config/crd/standard
+  # Images contrôlées à la création des pods, signature comprise, dans les espaces de noms qui
+  # portent l'étiquette rtgre.fr/verified-images. Retirer l'application ne supprime rien : ses webhooks
+  # resteraient sans personne pour leur répondre (kubernetes/kyverno/README.md).
+  kyverno:
+    namespace: kyverno
+    namespaceLabels:
+      pod-security.kubernetes.io/enforce: restricted
+    cascade: false
+    serverSideApply: true
   # Journaux : Loki les conserve, Alloy les lit par l'API de Kubernetes.
   logging:
     namespace: logging
@@ -86,8 +95,11 @@ applications:
     namespaceLabels:
       pod-security.kubernetes.io/enforce: privileged
     cascade: true
+  # Le site. Ses images sont contrôlées à la création de chaque pod : dépôts déclarés, empreinte
+  # et signature (kubernetes/kyverno).
   rtgre:
     namespace: rtgre
     namespaceLabels:
       pod-security.kubernetes.io/enforce: restricted
+      rtgre.fr/verified-images: required
     cascade: true

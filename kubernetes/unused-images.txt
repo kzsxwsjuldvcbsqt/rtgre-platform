@@ -3,3 +3,6 @@
 
 # Valeur par défaut de l'opérateur de Prometheus, pour un conteneur Thanos que Prometheus n'a pas.
 quay.io/thanos/thanos
+
+# Pods de test du chart de Kyverno, que seul « helm test » lance : Argo CD ne les crée pas.
+ghcr.io/kyverno/readiness-checker

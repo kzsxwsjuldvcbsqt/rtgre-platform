@@ -29,6 +29,14 @@ ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n kube-system exec <pod cilium du
 
 Chaque ligne donne la source, la destination et le port refusés.
 
+## Un pod n'est pas créé
+
+Dans l'espace de noms du site, un Job ou un Deployment peut exister sans pod : l'admission l'a refusé. Le message est dans les événements, et le [README de `kubernetes/kyverno`](../../kubernetes/kyverno/README.md) dit quoi faire de chacun.
+
+```bash
+ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre get events --field-selector type=Warning --sort-by=.lastTimestamp
+```
+
 ## Prometheus ne joint plus une cible
 
 L'alerte donne la tâche de collecte (`job`) et l'adresse de la cible. La page « Target health » de Prometheus affiche l'erreur exacte ([ouvrir Prometheus](../../kubernetes/monitoring/README.md)).

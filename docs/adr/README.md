@@ -22,3 +22,4 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | [0016](0016-grafana-en-lecture-seule-sans-compte.md) | Grafana en lecture seule, sans compte | accepté |
 | [0017](0017-journaux-avec-loki-et-alloy.md) | Journaux avec Loki et Alloy | accepté |
 | [0018](0018-alertes-avec-alertmanager-et-telegram.md) | Alertes avec Alertmanager et Telegram | accepté |
+| [0019](0019-controler-les-images-a-l-admission-avec-kyverno.md) | Contrôler les images à l'admission avec Kyverno | accepté |

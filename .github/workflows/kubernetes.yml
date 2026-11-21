@@ -95,7 +95,7 @@ jobs:
         with:
           version: ${{ env.MISE_VERSION }}
 
-      # Une image à signature exigée (kubernetes/signed-images.txt) ne passe que si elle est
+      # Une image à signature exigée (kubernetes/kyverno/files/signed-images.txt) ne passe que si elle est
       # référencée par son empreinte et signée par son workflow officiel.
       - name: Verify the signature of the deployed images
         run: scripts/ci/verify-image-signatures.sh

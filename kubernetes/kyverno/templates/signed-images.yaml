@@ -1,0 +1,55 @@
+# Une politique par ligne de files/signed-images.txt : dans les espaces de noms étiquetés, une
+# image de ce dépôt n'est admise que référencée par son empreinte et signée par l'identité
+# attendue. Les contrôleurs (Deployment, CronJob) sont refusés dès leur création.
+{{- range (include "kyverno.signedImages" . | fromYaml).images }}
+---
+apiVersion: policies.kyverno.io/v1
+kind: ImageValidatingPolicy
+metadata:
+  name: signed-{{ regexReplaceAll "[^a-z0-9]+" .prefix "-" }}
+spec:
+  validationActions:
+    - Deny
+  # Si la vérification est impossible, le pod est refusé.
+  failurePolicy: Fail
+  webhookConfiguration:
+    timeoutSeconds: {{ $.Values.verification.timeoutSeconds }}
+  evaluation:
+    background:
+      enabled: false
+  matchConstraints:
+    namespaceSelector:
+      {{- include "kyverno.verifiedNamespaces" $ | nindent 6 }}
+    resourceRules:
+      - apiGroups:
+          - ""
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+  matchImageReferences:
+    - glob: {{ printf "%s:*" .prefix | quote }}
+    - glob: {{ printf "%s@*" .prefix | quote }}
+  validationConfigurations:
+    required: true
+    verifyDigest: true
+    # Un tag n'est pas remplacé par son empreinte : le dépôt doit la porter.
+    mutateDigest: false
+  attestors:
+    - name: signer
+      cosign:
+        keyless:
+          identities:
+            - subject: {{ .identity }}
+              issuer: {{ .issuer }}
+        ctlog:
+          url: {{ $.Values.verification.transparencyLog }}
+  validations:
+    - expression: >-
+        (images.containers + images.initContainers + images.ephemeralContainers)
+        .all(image, verifyImageSignatures(image, [attestors.signer]) > 0)
+      message: "L'image n'est pas signée par {{ .identity }}."
+{{- end }}

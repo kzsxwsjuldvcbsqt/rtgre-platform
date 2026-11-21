@@ -1,6 +1,6 @@
 # Générateur du site : l'image que le dépôt rtgre construit, signe et publie. Elle est
 # référencée par son empreinte, et sa signature est vérifiée avant toute fusion
-# (kubernetes/signed-images.txt).
+# (kubernetes/kyverno/files/signed-images.txt), puis par le cluster à chaque création de pod.
 generator:
   image:
     repository: ghcr.io/kzsxwsjuldvcbsqt/rtgre

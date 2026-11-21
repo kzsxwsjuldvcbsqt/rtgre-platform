@@ -48,6 +48,8 @@ Prometheus collecte les métriques des nœuds et du cluster ([ADR 0015](docs/adr
 
 Douze règles d'alerte, testées dans la CI, préviennent le propriétaire sur Telegram : site injoignable, génération en échec, certificat non renouvelé, nœud saturé, pod en boucle, application désynchronisée, journaux gardés trop longtemps ([ADR 0018](docs/adr/0018-alertes-avec-alertmanager-et-telegram.md)). Chaque message renvoie au [runbook](docs/runbooks) de l'alerte.
 
+Dans l'espace de noms du site, le cluster contrôle lui-même chaque pod à sa création : ses images viennent de dépôts déclarés, portent leur empreinte, et celle du site doit être signée par le workflow qui la construit ([ADR 0019](docs/adr/0019-controler-les-images-a-l-admission-avec-kyverno.md), [`kubernetes/kyverno`](kubernetes/kyverno)).
+
 Le site est généré dans le cluster par l'image que publie le dépôt rtgre ([`kubernetes/rtgre`](kubernetes/rtgre)). Quand rtgre publie une nouvelle image, Renovate propose sa nouvelle empreinte et la fusionne de lui-même une fois la CI verte : celle-ci vérifie que l'image est signée par le workflow de rtgre.
 
 ## Dépendances
@@ -73,7 +75,7 @@ Toutes les versions sont épinglées : outils dans `mise.toml`, providers Terraf
 | conventional-pre-commit | Format des messages de commit |
 | Molecule | Rôles Ansible, dans un conteneur Ubuntu 24.04 |
 | helm lint, kubeconform | Charts de `kubernetes/`, rendus pour la version de Kubernetes du cluster (`mise run kubernetes-validate`) |
-| cosign | Signature des images listées dans `kubernetes/signed-images.txt`, avant tout déploiement |
+| cosign | Signature des images listées dans `kubernetes/kyverno/files/signed-images.txt`, avant tout déploiement |
 | promtool, amtool | Règles d'alerte et leurs tests, configuration d'Alertmanager, existence du runbook de chaque alerte |
 
 Les contrôles sont décrits dans `.pre-commit-config.yaml` et s'exécutent avant chaque commit une fois les hooks installés :

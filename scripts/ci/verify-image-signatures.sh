@@ -5,11 +5,12 @@
 #
 #   scripts/ci/verify-image-signatures.sh
 #
-# Les images concernées et leurs signataires sont listés dans kubernetes/signed-images.txt.
+# Les images concernées et leurs signataires sont listés dans
+# kubernetes/kyverno/files/signed-images.txt, que Kyverno applique aussi dans le cluster.
 set -euo pipefail
 
 repo=$(git rev-parse --show-toplevel)
-policy=$repo/kubernetes/signed-images.txt
+policy=$repo/kubernetes/kyverno/files/signed-images.txt
 
 images=$("$repo/scripts/ci/list-chart-images.sh")
 
