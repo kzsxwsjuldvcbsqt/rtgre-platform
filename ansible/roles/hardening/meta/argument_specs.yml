@@ -16,6 +16,9 @@ argument_specs:
       hardening_ssh_options:
         type: dict
         description: Options de sshd écrites dans le fichier de configuration du rôle.
+      hardening_ssh_extra_options:
+        type: dict
+        description: Options de sshd propres à un groupe de nœuds, qui complètent ou remplacent les précédentes.
       hardening_firewall_enabled:
         type: bool
         description: Active le pare-feu local.

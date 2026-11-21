@@ -2,5 +2,10 @@
 - name: Converge
   hosts: all
   become: true
+  vars:
+    # Exception d'un groupe de nœuds : elle doit l'emporter sur l'option par défaut.
+    hardening_ssh_extra_options:
+      AllowTcpForwarding: local
+      PermitOpen: 127.0.0.1:8080
   roles:
     - role: hardening
