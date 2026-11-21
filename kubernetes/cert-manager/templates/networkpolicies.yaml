@@ -81,3 +81,22 @@ spec:
         - ports:
             - port: "80"
               protocol: TCP
+---
+# Prometheus lit les métriques du contrôleur (kubernetes/monitoring).
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: controller-from-prometheus
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: controller
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: monitoring
+            app.kubernetes.io/name: prometheus
+      toPorts:
+        - ports:
+            - port: "9402"
+              protocol: TCP

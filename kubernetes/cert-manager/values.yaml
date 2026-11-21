@@ -38,9 +38,11 @@ cert-manager:
   startupapicheck:
     enabled: false
 
-  # Les métriques seront collectées avec l'observabilité (phase 5).
+  # Métriques : date d'expiration et état de chaque certificat.
   prometheus:
-    enabled: false
+    enabled: true
+    servicemonitor:
+      enabled: true
 
   resources:
     requests:
