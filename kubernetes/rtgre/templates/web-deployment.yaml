@@ -55,6 +55,12 @@ spec:
           ports:
             - name: http
               containerPort: {{ .Values.web.port }}
+          # À l'arrêt, nginx continue de servir quelques secondes : le temps que la passerelle
+          # apprenne que ce pod s'en va et cesse de lui envoyer des requêtes.
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: {{ .Values.web.shutdownDelaySeconds }}
           # Prêt quand le site répond ; en vie tant que nginx répond.
           readinessProbe:
             httpGet:

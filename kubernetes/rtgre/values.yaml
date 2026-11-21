@@ -28,6 +28,8 @@ web:
   # Utilisateur nginx de l'image.
   user: 101
   port: 8080
+  # Délai entre la demande d'arrêt d'un pod et l'arrêt de nginx.
+  shutdownDelaySeconds: 10
   resources:
     requests:
       cpu: 10m
