@@ -1,8 +1,13 @@
 # rtgre-platform
 
+[![Quality](https://github.com/kzsxwsjuldvcbsqt/rtgre-platform/actions/workflows/quality.yml/badge.svg)](https://github.com/kzsxwsjuldvcbsqt/rtgre-platform/actions/workflows/quality.yml)
+[![Terraform](https://github.com/kzsxwsjuldvcbsqt/rtgre-platform/actions/workflows/terraform.yml/badge.svg)](https://github.com/kzsxwsjuldvcbsqt/rtgre-platform/actions/workflows/terraform.yml)
+[![Ansible](https://github.com/kzsxwsjuldvcbsqt/rtgre-platform/actions/workflows/ansible.yml/badge.svg)](https://github.com/kzsxwsjuldvcbsqt/rtgre-platform/actions/workflows/ansible.yml)
+[![Security](https://github.com/kzsxwsjuldvcbsqt/rtgre-platform/actions/workflows/security.yml/badge.svg)](https://github.com/kzsxwsjuldvcbsqt/rtgre-platform/actions/workflows/security.yml)
+
 Infrastructure de [rtgre.fr](https://rtgre.fr), décrite en code : provisionnement avec Terraform, configuration avec Ansible, cluster Kubernetes monté avec kubeadm et déploiement en GitOps.
 
-Le site lui-même est développé dans le dépôt [rtgre](https://github.com/kzsxwsjuldvcbsqt/rtgre). Ce dépôt ne contient que ce qui le fait tourner.
+Le site lui-même est développé dans le dépôt [rtgre](https://github.com/kzsxwsjuldvcbsqt/rtgre). Ce dépôt ne contient que ce qui le fait tourner. rtgre construit, signe et publie l'image de son générateur sur `ghcr.io/kzsxwsjuldvcbsqt/rtgre` ; la plateforme la déploie par son empreinte, après vérification de sa signature. Le schéma de la chaîne de livraison est dans le [README de rtgre](https://github.com/kzsxwsjuldvcbsqt/rtgre#chaîne-de-livraison).
 
 Projet en construction.
 
