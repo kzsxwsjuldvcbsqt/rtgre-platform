@@ -7,6 +7,7 @@ Prometheus collecte les métriques du cluster et les garde quinze jours ([ADR 00
 | Prometheus | Collecte les cibles chaque minute, sur un volume local déclaré dans [`storage`](../storage) |
 | Opérateur | Traduit les objets ServiceMonitor et PrometheusRule en configuration de Prometheus |
 | kube-state-metrics | Expose l'état des objets du cluster : pods, déploiements, tâches |
+| Grafana | Affiche les tableaux de bord du dépôt, en lecture seule et sans compte ([ADR 0016](../../docs/adr/0016-grafana-en-lecture-seule-sans-compte.md)) |
 | [`node-exporter`](../node-exporter) | Métriques des nœuds, dans sa propre application |
 
 ## Ce qui est collecté
@@ -26,9 +27,34 @@ Le planificateur, le gestionnaire de contrôleurs, etcd et kube-proxy ne le sont
 1. Dans le chart du composant, un ServiceMonitor, et une règle réseau qui laisse entrer les pods de Prometheus (`app.kubernetes.io/name: prometheus`, espace de noms `monitoring`) sur le port des métriques.
 2. Ici, une entrée dans `scrape.pods` de [`values.yaml`](values.yaml) : Prometheus ne sort que vers ce qui y figure.
 
-## Ouvrir l'interface
+## Tableaux de bord
 
-Elle n'est pas exposée. Depuis la racine du dépôt, après avoir ouvert les sessions du Bastion ([se-connecter-a-un-noeud](../../docs/runbooks/se-connecter-a-un-noeud.md)) :
+| Tableau | Contenu |
+| --- | --- |
+| Plateforme | Nœuds prêts, pods, processeur, mémoire, disque et charge par nœud, consommation par espace de noms, redémarrages |
+| rtgre | Dernière génération réussie, durée des générations, serveur web, âge des journaux de visite |
+
+Ils sont dans [`files/dashboards`](files/dashboards), générés par [`scripts/grafana-dashboards.py`](../../scripts/grafana-dashboards.py). Pour en modifier un : changer le script, le relancer, vérifier la requête dans Prometheus, puis ouvrir une pull request.
+
+```bash
+python3 scripts/grafana-dashboards.py kubernetes/monitoring/files/dashboards
+```
+
+Grafana relit le dossier toutes les trente secondes : aucun redémarrage n'est nécessaire.
+
+## Ouvrir Grafana
+
+Depuis la racine du dépôt, après avoir ouvert les sessions du Bastion :
+
+```bash
+ssh -t -F ansible/.ssh/bastion.conf -L 8080:127.0.0.1:8080 cp-1 kubectl -n monitoring port-forward svc/monitoring-grafana 8080:80
+```
+
+Puis ouvrir <http://localhost:8080>. Il n'y a ni identifiant ni mot de passe : le tableau « rtgre » s'affiche, et rien ne peut être modifié. Si le port 8080 est pris sur le poste, changer le premier nombre.
+
+## Ouvrir l'interface de Prometheus
+
+Pour une requête ponctuelle ou l'état des cibles. Elle n'est pas exposée non plus. Depuis la racine du dépôt, après avoir ouvert les sessions du Bastion ([se-connecter-a-un-noeud](../../docs/runbooks/se-connecter-a-un-noeud.md)) :
 
 ```bash
 ssh -t -F ansible/.ssh/bastion.conf -L 8080:127.0.0.1:8080 cp-1 kubectl -n monitoring port-forward svc/monitoring-prometheus 8080:9090
