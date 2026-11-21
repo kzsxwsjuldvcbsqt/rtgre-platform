@@ -6,7 +6,10 @@ Ce qui tourne dans le cluster est décrit ici et déployé par Argo CD ([ADR 001
 | --- | --- |
 | [`apps`](apps) | Application racine : le projet `platform`, et une application Argo CD par entrée de ses valeurs, elle-même comprise |
 | [`argocd`](argocd) | Argo CD : le chart officiel `argo-cd`, figé dans `Chart.lock`, et les valeurs de la plateforme |
+| [`rtgre`](rtgre) | Le site rtgre.fr : génération horaire depuis ADE, et serveur web |
 | [`storage`](storage) | Volumes persistants locaux, déclarés un par un |
+
+[`signed-images.txt`](signed-images.txt) liste les images qui doivent être signées, et par qui.
 
 Le réseau des pods, Cilium, n'est pas ici : Argo CD en a besoin pour démarrer, c'est donc Ansible qui l'installe ([rôle `cilium`](../ansible/roles/cilium)).
 
@@ -19,6 +22,10 @@ Le réseau des pods, Cilium, n'est pas ici : Argo CD en a besoin pour démarrer,
 ```bash
 mise run kubernetes-validate
 ```
+
+Cette commande rend chaque chart pour la version de Kubernetes du cluster, valide les objets obtenus, puis vérifie la signature des images qui doivent en porter une.
+
+Une image se référence par son empreinte, dans des valeurs `repository` et `tag` (`tag: 1.2.3@sha256:…`) : Renovate la tient alors à jour.
 
 Le dépôt suivi et sa branche ne sont écrits qu'à un endroit : `repository` dans `apps/values.yaml`.
 

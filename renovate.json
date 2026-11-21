@@ -75,6 +75,16 @@
       "groupName": "Kubernetes et Cilium"
     },
     {
+      "description": "Image du générateur de rtgre : chaque publication du dépôt rtgre est proposée sans attendre le lundi, puis fusionnée d'elle-même une fois la CI verte. Le job « Images (cosign) » n'accepte qu'une image signée par le workflow de rtgre sur sa branche principale",
+      "matchPackageNames": [
+        "ghcr.io/kzsxwsjuldvcbsqt/rtgre"
+      ],
+      "schedule": [
+        "at any time"
+      ],
+      "automerge": true
+    },
+    {
       "description": "Argo CD : une montée mineure ou majeure du chart peut changer de version d'Argo CD, à vérifier contre sa matrice de versions de Kubernetes (ADR 0010) ; elle attend une approbation dans le tableau de bord",
       "matchDepNames": [
         "argo-cd"

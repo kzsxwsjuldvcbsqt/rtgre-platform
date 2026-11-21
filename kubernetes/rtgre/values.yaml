@@ -1,0 +1,52 @@
+# Générateur du site : l'image que le dépôt rtgre construit, signe et publie. Elle est
+# référencée par son empreinte, et sa signature est vérifiée avant toute fusion
+# (kubernetes/signed-images.txt).
+generator:
+  image:
+    repository: ghcr.io/kzsxwsjuldvcbsqt/rtgre
+    tag: latest@sha256:061d3d53525dfab41a86016dbc814f08811a6a7f3e2b96b1d6fdba20fdf94bdb
+  # Une génération par heure, à l'heure de Paris.
+  schedule: "7 * * * *"
+  timeZone: Europe/Paris
+  # Une génération dure une dizaine de secondes. Quand ADE ne répond pas, le générateur
+  # réessaie de lui-même pendant quelques minutes avant d'abandonner.
+  activeDeadlineSeconds: 900
+  # Seul service que le générateur a le droit de joindre.
+  adeHost: ade-uga-ro-vs.grenet.fr
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
+# Serveur web : l'image officielle de nginx, lancée sans privilège.
+web:
+  image:
+    repository: docker.io/library/nginx
+    tag: 1.30.7-alpine-slim@sha256:8c950211a641ec5b23f265450517001f6bcca533666120ebe36cb4cff3d00a55
+  # Utilisateur nginx de l'image.
+  user: 101
+  port: 8080
+  resources:
+    requests:
+      cpu: 10m
+      memory: 16Mi
+    limits:
+      memory: 64Mi
+
+# Utilisateur de l'image du générateur. Son groupe est aussi celui du volume (fsGroup) : le
+# serveur web le reçoit en groupe supplémentaire pour lire le site.
+user: 65532
+
+# Volume du site, déclaré dans kubernetes/storage/values.yaml sous la même demande.
+site:
+  claimName: site
+  storageClass: local
+  size: 1Gi
+  # Point de montage : le générateur publie dans <mountPath>/dist.
+  mountPath: /srv/site
+
+# Espace de noms de la passerelle autorisée à joindre le serveur web. Vide tant qu'aucune
+# passerelle n'existe : rien n'entre.
+gatewayNamespace: ""

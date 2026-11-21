@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: rtgre-generator
+  labels:
+    {{- include "rtgre.labels" . | nindent 4 }}
+    app.kubernetes.io/component: generator
+spec:
+  schedule: {{ .Values.generator.schedule | quote }}
+  timeZone: {{ .Values.generator.timeZone }}
+  # Une génération à la fois. Une heure manquée n'est pas rattrapée : la suivante suffit.
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      # Le générateur réessaie lui-même de joindre ADE. S'il échoue, le site déjà publié reste
+      # en place et la prochaine heure réessaie.
+      backoffLimit: 0
+      activeDeadlineSeconds: {{ .Values.generator.activeDeadlineSeconds }}
+      template:
+        metadata:
+          labels:
+            {{- include "rtgre.labels" . | nindent 12 }}
+            app.kubernetes.io/component: generator
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          dnsConfig:
+            {{- include "rtgre.dnsConfig" . | nindent 12 }}
+          securityContext:
+            {{- include "rtgre.podSecurityContext" (dict "root" . "user" .Values.user) | nindent 12 }}
+          containers:
+            - name: generator
+              {{- include "rtgre.generatorContainer" . | nindent 14 }}
+          volumes:
+            - name: site
+              persistentVolumeClaim:
+                claimName: {{ .Values.site.claimName }}

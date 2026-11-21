@@ -1,0 +1,5 @@
+apiVersion: v2
+name: rtgre
+description: Le site rtgre.fr, généré chaque heure depuis ADE et servi par nginx.
+type: application
+version: 0.1.0

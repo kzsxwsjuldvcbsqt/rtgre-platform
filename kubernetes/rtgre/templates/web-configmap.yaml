@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rtgre-web
+  labels:
+    {{- include "rtgre.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+data:
+  nginx.conf: |
+    {{- .Files.Get "files/nginx.conf" | nindent 4 }}

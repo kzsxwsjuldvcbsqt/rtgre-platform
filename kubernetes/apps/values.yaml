@@ -31,3 +31,8 @@ applications:
   storage:
     namespace: argocd
     cascade: true
+  rtgre:
+    namespace: rtgre
+    namespaceLabels:
+      pod-security.kubernetes.io/enforce: restricted
+    cascade: true
