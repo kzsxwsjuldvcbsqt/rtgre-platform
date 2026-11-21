@@ -1,0 +1,150 @@
+name: Terraform
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - terraform/envs/prod/**
+      - terraform/modules/**
+      - .github/workflows/terraform.yml
+      - .github/actions/oci-login/**
+  push:
+    branches:
+      - main
+    paths:
+      - terraform/envs/prod/**
+      - terraform/modules/**
+      - .github/workflows/terraform.yml
+      - .github/actions/oci-login/**
+  workflow_dispatch:
+
+permissions: {}
+
+# Un seul run à la fois sur la prod ; un apply en cours n'est jamais annulé.
+concurrency:
+  group: terraform-prod
+  cancel-in-progress: false
+
+env:
+  MISE_VERSION: '2026.11.11'
+  WORKING_DIRECTORY: terraform/envs/prod
+  PLAN_FILE: prod.tfplan
+  TF_IN_AUTOMATION: 'true'
+  TF_INPUT: 'false'
+  TF_VAR_oci_auth: SecurityToken
+  TF_VAR_region: ${{ vars.OCI_REGION }}
+  TF_VAR_state_bucket: ${{ vars.OCI_STATE_BUCKET }}
+  SUPPRESS_LABEL_WARNING: 'True'
+
+jobs:
+  plan:
+    name: Plan (prod)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    outputs:
+      changes: ${{ steps.plan.outputs.changes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned tools
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          version: ${{ env.MISE_VERSION }}
+
+      - name: Log in to Oracle Cloud (read-only identity)
+        uses: $/.github/actions/oci-login
+        with:
+          domain-url: ${{ vars.OCI_DOMAIN_URL }}
+          client-id: ${{ vars.OCI_CLIENT_ID }}
+          client-secret: ${{ secrets.OCI_CLIENT_SECRET }}
+          tenancy: ${{ vars.OCI_TENANCY_OCID }}
+          region: ${{ vars.OCI_REGION }}
+
+      - name: Initialize Terraform
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: $GITHUB_WORKSPACE/scripts/ci/terraform-init.sh
+
+      # L'identité de plan est en lecture seule : elle ne peut pas poser le verrou du state.
+      - name: Plan
+        id: plan
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          set +e
+          terraform plan -lock=false -no-color -detailed-exitcode -out="$PLAN_FILE" > plan.log 2>&1
+          status=$?
+          set -e
+          cat plan.log
+          case "$status" in
+            0) echo "changes=false" >> "$GITHUB_OUTPUT" ;;
+            2) echo "changes=true" >> "$GITHUB_OUTPUT" ;;
+            *) exit "$status" ;;
+          esac
+
+      - name: Comment the plan on the pull request
+        if: github.event_name == 'pull_request'
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          CHANGES: ${{ steps.plan.outputs.changes }}
+        run: $GITHUB_WORKSPACE/scripts/ci/comment-plan.sh
+
+      - name: Keep the plan for the apply job
+        if: github.event_name != 'pull_request' && steps.plan.outputs.changes == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: prod-plan
+          path: ${{ env.WORKING_DIRECTORY }}/${{ env.PLAN_FILE }}
+          retention-days: 1
+          if-no-files-found: error
+
+  apply:
+    name: Apply (prod)
+    needs: plan
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.plan.outputs.changes == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned tools
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          version: ${{ env.MISE_VERSION }}
+
+      - name: Log in to Oracle Cloud (apply identity)
+        uses: $/.github/actions/oci-login
+        with:
+          domain-url: ${{ vars.OCI_DOMAIN_URL }}
+          client-id: ${{ vars.OCI_CLIENT_ID }}
+          client-secret: ${{ secrets.OCI_CLIENT_SECRET }}
+          tenancy: ${{ vars.OCI_TENANCY_OCID }}
+          region: ${{ vars.OCI_REGION }}
+
+      - name: Initialize Terraform
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: $GITHUB_WORKSPACE/scripts/ci/terraform-init.sh
+
+      - name: Fetch the reviewed plan
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: prod-plan
+          path: ${{ env.WORKING_DIRECTORY }}
+
+      # Terraform refuse un plan dont le state a changé depuis : seul le plan relu est appliqué.
+      - name: Apply the plan
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: terraform apply -no-color "$PLAN_FILE"
