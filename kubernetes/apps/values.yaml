@@ -26,3 +26,8 @@ applications:
     # Argo CD ne se désinstalle pas lui-même si son application est retirée par erreur.
     cascade: false
     serverSideApply: true
+  # Classe de stockage et PersistentVolume : aucun objet dans un espace de noms, celui
+  # d'Argo CD sert seulement de destination.
+  storage:
+    namespace: argocd
+    cascade: true

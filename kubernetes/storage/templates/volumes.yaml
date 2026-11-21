@@ -1,0 +1,28 @@
+{{- range $name, $volume := .Values.volumes }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ $name }}
+spec:
+  storageClassName: {{ $.Values.storageClass }}
+  capacity:
+    storage: {{ $volume.capacity }}
+  accessModes:
+    - ReadWriteOnce
+  # Les données restent sur le nœud quand la demande disparaît.
+  persistentVolumeReclaimPolicy: Retain
+  claimRef:
+    namespace: {{ $volume.claim.namespace }}
+    name: {{ $volume.claim.name }}
+  local:
+    path: {{ $.Values.directory }}/{{ $name }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - {{ $volume.node }}
+{{- end }}

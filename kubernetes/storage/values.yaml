@@ -1,0 +1,20 @@
+# Volumes locaux statiques (ADR 0011). Ce fichier est la seule déclaration des volumes :
+# Argo CD en tire les PersistentVolume, et le rôle Ansible local_volumes les dossiers des nœuds.
+
+# Classe de stockage sans approvisionneur : un volume n'existe que s'il est déclaré ici.
+storageClass: local
+
+# Dossier des nœuds qui contient un sous-dossier par volume.
+directory: /var/lib/kubernetes-local-volumes
+
+# Chaque clé est le nom du PersistentVolume et de son sous-dossier.
+#   node     : nœud qui porte le volume
+#   capacity : taille annoncée (un volume local n'applique pas de quota)
+#   claim    : seule demande autorisée à s'y lier
+volumes:
+  rtgre-site:
+    node: wk-1
+    capacity: 1Gi
+    claim:
+      namespace: rtgre
+      name: site
