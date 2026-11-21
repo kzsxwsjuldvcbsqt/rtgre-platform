@@ -41,6 +41,7 @@
         that:
           - "'Status: active' in hardening_ufw_status.stdout"
           - "'Default: deny (incoming)' in hardening_ufw_status.stdout"
+          - "'allow (routed)' in hardening_ufw_status.stdout"
           - hardening_ufw_status.stdout is search('22/tcp\\s+ALLOW IN\\s+Anywhere')
           - hardening_ufw_status.stdout is search('443/tcp\\s+ALLOW IN\\s+Anywhere')
           - hardening_ufw_status.stdout is search('Anywhere\\s+ALLOW IN\\s+10\\.20\\.0\\.0/16')
