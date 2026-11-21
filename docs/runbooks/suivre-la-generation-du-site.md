@@ -2,6 +2,8 @@
 
 Le site est généré chaque heure, à la septième minute, par le CronJob `rtgre-generator` ([README de `kubernetes/rtgre`](../../kubernetes/rtgre/README.md)). Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
 
+L'alerte `GenerationEnEchec` part quand aucune génération n'a réussi depuis trois heures : commencer par « Une génération échoue ».
+
 ## Voir l'état
 
 ```bash
