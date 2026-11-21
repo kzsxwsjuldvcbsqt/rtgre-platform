@@ -68,6 +68,12 @@ resource "oci_core_instance" "node" {
     ssh_authorized_keys = join("\n", var.ssh_authorized_keys)
   }
 
+  # Seul le service de métadonnées v2 (en-tête d'autorisation obligatoire) reste actif : le v1 peut
+  # être exploité par une requête forgée depuis le nœud (SSRF) pour lire ses identifiants.
+  instance_options {
+    are_legacy_imds_endpoints_disabled = true
+  }
+
   agent_config {
     are_all_plugins_disabled = false
     is_management_disabled   = false
