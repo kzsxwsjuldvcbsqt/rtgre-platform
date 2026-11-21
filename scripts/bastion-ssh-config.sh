@@ -92,7 +92,10 @@ Host $hostname $private_ip
   IdentitiesOnly yes
   StrictHostKeyChecking accept-new
   Port $ssh_port
-  ProxyCommand ssh -i $key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -W %h:%p -p 22 $jump
+  # Le Bastion coupe les connexions silencieuses : un message de maintien toutes les 30 s.
+  ServerAliveInterval 30
+  ServerAliveCountMax 4
+  ProxyCommand ssh -i $key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 -o ServerAliveCountMax=4 -W %h:%p -p 22 $jump
 EOF
 done
 
