@@ -28,6 +28,10 @@ La seconde commande installe les dépendances Python et les collections d'Ansibl
 | [`docs/adr`](docs/adr) | Décisions d'architecture |
 | [`docs/runbooks`](docs/runbooks) | Procédures d'exploitation |
 
+## Déploiement
+
+La prod est déployée par le workflow `Terraform` : plan commenté sur chaque pull request, puis apply du plan enregistré sur `main` après approbation dans l'environnement GitHub `production`. La CI s'authentifie auprès d'Oracle sans clé API, par échange de son jeton OIDC.
+
 ## Qualité
 
 Les contrôles sont décrits dans `.pre-commit-config.yaml` et s'exécutent avant chaque commit une fois les hooks installés :

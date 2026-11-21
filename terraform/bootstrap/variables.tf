@@ -96,3 +96,13 @@ variable "github_oidc_issuer" {
   type        = string
   default     = "https://token.actions.githubusercontent.com"
 }
+
+variable "github_apply_environment" {
+  description = "Environnement GitHub dont les jobs peuvent emprunter l'identité d'apply de la CI."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9._-]+$", var.github_apply_environment))
+    error_message = "github_apply_environment ne doit contenir que des lettres, des chiffres, des points, des tirets ou des tirets bas."
+  }
+}
