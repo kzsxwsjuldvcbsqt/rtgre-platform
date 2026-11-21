@@ -12,11 +12,20 @@ metadata:
 spec:
   project: {{ $.Values.project }}
   source:
+    {{- with $app.source }}
+    repoURL: {{ .repoURL }}
+    targetRevision: {{ .targetRevision }}
+    path: {{ .path }}
+    {{- else }}
     repoURL: {{ $.Values.repository.url }}
     targetRevision: {{ $.Values.repository.revision }}
     path: {{ $.Values.repository.path }}/{{ $name }}
     helm:
       releaseName: {{ $name }}
+      {{- if $app.skipCrds }}
+      skipCrds: true
+      {{- end }}
+    {{- end }}
   destination:
     server: https://kubernetes.default.svc
     namespace: {{ $app.namespace }}
@@ -24,6 +33,13 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    # Une application qui attend les objets d'une autre (des CRD, un volume) réessaie.
+    retry:
+      limit: 10
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
     {{- with $app.namespaceLabels }}
     managedNamespaceMetadata:
       labels:

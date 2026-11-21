@@ -10,7 +10,6 @@ spec:
   policyTypes:
     - Ingress
     - Egress
-{{- with .Values.gatewayNamespace }}
 ---
 # Seule la passerelle joint le serveur web.
 apiVersion: networking.k8s.io/v1
@@ -18,7 +17,7 @@ kind: NetworkPolicy
 metadata:
   name: web-from-gateway
   labels:
-    {{- include "rtgre.labels" $ | nindent 4 }}
+    {{- include "rtgre.labels" . | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
@@ -30,10 +29,9 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: {{ . }}
+              kubernetes.io/metadata.name: {{ .Values.gateway.namespace }}
       ports:
         - port: http
-{{- end }}
 ---
 # Le générateur ne sort que vers ADE, en HTTPS. Une politique de Cilium, car une NetworkPolicy
 # ne sait filtrer que des adresses, et celles d'ADE peuvent changer. Les requêtes DNS passent

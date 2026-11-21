@@ -6,6 +6,7 @@ Ce qui tourne dans le cluster est décrit ici et déployé par Argo CD ([ADR 001
 | --- | --- |
 | [`apps`](apps) | Application racine : le projet `platform`, et une application Argo CD par entrée de ses valeurs, elle-même comprise |
 | [`argocd`](argocd) | Argo CD : le chart officiel `argo-cd`, figé dans `Chart.lock`, et les valeurs de la plateforme |
+| [`gateway`](gateway) | Passerelle du cluster : Traefik en contrôleur Gateway API |
 | [`rtgre`](rtgre) | Le site rtgre.fr : génération horaire depuis ADE, et serveur web |
 | [`storage`](storage) | Volumes persistants locaux, déclarés un par un |
 
@@ -28,6 +29,8 @@ Cette commande rend chaque chart pour la version de Kubernetes du cluster, valid
 Une image se référence par son empreinte, dans des valeurs `repository` et `tag` (`tag: 1.2.3@sha256:…`) : Renovate la tient alors à jour.
 
 Le dépôt suivi et sa branche ne sont écrits qu'à un endroit : `repository` dans `apps/values.yaml`.
+
+Une application peut aussi venir d'un autre dépôt, avec une entrée `source` : c'est le cas des CRD de Gateway API, lues dans leur dépôt officiel à un commit épinglé. Le projet `platform` n'accepte que les dépôts ainsi déclarés.
 
 ## Essayer une branche avant de la fusionner
 

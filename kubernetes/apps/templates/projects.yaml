@@ -7,6 +7,11 @@ spec:
   description: Composants de la plateforme, déployés depuis ce dépôt uniquement.
   sourceRepos:
     - {{ .Values.repository.url }}
+    {{- range $name, $app := .Values.applications }}
+    {{- with $app.source }}
+    - {{ .repoURL }}
+    {{- end }}
+    {{- end }}
   destinations:
     - server: https://kubernetes.default.svc
       namespace: {{ .Values.argocdNamespace }}

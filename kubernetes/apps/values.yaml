@@ -18,6 +18,9 @@ argocdNamespace: argocd
 #   namespaceLabels : étiquettes posées sur cet espace de noms (niveau Pod Security, etc.)
 #   cascade         : true supprime les ressources quand l'application disparaît du dépôt
 #   serverSideApply : true pour les objets trop grands pour l'annotation de kubectl (CRD)
+#   skipCrds        : true pour ne pas installer les CRD que le chart embarque
+#   source          : dépôt, révision et dossier d'une source extérieure, à la place du chart
+#                     de ce dépôt
 applications:
   argocd:
     namespace: argocd
@@ -31,6 +34,26 @@ applications:
   storage:
     namespace: argocd
     cascade: true
+  # Passerelle du cluster : Traefik en contrôleur Gateway API. Ses propres CRD (IngressRoute)
+  # ne sont pas installées : il ne sert que Gateway API.
+  gateway:
+    namespace: gateway
+    namespaceLabels:
+      pod-security.kubernetes.io/enforce: restricted
+    cascade: true
+    skipCrds: true
+  # CRD de Gateway API, canal standard, lues dans le dépôt officiel au commit de la version que
+  # Traefik prend en charge (kubernetes/gateway/Chart.yaml). Retirer l'application ne les
+  # supprime pas : elles emporteraient toutes les passerelles et les routes.
+  gateway-api:
+    namespace: argocd
+    cascade: false
+    serverSideApply: true
+    source:
+      repoURL: https://github.com/kubernetes-sigs/gateway-api
+      # renovate-digest: datasource=github-tags depName=kubernetes-sigs/gateway-api
+      targetRevision: c0836133e24073fcdcdbb1713aba3cc73a89d0b5 # v1.6.3
+      path: config/crd/standard
   rtgre:
     namespace: rtgre
     namespaceLabels:
