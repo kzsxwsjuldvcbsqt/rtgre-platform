@@ -48,6 +48,7 @@ Chaque ligne porte le réseau du visiteur, jamais son adresse ([ADR 0014](../adr
 
 ```bash
 ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre create job --from=cronjob/rtgre-log-retention conservation-manuelle
+ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre wait job/conservation-manuelle --for=condition=complete --timeout=120s
 ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre delete job conservation-manuelle
 ```
 
