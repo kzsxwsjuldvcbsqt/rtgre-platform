@@ -1,8 +1,10 @@
 ---
-# Requis par le module deb822_repository sur le nœud.
-- name: Install the Debian repository library
+# python3-debian est requis par deb822_repository ; ca-certificates sert à télécharger la clé du dépôt.
+- name: Install the repository prerequisites
   ansible.builtin.apt:
-    name: python3-debian
+    name:
+      - ca-certificates
+      - python3-debian
     state: present
     update_cache: true
     cache_valid_time: 3600
