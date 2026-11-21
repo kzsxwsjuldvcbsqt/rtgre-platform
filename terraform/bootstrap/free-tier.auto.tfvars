@@ -7,4 +7,5 @@ free_tier_quotas = {
   block_storage_in_gbs    = 200
   block_backups           = 5
   object_storage_in_bytes = 20000000000
+  network_load_balancers  = 1
 }
