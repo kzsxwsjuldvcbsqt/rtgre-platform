@@ -23,9 +23,10 @@ ssh_authorized_keys = [
   "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICl0AIjV1cKcw7XrTKX9P88cLXexQ047cH4Q0Bqpzhqg rtgre-platform",
 ]
 
-# Plugins de l'agent Oracle : Bastion pour les sessions SSH gérées (ADR 0006, #16).
+# Plugins de l'agent Oracle. Le plugin Bastion n'est pas utilisé : les sessions passent par la
+# redirection de port, qui n'en dépend pas (#16). Il reste désactivé pour réduire la surface.
 node_agent_plugins = {
-  Bastion = "ENABLED"
+  Bastion = "DISABLED"
 }
 
 # Bastion : l'adresse du poste d'administration change (connexion domestique), donc toutes les

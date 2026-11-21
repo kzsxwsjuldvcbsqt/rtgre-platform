@@ -27,6 +27,7 @@ La seconde commande installe les dépendances Python et les collections d'Ansibl
 | [`ansible`](ansible) | Configuration des nœuds : inventaire dynamique, rôles et playbooks |
 | [`docs/adr`](docs/adr) | Décisions d'architecture |
 | [`docs/runbooks`](docs/runbooks) | Procédures d'exploitation |
+| [`scripts`](scripts) | Ouverture des sessions du Bastion, tentatives d'apply sans capacité, aides à la CI |
 
 ## Déploiement
 
