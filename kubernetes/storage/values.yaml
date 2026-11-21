@@ -12,6 +12,13 @@ directory: /var/lib/kubernetes-local-volumes
 #   capacity : taille annoncée (un volume local n'applique pas de quota)
 #   claim    : seule demande autorisée à s'y lier
 volumes:
+  # Données de Prometheus : la demande porte le nom que lui donne l'opérateur.
+  prometheus:
+    node: wk-1
+    capacity: 5Gi
+    claim:
+      namespace: monitoring
+      name: prometheus-monitoring-prometheus-db-prometheus-monitoring-prometheus-0
   rtgre-site:
     node: wk-1
     capacity: 1Gi
