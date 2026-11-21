@@ -1,0 +1,12 @@
+---
+argument_specs:
+  main:
+    short_description: Crée les dossiers des volumes persistants locaux portés par le nœud.
+    options:
+      local_volumes_directory:
+        type: path
+        description: Dossier qui contient un sous-dossier par volume local.
+      local_volumes_names:
+        type: list
+        elements: str
+        description: Noms des volumes portés par ce nœud.

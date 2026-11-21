@@ -1,0 +1,33 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  tasks:
+    - name: Read the directories
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /var/lib/kubernetes-local-volumes
+        - /var/lib/kubernetes-local-volumes/site
+        - /var/lib/kubernetes-local-volumes/metrics
+      register: local_volumes_stat
+
+    - name: Check that the parent directory can only be traversed
+      ansible.builtin.assert:
+        that:
+          - local_volumes_stat.results[0].stat.isdir
+          - local_volumes_stat.results[0].stat.mode == '0711'
+
+    - name: Check that a new volume is closed to other users
+      ansible.builtin.assert:
+        that:
+          - local_volumes_stat.results[1].stat.isdir
+          - local_volumes_stat.results[1].stat.mode == '0770'
+          - local_volumes_stat.results[1].stat.uid == 0
+          - local_volumes_stat.results[1].stat.gid == 0
+
+    - name: Check that a volume handed over to a pod keeps its group
+      ansible.builtin.assert:
+        that:
+          - local_volumes_stat.results[2].stat.gid == 65532
+          - local_volumes_stat.results[2].stat.mode == '2770'

@@ -1,0 +1,36 @@
+---
+- name: Check the volume names
+  ansible.builtin.assert:
+    that:
+      - item is match('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')
+    fail_msg: "{{ item }} n'est pas un nom de PersistentVolume valide."
+    quiet: true
+  loop: "{{ local_volumes_names }}"
+
+# Traversable par tous, pour qu'un pod atteigne son volume ; rien d'autre n'y est lisible.
+- name: Create the directory of the local volumes
+  ansible.builtin.file:
+    path: "{{ local_volumes_directory }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0711"
+
+# Le rôle crée le dossier sans jamais reprendre ses droits ensuite : kubelet donne le groupe
+# du pod (fsGroup) au volume, et le rôle ne doit pas le lui retirer à chaque passage.
+- name: Look for the volume directories
+  ansible.builtin.stat:
+    path: "{{ local_volumes_directory }}/{{ item }}"
+  loop: "{{ local_volumes_names }}"
+  register: local_volumes_existing
+
+- name: Create the missing volume directories
+  ansible.builtin.file:
+    path: "{{ local_volumes_directory }}/{{ item.item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0770"
+  loop: "{{ local_volumes_existing.results | rejectattr('stat.exists') }}"
+  loop_control:
+    label: "{{ item.item }}"

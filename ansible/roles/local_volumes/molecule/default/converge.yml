@@ -1,0 +1,16 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  pre_tasks:
+    # Simule kubelet, qui a déjà donné un volume au groupe d'un pod : le rôle ne doit pas
+    # reprendre ces droits.
+    - name: Create a volume already handed over to a pod
+      ansible.builtin.file:
+        path: "{{ local_volumes_directory | default('/var/lib/kubernetes-local-volumes') }}/metrics"
+        state: directory
+        owner: root
+        group: "65532"
+        mode: "2770"
+  roles:
+    - role: local_volumes
