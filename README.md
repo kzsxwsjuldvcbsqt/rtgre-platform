@@ -9,7 +9,7 @@ Infrastructure de [rtgre.fr](https://rtgre.fr), décrite en code : provisionneme
 
 Le site lui-même est développé dans le dépôt [rtgre](https://github.com/kzsxwsjuldvcbsqt/rtgre). Ce dépôt ne contient que ce qui le fait tourner. rtgre construit, signe et publie l'image de son générateur sur `ghcr.io/kzsxwsjuldvcbsqt/rtgre` ; la plateforme la déploie par son empreinte, après vérification de sa signature. Le schéma de la chaîne de livraison est dans le [README de rtgre](https://github.com/kzsxwsjuldvcbsqt/rtgre#chaîne-de-livraison).
 
-Projet en construction.
+rtgre.fr est servi par cette plateforme depuis le 21 novembre 2026. GitHub Pages reste en secours : la zone DNS y revient en changeant une valeur ([runbook](docs/runbooks/basculer-rtgre-fr.md)).
 
 ## Prérequis
 
