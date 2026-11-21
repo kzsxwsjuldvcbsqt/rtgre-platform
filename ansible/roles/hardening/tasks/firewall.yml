@@ -35,6 +35,20 @@
     comment: Public service
   loop: "{{ hardening_firewall_public_tcp_ports }}"
 
+# ufw applique son propre /etc/ufw/sysctl.conf à chaque démarrage et rechargement, après
+# /etc/sysctl.d/ : il remettrait par exemple log_martians à 0. Les paramètres que ce fichier
+# connaît déjà sont alignés sur hardening_sysctl ; les autres ne sont pas ajoutés.
+- name: Align the ufw kernel parameters with the hardening ones
+  ansible.builtin.lineinfile:
+    path: /etc/ufw/sysctl.conf
+    regexp: "^{{ item.key | replace('.', '/') }}="
+    line: "{{ item.key | replace('.', '/') }}={{ item.value }}"
+    backrefs: true
+  loop: "{{ hardening_sysctl | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  notify: Reload ufw
+
 - name: Deny incoming traffic by default and enable the firewall
   community.general.ufw:
     state: enabled

@@ -56,6 +56,16 @@
         that:
           - hardening_forward_policy.stdout == 'DEFAULT_FORWARD_POLICY="ACCEPT"'
 
+    - name: Read the ufw kernel parameters
+      ansible.builtin.command: grep -E '^net/ipv4/conf/all/log_martians=' /etc/ufw/sysctl.conf
+      register: hardening_ufw_sysctl
+      changed_when: false
+
+    - name: Check that ufw does not undo the hardening parameters
+      ansible.builtin.assert:
+        that:
+          - hardening_ufw_sysctl.stdout == 'net/ipv4/conf/all/log_martians=1'
+
     - name: Gather installed packages
       ansible.builtin.package_facts:
 
