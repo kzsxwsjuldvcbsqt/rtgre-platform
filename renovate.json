@@ -85,6 +85,13 @@
       "automerge": true
     },
     {
+      "description": "nginx : seulement la branche stable, dont le numéro mineur est pair (1.30, 1.32). Les mineurs impairs sont la branche de développement",
+      "matchPackageNames": [
+        "docker.io/library/nginx"
+      ],
+      "allowedVersions": "/^\\d+\\.\\d*[02468]\\.\\d+/"
+    },
+    {
       "description": "Argo CD : une montée mineure ou majeure du chart peut changer de version d'Argo CD, à vérifier contre sa matrice de versions de Kubernetes (ADR 0010) ; elle attend une approbation dans le tableau de bord",
       "matchDepNames": [
         "argo-cd"
