@@ -27,6 +27,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  # renovate: datasource=github-releases depName=jdx/mise extractVersion=^v(?<version>.+)$
   MISE_VERSION: '2026.11.11'
   WORKING_DIRECTORY: terraform/envs/prod
   PLAN_FILE: prod.tfplan

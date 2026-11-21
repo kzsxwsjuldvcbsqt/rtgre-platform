@@ -1,5 +1,6 @@
 ---
 # Version du chart Helm de Cilium. Cilium 1.20 est testé avec Kubernetes 1.33 à 1.36 (ADR 0009).
+# renovate: datasource=helm depName=cilium registryUrl=https://helm.cilium.io
 cilium_chart_version: "1.20.5"
 cilium_chart_repository: https://helm.cilium.io
 

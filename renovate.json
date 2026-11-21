@@ -1,0 +1,127 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "timezone": "Europe/Paris",
+  "schedule": [
+    "before 7am on monday"
+  ],
+  "prConcurrentLimit": 5,
+  "labels": [
+    "dépendances"
+  ],
+  "dependencyDashboard": {
+    "enabled": true,
+    "title": "Tableau de bord des dépendances"
+  },
+  "platformCommit": "enabled",
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "commitMessageAction": "met à jour",
+  "commitMessageExtra": "vers {{#if isPinDigest}}{{{newDigestShort}}}{{else}}{{#if isMajor}}{{prettyNewMajor}}{{else}}{{#if isSingleVersion}}{{prettyNewVersion}}{{else}}{{#if newValue}}{{{newValue}}}{{else}}{{{newDigestShort}}}{{/if}}{{/if}}{{/if}}{{/if}}",
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": [
+      "at any time"
+    ],
+    "labels": [
+      "dépendances",
+      "sécurité"
+    ]
+  },
+  "pre-commit": {
+    "enabled": true
+  },
+  "dockerfile": {
+    "managerFilePatterns": [
+      "/(^|/)Dockerfile\\.j2$/"
+    ]
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Versions annotées d'un commentaire « renovate: » dans les fichiers YAML (Ansible, workflows)",
+      "managerFilePatterns": [
+        "/\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( registryUrl=(?<registryUrl>\\S+))?( extractVersion=(?<extractVersion>\\S+))?\\s+[A-Za-z0-9_]+: ['\"]?(?<currentValue>[^'\"\\s]+)['\"]?"
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Kubernetes et Cilium : une montée mineure ou majeure dépend de la matrice de compatibilité de Cilium (ADR 0009), elle attend une approbation dans le tableau de bord",
+      "matchDepNames": [
+        "kubernetes/kubernetes",
+        "cilium"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Kubernetes et Cilium dans une même PR",
+      "matchDepNames": [
+        "kubernetes/kubernetes",
+        "cilium"
+      ],
+      "groupName": "Kubernetes et Cilium"
+    },
+    {
+      "description": "Providers Terraform",
+      "matchManagers": [
+        "terraform"
+      ],
+      "groupName": "providers Terraform"
+    },
+    {
+      "description": "Hooks pre-commit",
+      "matchManagers": [
+        "pre-commit"
+      ],
+      "groupName": "hooks pre-commit"
+    },
+    {
+      "description": "Actions GitHub, épinglées par SHA",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "actions GitHub"
+    },
+    {
+      "description": "Outils d'Ansible : paquets Python et collections",
+      "matchManagers": [
+        "pip_requirements",
+        "ansible-galaxy"
+      ],
+      "groupName": "outils Ansible"
+    },
+    {
+      "description": "Outils épinglés dans mise.toml",
+      "matchManagers": [
+        "mise"
+      ],
+      "groupName": "outils mise"
+    },
+    {
+      "description": "Version de mise utilisée par les workflows, avec les outils qu'elle installe",
+      "matchDepNames": [
+        "jdx/mise"
+      ],
+      "groupName": "outils mise"
+    },
+    {
+      "description": "L'image pause suit kubeadm, pas sa propre dernière version : le test Molecule les compare",
+      "matchPackageNames": [
+        "registry.k8s.io/pause"
+      ],
+      "enabled": false
+    }
+  ]
+}

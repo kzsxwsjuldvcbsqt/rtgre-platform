@@ -33,6 +33,14 @@ La seconde commande installe les dépendances Python et les collections d'Ansibl
 
 La prod est déployée par le workflow `Terraform` : plan commenté sur chaque pull request, puis apply du plan enregistré sur `main` après approbation dans l'environnement GitHub `production`. La CI s'authentifie auprès d'Oracle sans clé API, par échange de son jeton OIDC.
 
+## Dépendances
+
+Toutes les versions sont épinglées : outils dans `mise.toml`, providers Terraform, hooks pre-commit, actions GitHub par SHA, dépendances d'Ansible, images de test par empreinte, Kubernetes et Cilium.
+
+- **Renovate** (`renovate.json`) propose les mises à jour, regroupées par écosystème, chaque lundi matin. Les correctifs de sécurité arrivent sans attendre. Une montée mineure de Kubernetes ou de Cilium attend une approbation dans le tableau de bord des dépendances, car leur compatibilité doit être vérifiée ([ADR 0009](docs/adr/0009-reseau-des-pods-avec-cilium.md)).
+- **Les alertes Dependabot** signalent une vulnérabilité publiée sur une dépendance en place.
+- **Le workflow `Security`** analyse chaque lundi les dépendances avec Trivy.
+
 ## Qualité
 
 | Outil | Ce qu'il vérifie |
