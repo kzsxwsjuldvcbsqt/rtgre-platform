@@ -5,3 +5,5 @@ molecule==26.11.0
 molecule-plugins[docker]==26.11.0
 # SDK utilisé par l'inventaire dynamique de la collection oracle.oci.
 oci==2.192.0
+# Requis par les filtres réseau de la collection ansible.utils.
+netaddr==1.3.0
