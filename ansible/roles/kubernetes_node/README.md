@@ -6,7 +6,7 @@ Prépare un nœud Ubuntu 24.04 pour kubeadm, sans initialiser ni joindre de clus
 | --- | --- |
 | Noyau | Modules `overlay` et `br_netfilter` déclarés au démarrage et chargés, routage IPv4 et filtrage des ponts activés (`/etc/sysctl.d/70-kubernetes.conf`), swap désactivé. |
 | containerd | Paquet de l'archive Ubuntu (2.2 sur Ubuntu 24.04), configuré au format 3 : pilote cgroup systemd pour runc, image pause épinglée. `crictl` pointe sur son socket. |
-| Kubernetes | kubeadm, kubelet et kubectl à la version exacte `kubernetes_node_version`, depuis `pkgs.k8s.io`, puis bloqués. `cri-tools` est installé dans la même version mineure. |
+| Kubernetes | kubeadm, kubelet et kubectl à la version exacte `kubernetes_node_version` (1.36.6 par défaut, voir l'ADR 0009), depuis `pkgs.k8s.io`, puis bloqués. Une version plus ancienne que celle installée peut être imposée. `cri-tools` est installé dans la même version mineure. |
 
 ## Choix notables
 
@@ -25,7 +25,7 @@ Prépare un nœud Ubuntu 24.04 pour kubeadm, sans initialiser ni joindre de clus
   roles:
     - role: kubernetes_node
       vars:
-        kubernetes_node_version: "1.37.2"
+        kubernetes_node_version: "1.36.6"
 ```
 
 ## Tests

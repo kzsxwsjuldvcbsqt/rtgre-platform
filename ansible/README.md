@@ -37,7 +37,17 @@ Les nœuds ne sont joignables que par le Bastion. Il faut d'abord ouvrir les ses
 ansible-playbook playbooks/site.yml
 ```
 
-Le playbook vérifie d'abord les plages réseau déclarées dans `inventories/prod/group_vars/all.yml`, puis applique `hardening` et `kubernetes_node` à tous les nœuds. Pour une modification risquée, l'appliquer d'abord à un seul nœud avec `--limit wk-1`.
+Le playbook vérifie d'abord les plages réseau déclarées dans `inventories/prod/group_vars/all.yml`, applique `hardening` et `kubernetes_node` à tous les nœuds, initialise le plan de contrôle, installe Cilium, joint les nœuds de travail, puis attend qu'ils soient tous prêts. Relancé sur un cluster en place, il ne change rien. Pour une modification risquée, l'appliquer d'abord à un seul nœud avec `--limit wk-1`.
+
+## Utiliser kubectl
+
+kubectl est disponible sur le plan de contrôle, pour le compte d'administration :
+
+```bash
+ssh -F .ssh/bastion.conf cp-1 kubectl get nodes
+```
+
+Le kubeconfig d'administration ne quitte pas le nœud.
 
 ## Rôles
 
@@ -45,6 +55,8 @@ Le playbook vérifie d'abord les plages réseau déclarées dans `inventories/pr
 | --- | --- |
 | [`hardening`](roles/hardening) | Socle de sécurité : SSH, pare-feu, mises à jour, noyau |
 | [`kubernetes_node`](roles/kubernetes_node) | Préparation pour kubeadm : noyau, containerd, paquets Kubernetes |
+| [`kubeadm`](roles/kubeadm) | Initialisation du plan de contrôle et jonction des nœuds |
+| [`cilium`](roles/cilium) | Réseau des pods (CNI) |
 
 Chaque rôle a un scénario Molecule (`roles/<rôle>/molecule/default`), lancé en local avec `molecule test` depuis le dossier du rôle, et dans la CI par le workflow `Ansible`. Molecule a besoin de Docker et de `rsync`.
 
