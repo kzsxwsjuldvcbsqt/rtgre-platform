@@ -152,12 +152,15 @@ vulnerabilities:
     statement: *grafana
     expired_at: 2027-01-31
 
-  # cert-manager : go-jose.
+  # cert-manager et Kyverno : go-jose.
   - id: CVE-2026-116587
     paths:
       - app/cmd/controller/controller
-    statement: &cert-manager >-
-      Déni de service à la lecture d'une clé JWK, dans le contrôleur de cert-manager 1.21.3, dernière version
-      publiée au 2026-11-21. Le correctif est fusionné dans la branche release-1.21 : la prochaine version
-      corrective l'apportera.
+      - ko-app/kyverno
+      - ko-app/kyverno-init
+    statement: >-
+      Déni de service à la lecture d'une clé JWK, dans le contrôleur de cert-manager 1.21.3 et dans Kyverno
+      1.20.0, leurs dernières versions publiées au 2026-11-22. Pour cert-manager, le correctif est fusionné dans
+      la branche release-1.21 : la prochaine version corrective l'apportera. Kyverno ne lit que les signatures du
+      registre déclaré et les certificats de Sigstore, seules adresses qu'il peut joindre.
     expired_at: 2027-01-31

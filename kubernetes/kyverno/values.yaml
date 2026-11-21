@@ -46,6 +46,9 @@ kyverno:
       enabled: false
     backgroundScan:
       enabled: false
+    # Aucune politique ne génère d'objet : le webhook qui protège leurs étiquettes est inutile.
+    protectGenerationLabels:
+      enabled: false
 
   # Tâches que Helm lancerait avant une installation, une mise à jour ou une suppression :
   # Argo CD n'installe pas par Helm, et ne les lancerait pas au bon moment. Ce cluster n'a
@@ -75,3 +78,11 @@ kyverno:
     serviceMonitor:
       enabled: true
       interval: 60s
+    # Mesuré à 57 Mo au repos, 67 Mo pendant les vérifications.
+    container:
+      resources:
+        requests:
+          cpu: 25m
+          memory: 96Mi
+        limits:
+          memory: 256Mi
