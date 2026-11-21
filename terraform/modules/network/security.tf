@@ -26,6 +26,7 @@ locals {
 resource "oci_core_network_security_group_security_rule" "load_balancer_ingress_public" {
   for_each = local.public_ingress_rules
 
+  # checkov:skip=CKV_OCI_21:Règles avec état voulues : une règle sans état exige d'écrire aussi la règle de retour, source d'erreurs.
   network_security_group_id = oci_core_network_security_group.load_balancer.id
   description               = "Trafic web vers le load balancer, port ${each.value.port}"
   direction                 = "INGRESS"
@@ -43,6 +44,7 @@ resource "oci_core_network_security_group_security_rule" "load_balancer_ingress_
 }
 
 resource "oci_core_network_security_group_security_rule" "load_balancer_egress_nodes" {
+  # checkov:skip=CKV2_OCI_2:Tous protocoles, mais entre nœuds ou en sortie seulement : aucun accès RDP depuis Internet.
   network_security_group_id = oci_core_network_security_group.load_balancer.id
   description               = "Le load balancer ne parle qu'aux nœuds"
   direction                 = "EGRESS"
@@ -56,6 +58,8 @@ resource "oci_core_network_security_group_security_rule" "load_balancer_egress_n
 # load balancer, sortie libre pour les paquets et les images. Rien d'autre n'entre.
 
 resource "oci_core_network_security_group_security_rule" "nodes_ingress_nodes" {
+  # checkov:skip=CKV_OCI_21:Règles avec état voulues : une règle sans état exige d'écrire aussi la règle de retour, source d'erreurs.
+  # checkov:skip=CKV2_OCI_2:Tous protocoles, mais entre nœuds ou en sortie seulement : aucun accès RDP depuis Internet.
   network_security_group_id = oci_core_network_security_group.nodes.id
   description               = "Trafic entre nœuds du cluster"
   direction                 = "INGRESS"
@@ -66,6 +70,7 @@ resource "oci_core_network_security_group_security_rule" "nodes_ingress_nodes" {
 }
 
 resource "oci_core_network_security_group_security_rule" "nodes_ingress_load_balancer" {
+  # checkov:skip=CKV_OCI_21:Règles avec état voulues : une règle sans état exige d'écrire aussi la règle de retour, source d'erreurs.
   network_security_group_id = oci_core_network_security_group.nodes.id
   description               = "Trafic du load balancer vers les nœuds"
   direction                 = "INGRESS"
@@ -78,6 +83,8 @@ resource "oci_core_network_security_group_security_rule" "nodes_ingress_load_bal
 # Messages ICMP « fragmentation nécessaire » : sans eux, la découverte du MTU échoue et
 # certaines connexions restent bloquées.
 resource "oci_core_network_security_group_security_rule" "nodes_ingress_path_mtu" {
+  # checkov:skip=CKV_OCI_21:Règles avec état voulues : une règle sans état exige d'écrire aussi la règle de retour, source d'erreurs.
+  # checkov:skip=CKV2_OCI_2:Tous protocoles, mais entre nœuds ou en sortie seulement : aucun accès RDP depuis Internet.
   network_security_group_id = oci_core_network_security_group.nodes.id
   description               = "Découverte du MTU (ICMP type 3, code 4)"
   direction                 = "INGRESS"
@@ -93,6 +100,7 @@ resource "oci_core_network_security_group_security_rule" "nodes_ingress_path_mtu
 }
 
 resource "oci_core_network_security_group_security_rule" "nodes_egress_anywhere" {
+  # checkov:skip=CKV2_OCI_2:Tous protocoles, mais entre nœuds ou en sortie seulement : aucun accès RDP depuis Internet.
   network_security_group_id = oci_core_network_security_group.nodes.id
   description               = "Sortie des nœuds : paquets, images de conteneurs, API Oracle"
   direction                 = "EGRESS"
