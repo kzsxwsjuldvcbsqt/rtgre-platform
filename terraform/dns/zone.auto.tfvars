@@ -18,7 +18,7 @@ protected_records = {
 
 # Ce qui sert rtgre.fr et www.rtgre.fr : « github-pages » ou « cluster ». C'est la seule valeur
 # à changer pour basculer le site (docs/runbooks/basculer-rtgre-fr.md).
-site_served_by = "github-pages"
+site_served_by = "cluster"
 
 # Adresses que GitHub publie pour un domaine personnalisé. Elles ne servent que lorsque
 # site_served_by vaut « github-pages ».
