@@ -13,7 +13,7 @@ routeNamespaces: &routeNamespaces
 # bloque tout le certificat.
 certificate:
   secretName: &tlsSecret public-tls
-  issuer: letsencrypt-staging
+  issuer: letsencrypt-production
   dnsNames:
     - test.rtgre.fr
 
