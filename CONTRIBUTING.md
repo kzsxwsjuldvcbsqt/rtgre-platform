@@ -66,6 +66,7 @@ git config tag.gpgSign true
 
 - Une décision structurante s'accompagne d'un ADR dans `docs/adr/`, rédigé à partir de [template.md](docs/adr/template.md).
 - Une opération à refaire, ou à mener en cas d'incident, est décrite dans un runbook de `docs/runbooks/`.
+- Un incident en production a son issue « Incident », puis son post-mortem dans [`docs/postmortems/`](docs/postmortems).
 - Aucune valeur propre à l'environnement n'est écrite en dur : elle passe par une variable, un fichier `*.auto.tfvars` versionné ou les `group_vars` d'Ansible.
 
 ## Sécurité
