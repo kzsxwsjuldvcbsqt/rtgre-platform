@@ -18,6 +18,11 @@ on:
       - .github/workflows/terraform.yml
       - .github/actions/oci-login/**
   workflow_dispatch:
+    inputs:
+      replace_nodes:
+        description: Nœuds à détruire puis recréer, séparés par des espaces (par exemple « wk-1 »)
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -73,12 +78,24 @@ jobs:
         run: '"$GITHUB_WORKSPACE/scripts/ci/terraform-init.sh"'
 
       # L'identité de plan est en lecture seule : elle ne peut pas poser le verrou du state.
+      # Lancé à la main avec des noms de nœuds, le plan les remplace : c'est la seule façon de
+      # recréer un nœud, et elle passe par la même approbation que le reste.
       - name: Plan
         id: plan
         working-directory: ${{ env.WORKING_DIRECTORY }}
+        env:
+          REPLACE_NODES: ${{ inputs.replace_nodes }}
         run: |
+          replace=()
+          for node in $REPLACE_NODES; do
+            if ! [[ $node =~ ^[a-z][a-z0-9-]*$ ]]; then
+              echo "::error::Nom de nœud invalide : $node"
+              exit 1
+            fi
+            replace+=("-replace=module.compute.oci_core_instance.node[\"$node\"]")
+          done
           set +e
-          terraform plan -lock=false -no-color -detailed-exitcode -out="$PLAN_FILE" > plan.log 2>&1
+          terraform plan -lock=false -no-color -detailed-exitcode -out="$PLAN_FILE" "${replace[@]}" > plan.log 2>&1
           status=$?
           set -e
           cat plan.log
