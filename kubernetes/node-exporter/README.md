@@ -4,4 +4,6 @@ Expose les métriques de chaque nœud à Prometheus : processeur, mémoire, disq
 
 Il lit `/proc`, `/sys` et la racine du nœud, et utilise le réseau de l'hôte. C'est pourquoi il a sa propre application et son propre espace de noms, le seul du cluster au niveau Pod Security `privileged`. Tout le reste de la métrologie reste au niveau `restricted`.
 
+Il lit aussi, en lecture seule, le dossier `textfileDirectory` des nœuds : le rôle Ansible `hardening` y écrit `node_reboot_required`, qui dit si le nœud attend un redémarrage ([ADR 0023](../../docs/adr/0023-redemarrer-les-noeuds-seuls-la-nuit.md)).
+
 Sur les nœuds, son port 9100 n'est joignable que du réseau virtuel et des pods : le pare-feu des nœuds et les groupes de sécurité d'Oracle le ferment à Internet.
