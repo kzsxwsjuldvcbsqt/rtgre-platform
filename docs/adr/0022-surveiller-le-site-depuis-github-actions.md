@@ -1,6 +1,6 @@
 # 0022. Surveiller le site depuis GitHub Actions
 
-- Statut : accepté
+- Statut : accepté ; complété par [0024](0024-surveiller-le-load-balancer-par-une-alarme-d-oracle.md), GitHub ne tenant pas l'horaire
 - Date : 2026-11-22
 
 ## Contexte
