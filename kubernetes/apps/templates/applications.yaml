@@ -47,6 +47,12 @@ spec:
     {{- end }}
     syncOptions:
       - CreateNamespace=true
+      # Sur un cluster neuf, des applications s'attendent l'une l'autre : cert-manager déclare
+      # une cible à Prometheus, dont le chart demande un certificat à cert-manager. Sans cette
+      # option, Argo CD refuse toute la synchronisation dès qu'un type d'objet lui est inconnu,
+      # et aucune des deux ne démarre. Avec elle, il applique ce qu'il peut, et le reste au
+      # passage suivant.
+      - SkipDryRunOnMissingResource=true
       {{- if $app.serverSideApply }}
       - ServerSideApply=true
       {{- end }}
