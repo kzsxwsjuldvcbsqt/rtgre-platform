@@ -136,12 +136,15 @@ groups:
           description: "Argo CD la voit « {{ $labels.sync_status }} » depuis trente minutes."
           runbook: retablir-une-application-argocd.md
 
+      # Une génération du site qui échoue, parce qu'ADE ne répond pas, dégrade l'application du
+      # site jusqu'à la suivante, une heure après : c'est toléré, et GenerationEnEchec s'en charge
+      # si cela dure. L'alerte attend donc plus d'une heure.
       - alert: ApplicationDegradee
         expr: argocd_app_info{health_status!="Healthy"} == 1
-        for: 30m
+        for: 90m
         labels:
           severity: warning
         annotations:
           summary: "L'application {{ $labels.name }} n'est pas saine"
-          description: "Argo CD la voit « {{ $labels.health_status }} » depuis trente minutes."
+          description: "Argo CD la voit « {{ $labels.health_status }} » depuis une heure et demie."
           runbook: retablir-une-application-argocd.md

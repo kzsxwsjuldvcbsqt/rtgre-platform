@@ -1,6 +1,6 @@
 # Rétablir une application Argo CD
 
-Alertes `ApplicationDesynchronisee` (l'application ne correspond plus au dépôt) et `ApplicationDegradee` (ses objets ne sont pas sains), tenues trente minutes. Argo CD corrige seul un écart : une alerte signifie qu'il n'y arrive pas. Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
+Alertes `ApplicationDesynchronisee` (l'application ne correspond plus au dépôt, depuis trente minutes) et `ApplicationDegradee` (ses objets ne sont pas sains, depuis une heure et demie). Argo CD corrige seul un écart : une alerte signifie qu'il n'y arrive pas. Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
 
 ## Voir l'état
 
@@ -28,7 +28,7 @@ ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n argocd annotate applications.ar
 
 ## L'application n'est pas saine
 
-L'état vient d'un de ses objets : un pod qui ne démarre pas, un volume en attente, un certificat non prêt.
+L'état vient d'un de ses objets : un pod qui ne démarre pas, un volume en attente, un certificat non prêt. Pour l'application `rtgre`, c'est le plus souvent une génération en échec : une seule ne déclenche pas l'alerte, voir [suivre-la-generation-du-site](suivre-la-generation-du-site.md).
 
 ```bash
 ssh -F ansible/.ssh/bastion.conf cp-1 "kubectl -n argocd get applications.argoproj.io <nom> -o jsonpath='{range .status.resources[?(@.health.status!=\"Healthy\")]}{.kind}/{.name}: {.health.status} {.health.message}{\"\n\"}{end}'"

@@ -54,7 +54,7 @@ Les règles sont dans [`files/alerts.yaml`](files/alerts.yaml), au format de Pro
 | `PodEnBoucle` | Un conteneur redémarre 3 fois en 30 minutes | [diagnostiquer-un-pod](../../docs/runbooks/diagnostiquer-un-pod.md) |
 | `CibleInjoignable` | Prometheus ne joint plus une cible depuis 15 minutes | [diagnostiquer-un-pod](../../docs/runbooks/diagnostiquer-un-pod.md) |
 | `ApplicationDesynchronisee` | Une application Argo CD diffère du dépôt depuis 30 minutes | [retablir-une-application-argocd](../../docs/runbooks/retablir-une-application-argocd.md) |
-| `ApplicationDegradee` | Une application Argo CD n'est pas saine depuis 30 minutes | [retablir-une-application-argocd](../../docs/runbooks/retablir-une-application-argocd.md) |
+| `ApplicationDegradee` | Une application Argo CD n'est pas saine depuis 90 minutes, plus que le temps d'une génération manquée | [retablir-une-application-argocd](../../docs/runbooks/retablir-une-application-argocd.md) |
 
 Seule la première est `critical`, rappelée toutes les deux heures. Les autres sont `warning`, rappelées chaque jour.
 
