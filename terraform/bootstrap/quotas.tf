@@ -26,6 +26,7 @@ resource "oci_limits_quota" "free_tier" {
     # débit et la taille des messages, qu'un zéro bloquerait.
     "set email-delivery quota approved-sender-count to ${var.free_tier_quotas.mail_senders} in tenancy",
     "set email-delivery quota max-emails-day to ${var.free_tier_quotas.mails_per_day} in tenancy",
+    "set notifications quota topic-count to ${var.free_tier_quotas.notification_topics} in tenancy",
     # Un Vault du type par défaut, pour la clé du state. Le Vault privé, payant, reste à zéro.
     "zero kms quotas in tenancy",
     "set kms quota virtual-vault-count to ${var.free_tier_quotas.vaults} in tenancy",

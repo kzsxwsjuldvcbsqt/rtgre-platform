@@ -41,3 +41,11 @@ load_balancer_listeners = {
   https = { port = 443, backend_port = 30443 }
 }
 load_balancer_proxy_protocol_enabled = true
+
+# Alarmes d'Oracle quand plus aucun nœud ne répond derrière le load balancer (ADR 0024). Cinq
+# minutes d'attente : un nœud qui redémarre en manque trois. Rappel toutes les deux heures.
+load_balancer_alarm = {
+  pending_duration = "PT5M"
+  repeat_duration  = "PT2H"
+  runbook_url      = "https://github.com/kzsxwsjuldvcbsqt/rtgre-platform/blob/main/docs/runbooks/site-injoignable.md"
+}

@@ -67,3 +67,8 @@ output "alert_smtp_password" {
   value       = oci_identity_domains_smtp_credential.alerts.password
   sensitive   = true
 }
+
+output "outage_topic_id" {
+  description = "Sujet de notification des pannes vues depuis Oracle : destination des alarmes de la plateforme."
+  value       = oci_ons_notification_topic.outages.id
+}

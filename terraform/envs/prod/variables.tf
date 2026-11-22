@@ -134,3 +134,12 @@ variable "load_balancer_proxy_protocol_enabled" {
   description = "Transmet l'adresse du client à la passerelle du cluster par le PROXY protocol v2."
   type        = bool
 }
+
+variable "load_balancer_alarm" {
+  description = "Alarmes sur la sonde du load balancer : délai avant de prévenir, délai de rappel (durées ISO 8601) et runbook cité dans le message."
+  type = object({
+    pending_duration = string
+    repeat_duration  = string
+    runbook_url      = string
+  })
+}

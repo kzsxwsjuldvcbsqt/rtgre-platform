@@ -5,6 +5,7 @@ Network Load Balancer public d'Oracle, devant les nœuds du cluster ([ADR 0012](
 - Une écoute TCP par entrée de `listeners`, avec son groupe d'instances et sa sonde TCP.
 - Les instances de `backends` reçoivent chaque écoute sur son `backend_port`.
 - Le TLS n'est pas terminé ici : les connexions sont transmises telles quelles.
+- Avec `alarm`, deux alarmes d'Oracle préviennent quand plus aucune instance ne répond à la sonde, ou qu'il n'y en a plus ([ADR 0024](../../../docs/adr/0024-surveiller-le-load-balancer-par-une-alarme-d-oracle.md)).
 
 ## Choix notables
 
