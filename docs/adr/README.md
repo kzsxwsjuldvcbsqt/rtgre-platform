@@ -23,3 +23,4 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | [0017](0017-journaux-avec-loki-et-alloy.md) | Journaux avec Loki et Alloy | accepté |
 | [0018](0018-alertes-avec-alertmanager-et-telegram.md) | Alertes avec Alertmanager et Telegram | accepté |
 | [0019](0019-controler-les-images-a-l-admission-avec-kyverno.md) | Contrôler les images à l'admission avec Kyverno | accepté |
+| [0020](0020-chiffrer-le-state-avec-une-cle-du-vault.md) | Chiffrer le state avec une clé du Vault | accepté |
