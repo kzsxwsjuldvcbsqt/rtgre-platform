@@ -1,6 +1,10 @@
 # Le site ne répond plus
 
-Alerte `SiteInjoignable` : la sonde du cluster n'obtient plus de réponse valide de rtgre.fr ou de www.rtgre.fr depuis cinq minutes. Les visiteurs sont touchés. Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
+Deux signaux mènent ici, et les visiteurs sont touchés dans les deux cas :
+
+- l'alerte `SiteInjoignable`, reçue par courrier : la sonde du cluster n'obtient plus de réponse valide de rtgre.fr ou de www.rtgre.fr depuis cinq minutes ;
+- une issue « rtgre.fr ne répond plus depuis l'extérieur », ouverte par le workflow `Watch` ([ADR 0022](../adr/0022-surveiller-le-site-depuis-github-actions.md)) : la sonde de GitHub n'obtient plus de réponse. **Si elle arrive seule, sans alerte du cluster, c'est le cluster entier qui est tombé**, ou le nœud qui porte les alertes : commencer par l'état des nœuds, à l'étape 3.
+ Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
 
 ## 1. Confirmer depuis l'extérieur
 
@@ -36,4 +40,8 @@ ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre get pods,httproute
 
 ## 4. Après la panne
 
-Si les visiteurs ont été renvoyés sur GitHub Pages, revenir au cluster par la même procédure. Ouvrir une issue « Incident », puis écrire le post-mortem dans `docs/postmortems/`.
+Si les visiteurs ont été renvoyés sur GitHub Pages, revenir au cluster par la même procédure. L'issue ouverte par la sonde extérieure se ferme d'elle-même au retour du site ; sinon, ouvrir une issue « Incident ». Y consigner la chronologie, puis écrire le post-mortem dans `docs/postmortems/`.
+
+## Vérifier que la sonde extérieure signale encore
+
+Dans GitHub, onglet « Actions », workflow `Watch`, « Run workflow » en cochant `simulate_outage`. Une issue « (simulation) » s'ouvre dans la minute, et la sonde suivante la ferme.
