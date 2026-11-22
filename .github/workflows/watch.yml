@@ -2,7 +2,8 @@ name: Watch
 
 # Sonde extérieure : les alertes du cluster ne partent pas s'il tombe en entier (ADR 0022). Ce
 # workflow interroge le site depuis GitHub, ouvre une issue « Incident » quand il ne répond plus
-# et la ferme à son retour.
+# et la ferme à son retour. GitHub ne tient pas l'horaire : le signal sûr est l'alarme d'Oracle
+# sur le load balancer (ADR 0024), celui-ci n'est qu'un second filet.
 on:
   # Quatre fois par heure, hors des minutes rondes : GitHub y retarde ou abandonne les exécutions
   # planifiées, les plus demandées.
