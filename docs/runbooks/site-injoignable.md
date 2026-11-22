@@ -4,7 +4,7 @@ Trois signaux mènent ici, et les visiteurs sont touchés dans tous les cas :
 
 - l'alerte `SiteInjoignable`, reçue par courrier : la sonde du cluster n'obtient plus de réponse valide de rtgre.fr ou de www.rtgre.fr depuis cinq minutes ;
 - un courrier d'Oracle, alarme `no-healthy-backend` ou `no-backend` ([ADR 0024](../adr/0024-surveiller-le-load-balancer-par-une-alarme-d-oracle.md)) : plus aucun nœud ne répond derrière le load balancer depuis cinq minutes. **S'il arrive seul, sans alerte du cluster, c'est le nœud de travail ou le cluster entier qui est tombé** : commencer par l'état des nœuds, à l'étape 3 ;
-- une issue « rtgre.fr ne répond plus depuis l'extérieur », ouverte par le workflow `Watch` ([ADR 0022](../adr/0022-surveiller-le-site-depuis-github-actions.md)) : la sonde de GitHub n'obtient plus de réponse. GitHub la lance irrégulièrement : son absence ne prouve rien.
+- une issue « rtgre.fr ne répond plus depuis l'extérieur », ouverte par le workflow `Watch` ([ADR 0022](../adr/0022-surveiller-le-site-depuis-github-actions.md)) : la sonde de GitHub, lancée toutes les quinze minutes, n'obtient plus de réponse.
 
 Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
 
@@ -47,3 +47,20 @@ Si les visiteurs ont été renvoyés sur GitHub Pages, revenir au cluster par la
 ## Vérifier que la sonde extérieure signale encore
 
 Dans GitHub, onglet « Actions », workflow `Watch`, « Run workflow » en cochant `simulate_outage`. Une issue « (simulation) » s'ouvre dans la minute, et la sonde suivante la ferme.
+
+## La sonde extérieure ne part plus
+
+La sonde est lancée par un minuteur, le workflow `Watch timer` ([ADR 0027](../adr/0027-lancer-la-sonde-exterieure-par-un-minuteur.md)). Dans l'onglet « Actions », une exécution de `Watch timer` doit toujours être en attente, et la dernière de `Watch` dater de moins d'une demi-heure.
+
+```bash
+gh run list --workflow watch.yml --limit 5
+gh run list --workflow watch-timer.yml --limit 5
+```
+
+Si aucun minuteur n'attend, relancer la chaîne. Ne pas le faire s'il y en a déjà un : il y en aurait deux.
+
+```bash
+gh workflow run watch-timer.yml
+```
+
+Le délai est celui de l'environnement `watch-timer` : « Settings », « Environments », « Wait timer », quinze minutes, branche `main` seulement. S'il a disparu, le minuteur refuse de continuer : le recréer, puis relancer la chaîne.

@@ -81,7 +81,7 @@ scripts/alertmanager-email.sh
 
 ## Ce que les alertes ne voient pas
 
-Prometheus et Alertmanager tournent sur le cluster qu'ils surveillent. Si le nœud de travail tombe, ou tout le cluster, aucune alerte ne part. Deux alarmes d'Oracle couvrent ce cas : elles surveillent la sonde du load balancer et préviennent par courrier, depuis une adresse d'Oracle ([site-injoignable](site-injoignable.md)). Le workflow `Watch` sonde aussi le site depuis GitHub, quand GitHub le lance.
+Prometheus et Alertmanager tournent sur le cluster qu'ils surveillent. Si le nœud de travail tombe, ou tout le cluster, aucune alerte ne part. Deux alarmes d'Oracle couvrent ce cas : elles surveillent la sonde du load balancer et préviennent par courrier, depuis une adresse d'Oracle ([site-injoignable](site-injoignable.md)). Le workflow `Watch` sonde aussi le site depuis GitHub, toutes les quinze minutes, lancé par son minuteur ([site-injoignable](site-injoignable.md)).
 
 Pour que ces courriers arrivent, le destinataire valide une fois le message de confirmation qu'Oracle lui envoie à la création de l'abonnement. Pour le vérifier, depuis `terraform/bootstrap` :
 
