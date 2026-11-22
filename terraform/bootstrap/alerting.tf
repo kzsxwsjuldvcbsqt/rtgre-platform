@@ -127,3 +127,23 @@ resource "oci_identity_domains_smtp_credential" "alerts" {
     value = oci_identity_domains_user.alerts.id
   }
 }
+
+# Pannes vues depuis Oracle, hors du cluster : les alarmes de la plateforme (terraform/envs/prod)
+# publient dans ce sujet, qui prévient par courrier (ADR 0024). Chaque destinataire reçoit d'abord
+# un message de confirmation, à valider une fois.
+resource "oci_ons_notification_topic" "outages" {
+  compartment_id = oci_identity_compartment.platform.id
+  name           = "${var.project}-outages"
+  description    = "Pannes de la plateforme vues depuis Oracle, hors du cluster."
+  freeform_tags  = local.freeform_tags
+}
+
+resource "oci_ons_subscription" "outages" {
+  for_each = toset(var.outage_alert_recipients)
+
+  compartment_id = oci_identity_compartment.platform.id
+  topic_id       = oci_ons_notification_topic.outages.id
+  protocol       = "EMAIL"
+  endpoint       = each.value
+  freeform_tags  = local.freeform_tags
+}

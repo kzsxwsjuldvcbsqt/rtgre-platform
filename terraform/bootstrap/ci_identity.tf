@@ -40,6 +40,9 @@ locals {
         { permission = "manage volume-family", condition = "" },
         { permission = "manage bastion-family", condition = "" },
         { permission = "manage network-load-balancers", condition = "" },
+        # Alarmes de la plateforme, qui publient dans le sujet des pannes sans pouvoir le modifier.
+        { permission = "manage alarms", condition = "" },
+        { permission = "use ons-topics", condition = "" },
         { permission = "manage objects", condition = "target.bucket.name = '${oci_objectstorage_bucket.terraform_state.name}'" },
       ]
     }

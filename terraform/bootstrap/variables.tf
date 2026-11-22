@@ -92,6 +92,16 @@ variable "budget_alert_recipients" {
   }
 }
 
+variable "outage_alert_recipients" {
+  description = "Adresses e-mail prévenues des pannes vues depuis Oracle, hors du cluster."
+  type        = list(string)
+
+  validation {
+    condition     = length(var.outage_alert_recipients) > 0 && alltrue([for address in var.outage_alert_recipients : can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", address))])
+    error_message = "outage_alert_recipients doit contenir au moins une adresse e-mail valide."
+  }
+}
+
 variable "identity_domain_name" {
   description = "Nom du domaine d'identité qui porte l'utilisateur de service et la confiance de la CI."
   type        = string
@@ -147,6 +157,7 @@ variable "free_tier_quotas" {
     vaults                  = number
     mail_senders            = number
     mails_per_day           = number
+    notification_topics     = number
   })
 
   validation {

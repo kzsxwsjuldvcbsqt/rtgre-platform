@@ -15,4 +15,6 @@ free_tier_quotas = {
   # seul expéditeur suffit, pour les alertes.
   mail_senders  = 1
   mails_per_day = 100
+  # Notifications : 1000 courriers gratuits par mois. Un seul sujet, celui des pannes.
+  notification_topics = 1
 }
