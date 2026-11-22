@@ -1,33 +1,35 @@
 # Recevoir les alertes
 
-Prometheus évalue les règles d'alerte chaque minute, et Alertmanager envoie celles qui se déclenchent sur Telegram ([ADR 0018](../adr/0018-alertes-avec-alertmanager-et-telegram.md)). Chaque message porte un lien « Que faire » vers le runbook de l'alerte. Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
+Prometheus évalue les règles d'alerte chaque minute, et Alertmanager envoie celles qui se déclenchent par courrier ([ADR 0021](../adr/0021-envoyer-les-alertes-par-courrier.md)). Chaque message porte un lien « Que faire » vers le runbook de l'alerte. Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
 
-## Relier le bot Telegram
+Le courrier part de `cluster@alertes.rtgre.fr`, par le service Email Delivery d'Oracle. L'expéditeur, sa signature et son identifiant SMTP sont créés par [`terraform/bootstrap`](../../terraform/bootstrap), et les enregistrements DNS du sous-domaine par [`terraform/dns`](../../terraform/dns).
 
-À faire une fois, puis après toute reconstruction du cluster. Le jeton du bot ne va ni dans le dépôt, ni dans une commande : seulement dans un fichier du poste, puis dans un Secret du cluster.
+## Relier Alertmanager au courrier
 
-1. Dans Telegram, écrire à [@BotFather](https://t.me/BotFather) : `/newbot`, puis un nom et un identifiant qui finit par `bot`. Il répond avec le jeton.
-2. Créer le fichier du jeton, fermé aux autres comptes, et y coller le jeton avec un éditeur :
+À faire une fois, puis après toute reconstruction du cluster. Ni l'identifiant SMTP ni l'adresse du destinataire ne sont dans le dépôt : le premier vient du state du bootstrap, la seconde d'un fichier du poste.
 
-```bash
-install -D -m 600 /dev/null ~/.config/rtgre-platform/telegram-bot-token
-```
-
-3. Écrire un message quelconque au nouveau bot : c'est cette discussion qui recevra les alertes.
-4. Depuis la racine du dépôt :
+1. Écrire l'adresse qui recevra les alertes dans un fichier fermé aux autres comptes, avec un éditeur :
 
 ```bash
-scripts/alertmanager-telegram.sh
+install -D -m 600 /dev/null ~/.config/rtgre-platform/alert-recipient
 ```
 
-Le script vérifie le jeton, envoie un message de bienvenue, crée le Secret `alertmanager-telegram`, puis envoie une alerte d'essai. Elle arrive en moins d'une minute, et son message « Résolu » cinq minutes après.
+2. Depuis la racine du dépôt, avec `terraform/bootstrap` initialisé :
 
-Le fichier du poste peut ensuite être supprimé : BotFather redonne le jeton à la demande (`/token`).
+```bash
+scripts/alertmanager-email.sh
+```
+
+Le script crée le Secret `alertmanager-email`, remplace le pod d'Alertmanager, envoie une alerte d'essai, puis vérifie dans les métriques que le serveur d'envoi l'a acceptée. Le message arrive en moins d'une minute, et son message « Résolu » cinq minutes après.
+
+## Changer de destinataire
+
+Modifier le fichier du poste, puis relancer `scripts/alertmanager-email.sh`.
 
 ## Envoyer une alerte d'essai
 
 ```bash
-scripts/alertmanager-telegram.sh --test
+scripts/alertmanager-email.sh --test
 ```
 
 ## Voir les alertes en cours
@@ -50,21 +52,32 @@ La commande affiche l'identifiant du silence. Pour le lever avant son terme, la 
 
 ## Aucun message n'arrive
 
+Regarder d'abord le dossier des indésirables. Puis lire le journal : Alertmanager n'y écrit que la première tentative de chaque envoi.
+
 ```bash
-ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n monitoring logs alertmanager-monitoring-alertmanager-0 -c alertmanager --since 1h
+ssh -F ansible/.ssh/bastion.conf cp-1 "kubectl -n monitoring logs alertmanager-monitoring-alertmanager-0 -c alertmanager --since 1h | grep 'level=WARN'"
 ```
 
-| Journal | Cause | Que faire |
+| Constat | Cause | Que faire |
 | --- | --- | --- |
-| `could not read /etc/alertmanager/telegram/bot-token` | Le Secret n'existe pas, par exemple après une reconstruction du cluster. | Relier le bot. |
-| `Unauthorized` | Le jeton a été révoqué. | En demander un nouveau à BotFather, puis relier le bot. |
-| `chat not found` | Le bot n'a jamais reçu de message dans cette discussion. | Lui écrire, puis relier le bot. |
-| `context deadline exceeded` | Telegram est injoignable, ou son nom a changé. | Vérifier `alerting.telegram.host` dans `kubernetes/monitoring/values.yaml` : c'est le seul nom qu'Alertmanager peut joindre. |
-| Rien | Aucune alerte n'est partie de Prometheus. | Envoyer une alerte d'essai. |
+| Le pod reste à `Init:0/1` | Le Secret n'existe pas, par exemple après une reconstruction du cluster. | Relier Alertmanager au courrier. |
+| `Envelope From address … not authorized` | La politique `rtgre-platform-alerts` ne désigne plus le groupe de l'utilisateur SMTP. | Depuis `terraform/bootstrap` : `terraform apply -replace=oci_identity_policy.alerts` |
+| Une erreur `535` à la commande `AUTH` | L'identifiant SMTP a été supprimé ou renouvelé. | Relancer `scripts/alertmanager-email.sh`, qui relit le state. |
+| `Quota Exceeded` | Le plafond quotidien est atteint, ou un quota vient de changer : Oracle met plusieurs minutes à l'appliquer. | Attendre. Le plafond est `mails_per_day`, dans `terraform/bootstrap/free-tier.auto.tfvars`. |
+| `i/o timeout` | Le serveur d'envoi est injoignable, ou son nom a changé. | Vérifier `alerting.email.smarthost` dans `kubernetes/monitoring/values.yaml` : c'est le seul nom qu'Alertmanager peut joindre. |
+| Rien dans le journal | Aucune alerte n'est partie de Prometheus, ou le message a été accepté. | Envoyer une alerte d'essai. Si elle est acceptée sans arriver, l'adresse est peut-être sur la liste de suppression d'Oracle après un rejet : console d'Oracle, Email Delivery, « Suppression List ». |
 
-## Changer de jeton
+## Renouveler l'identifiant SMTP
 
-Dans BotFather, `/revoke` invalide l'ancien jeton et en donne un nouveau. Le placer dans le fichier du poste, puis relancer `scripts/alertmanager-telegram.sh`.
+Depuis `terraform/bootstrap`, puis depuis la racine du dépôt :
+
+```bash
+terraform apply -replace=oci_identity_domains_smtp_credential.alerts
+```
+
+```bash
+scripts/alertmanager-email.sh
+```
 
 ## Ce que les alertes ne voient pas
 

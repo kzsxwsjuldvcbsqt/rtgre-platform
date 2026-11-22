@@ -227,7 +227,8 @@ spec:
               protocol: TCP
 ---
 # Alertmanager ne reçoit que Prometheus, qui lui envoie les alertes et lit ses métriques, et ne
-# sort que vers Telegram.
+# sort que vers le serveur d'envoi du courrier.
+{{- $smarthost := splitList ":" .Values.alerting.email.smarthost }}
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -259,8 +260,8 @@ spec:
             dns:
               - matchPattern: "*"
     - toFQDNs:
-        - matchName: {{ .Values.alerting.telegram.host }}
+        - matchName: {{ first $smarthost }}
       toPorts:
         - ports:
-            - port: "443"
+            - port: {{ last $smarthost | quote }}
               protocol: TCP

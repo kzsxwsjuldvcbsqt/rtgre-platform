@@ -1,6 +1,6 @@
 # 0018. Alertes avec Alertmanager et Telegram
 
-- Statut : accepté
+- Statut : accepté ; le canal, Telegram, est remplacé par le courrier ([0021](0021-envoyer-les-alertes-par-courrier.md))
 - Date : 2026-11-21
 
 ## Contexte

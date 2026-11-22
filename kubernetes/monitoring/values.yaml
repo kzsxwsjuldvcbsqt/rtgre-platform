@@ -74,12 +74,14 @@ probes:
 alerting:
   # Chaque alerte renvoie à un runbook de ce dossier.
   runbookBaseUrl: https://github.com/kzsxwsjuldvcbsqt/rtgre-platform/blob/main/docs/runbooks
-  telegram:
-    # Seule adresse qu'Alertmanager peut joindre hors du cluster.
-    host: api.telegram.org
-    # Secret créé hors du dépôt par scripts/alertmanager-telegram.sh : le jeton du bot (bot-token)
-    # et la discussion qui reçoit les alertes (chat-id).
-    secretName: &telegramSecret alertmanager-telegram
+  email:
+    # Serveur d'envoi d'Oracle, seule adresse qu'Alertmanager peut joindre hors du cluster, et
+    # adresse d'expédition : sortie alert_mail de terraform/bootstrap.
+    smarthost: &smarthost smtp.email.eu-paris-1.oci.oraclecloud.com:587
+    from: &mailFrom cluster@alertes.rtgre.fr
+    # Secret créé hors du dépôt par scripts/alertmanager-email.sh : l'identifiant et le mot de
+    # passe SMTP (smtp-username, smtp-password), et l'adresse qui reçoit les alertes (recipient).
+    secretName: &emailSecret alertmanager-email
 
 # Valeurs du chart officiel prometheus-blackbox-exporter.
 prometheus-blackbox-exporter:
@@ -208,8 +210,9 @@ kube-prometheus-stack:
       limits:
         memory: 384Mi
 
-  # Alertmanager envoie les alertes sur Telegram. Tant que le Secret n'existe pas, il tourne
-  # sans pouvoir envoyer : le volume est facultatif.
+  # Alertmanager envoie les alertes par courrier. L'identifiant SMTP et le destinataire ne sont
+  # pas dans le dépôt : le conteneur qui prépare la configuration remplace $(SMTP_USERNAME) et
+  # $(ALERT_RECIPIENT) par les valeurs du Secret.
   alertmanager:
     enabled: true
     config:
@@ -217,7 +220,7 @@ kube-prometheus-stack:
         resolve_timeout: 5m
       inhibit_rules: []
       route:
-        receiver: telegram
+        receiver: email
         # Un message par alerte, qui regroupe ses occurrences (deux nœuds, plusieurs pods).
         group_by:
           - alertname
@@ -231,31 +234,56 @@ kube-prometheus-stack:
               - severity = critical
             repeat_interval: 2h
       receivers:
-        - name: telegram
-          telegram_configs:
-            - bot_token_file: /etc/alertmanager/telegram/bot-token
-              chat_id_file: /etc/alertmanager/telegram/chat-id
-              parse_mode: HTML
+        - name: email
+          email_configs:
+            - to: $(ALERT_RECIPIENT)
+              from: *mailFrom
+              smarthost: *smarthost
+              require_tls: true
+              auth_username: $(SMTP_USERNAME)
+              auth_password_file: /etc/alertmanager/email/smtp-password
               send_resolved: true
-              message: '{{ template "rtgre.telegram" . }}'
+              headers:
+                Subject: '{{ template "rtgre.subject" . }}'
+              text: '{{ template "rtgre.text" . }}'
+              html: '{{ template "rtgre.html" . }}'
       templates:
         - /etc/alertmanager/config/*.tmpl
     # Le message : ce qui se passe, puis le lien vers le runbook.
     templateFiles:
       rtgre.tmpl: |-
-        {{ define "rtgre.telegram" -}}
+        {{ define "rtgre.subject" -}}
+        [rtgre] {{ if eq .Status "firing" }}Alerte{{ else }}Résolu{{ end }} : {{ .CommonLabels.alertname }}
+        {{- end }}
+
+        {{ define "rtgre.text" -}}
         {{ if eq .Status "firing" -}}
-        🔴 <b>{{ .CommonLabels.alertname }}</b>
+        Alerte : {{ .CommonLabels.alertname }}
         {{ range .Alerts.Firing }}
         {{ .Annotations.summary }}
         {{ .Annotations.description }}
         {{ end }}
-        <a href="{{ .CommonAnnotations.runbook_url }}">Que faire</a>
+        Que faire : {{ .CommonAnnotations.runbook_url }}
         {{- else -}}
-        🟢 Résolu : <b>{{ .CommonLabels.alertname }}</b>
+        Résolu : {{ .CommonLabels.alertname }}
         {{ range .Alerts }}
         {{ .Annotations.summary }}
         {{- end }}
+        {{- end }}
+        {{- end }}
+
+        {{ define "rtgre.html" -}}
+        {{ if eq .Status "firing" -}}
+        <p><strong>Alerte : {{ .CommonLabels.alertname }}</strong></p>
+        {{ range .Alerts.Firing -}}
+        <p>{{ .Annotations.summary }}<br>{{ .Annotations.description }}</p>
+        {{ end -}}
+        <p><a href="{{ .CommonAnnotations.runbook_url }}">Que faire</a></p>
+        {{- else -}}
+        <p><strong>Résolu : {{ .CommonLabels.alertname }}</strong></p>
+        {{ range .Alerts -}}
+        <p>{{ .Annotations.summary }}</p>
+        {{ end -}}
         {{- end }}
         {{- end }}
     # Alertmanager ne parle pas à l'API de Kubernetes : il n'en reçoit aucun jeton.
@@ -263,14 +291,35 @@ kube-prometheus-stack:
       automountServiceAccountToken: false
     alertmanagerSpec:
       automountServiceAccountToken: false
+      # Les deux conteneurs qui préparent la configuration, au démarrage puis à chaque
+      # changement, reçoivent les valeurs à y placer.
+      initContainers:
+        - name: init-config-reloader
+          env: &emailEnv
+            - name: SMTP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: *emailSecret
+                  key: smtp-username
+            - name: ALERT_RECIPIENT
+              valueFrom:
+                secretKeyRef:
+                  name: *emailSecret
+                  key: recipient
+      containers:
+        - name: config-reloader
+          env: *emailEnv
+      # Le mot de passe SMTP est lu dans un fichier : il n'entre pas dans la configuration.
       volumes:
-        - name: telegram
+        - name: email
           secret:
-            secretName: *telegramSecret
-            optional: true
+            secretName: *emailSecret
+            items:
+              - key: smtp-password
+                path: smtp-password
       volumeMounts:
-        - name: telegram
-          mountPath: /etc/alertmanager/telegram
+        - name: email
+          mountPath: /etc/alertmanager/email
           readOnly: true
       resources:
         requests:

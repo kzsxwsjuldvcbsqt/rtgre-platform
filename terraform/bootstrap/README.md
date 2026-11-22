@@ -8,6 +8,7 @@ Socle de la tenancy Oracle Cloud, appliqué une fois avant tout le reste :
 - un budget mensuel sur toute la tenancy, qui alerte par e-mail dès la première dépense réelle et quand la prévision du mois dépasse le budget ;
 - le bucket privé et versionné `rtgre-platform-tfstate`, qui conserve le state de toutes les configurations Terraform, celui du bootstrap compris ;
 - un Vault et la clé maîtresse qui chiffre ce bucket, que seul Object Storage peut utiliser ([ADR 0020](../../docs/adr/0020-chiffrer-le-state-avec-une-cle-du-vault.md)) ;
+- l'envoi du courrier des alertes par Email Delivery : un domaine d'envoi, sa signature DKIM, un expéditeur, et un utilisateur limité à son identifiant SMTP ([ADR 0021](../../docs/adr/0021-envoyer-les-alertes-par-courrier.md)), avec ses valeurs dans `alerting.auto.tfvars` ;
 - des quotas qui limitent toute la tenancy aux ressources de l'offre Always Free ([ADR 0008](../../docs/adr/0008-passer-en-paiement-a-l-usage-sous-quotas.md)), avec leurs valeurs dans `free-tier.auto.tfvars` ;
 - l'identité de la CI : un utilisateur de service en lecture seule sur le compartiment, que GitHub Actions emprunte en échangeant son jeton OIDC (voir l'[ADR 0005](../../docs/adr/0005-authentifier-la-ci-par-federation-d-identite.md)).
 

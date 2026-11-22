@@ -43,3 +43,27 @@ output "ci_token_exchange_client_secret" {
   value       = oci_identity_domains_app.ci_token_exchange.client_secret
   sensitive   = true
 }
+
+output "alert_mail" {
+  description = "Envoi du courrier des alertes : serveur SMTP, expéditeur, et enregistrements DNS à publier pour le domaine d'envoi."
+  value = {
+    smtp_host   = "smtp.email.${var.region}.oci.oraclecloud.com"
+    smtp_port   = var.alert_mail.smtp_port
+    sender      = oci_email_sender.alerts.email_address
+    domain      = oci_email_email_domain.alerts.name
+    spf         = "v=spf1 include:${var.alert_mail.spf_include} -all"
+    dkim_name   = oci_email_dkim.alerts.dns_subdomain_name
+    dkim_target = oci_email_dkim.alerts.cname_record_value
+  }
+}
+
+output "alert_smtp_username" {
+  description = "Identifiant SMTP d'Alertmanager."
+  value       = oci_identity_domains_smtp_credential.alerts.user_name
+}
+
+output "alert_smtp_password" {
+  description = "Mot de passe SMTP d'Alertmanager."
+  value       = oci_identity_domains_smtp_credential.alerts.password
+  sensitive   = true
+}

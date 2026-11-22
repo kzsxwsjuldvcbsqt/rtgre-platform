@@ -1,6 +1,6 @@
 # Métriques et alertes
 
-Prometheus collecte les métriques du cluster et les garde quinze jours ([ADR 0015](../../docs/adr/0015-metriques-avec-prometheus-et-son-operateur.md)). Il évalue aussi les règles d'alerte, qu'Alertmanager envoie sur Telegram ([ADR 0018](../../docs/adr/0018-alertes-avec-alertmanager-et-telegram.md)).
+Prometheus collecte les métriques du cluster et les garde quinze jours ([ADR 0015](../../docs/adr/0015-metriques-avec-prometheus-et-son-operateur.md)). Il évalue aussi les règles d'alerte, qu'Alertmanager envoie par courrier ([ADR 0018](../../docs/adr/0018-alertes-avec-alertmanager-et-telegram.md), [ADR 0021](../../docs/adr/0021-envoyer-les-alertes-par-courrier.md)).
 
 | Composant | Rôle |
 | --- | --- |
@@ -9,7 +9,7 @@ Prometheus collecte les métriques du cluster et les garde quinze jours ([ADR 00
 | kube-state-metrics | Expose l'état des objets du cluster : pods, déploiements, tâches |
 | Sonde (blackbox exporter) | Interroge le site en HTTPS chaque minute, comme un visiteur |
 | Grafana | Affiche les tableaux de bord du dépôt, en lecture seule et sans compte ([ADR 0016](../../docs/adr/0016-grafana-en-lecture-seule-sans-compte.md)) |
-| Alertmanager | Regroupe les alertes et les envoie sur Telegram, seule adresse qu'il peut joindre |
+| Alertmanager | Regroupe les alertes et les envoie par courrier ; le serveur d'envoi est la seule adresse qu'il peut joindre |
 | [`node-exporter`](../node-exporter) | Métriques des nœuds, dans sa propre application |
 
 ## Ce qui est collecté
@@ -109,4 +109,5 @@ Puis ouvrir <http://localhost:8080>. La page « Target health » liste les cible
 - **Toute cible déclarée est candidate**, quel que soit son chart : Prometheus ne filtre pas sur une étiquette de release. Le filtre est la règle réseau.
 - **Des règles d'alerte écrites pour ce cluster**, plutôt que celles du chart : douze, chacune avec son test et son runbook.
 - **Alertmanager sans volume ni jeton de l'API** : il ne garde que des silences, et n'a rien à demander à Kubernetes.
+- **Ni l'identifiant SMTP ni le destinataire ne sont dans le dépôt** : la configuration les désigne par `$(SMTP_USERNAME)` et `$(ALERT_RECIPIENT)`, que les conteneurs qui la préparent remplacent par les valeurs d'un Secret.
 - **Retirer l'application ne supprime rien** : ses CRD emporteraient les cibles et les règles des autres charts.
