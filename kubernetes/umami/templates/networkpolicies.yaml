@@ -49,7 +49,7 @@ spec:
             dns:
               - matchPattern: "*"
 ---
-# La base ne reçoit qu'Umami, et ne sort nulle part.
+# La base ne reçoit qu'Umami et sa sauvegarde, et ne sort nulle part.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -62,7 +62,80 @@ spec:
     - fromEndpoints:
         - matchLabels:
             app.kubernetes.io/name: umami
+        - matchLabels:
+            app.kubernetes.io/name: umami-backup
       toPorts:
         - ports:
             - port: {{ .Values.postgres.port | quote }}
+              protocol: TCP
+---
+# La sauvegarde ne reçoit rien. Elle sort vers la base, vers le service de métadonnées de son
+# nœud, pour en obtenir l'identité, puis vers Oracle : l'échange de cette identité contre un jeton
+# de courte durée, et le dépôt dans Object Storage.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: backup
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: umami-backup
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: umami-postgres
+      toPorts:
+        - ports:
+            - port: {{ .Values.postgres.port | quote }}
+              protocol: TCP
+    - toCIDR:
+        - {{ .Values.instanceIdentity.address }}/32
+      toPorts:
+        - ports:
+            - port: {{ .Values.instanceIdentity.port | quote }}
+              protocol: TCP
+    - toFQDNs:
+        - matchName: auth.{{ .Values.backup.region }}.oraclecloud.com
+        - matchName: objectstorage.{{ .Values.backup.region }}.oraclecloud.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
+---
+# L'identité d'un nœud donne le droit de déposer dans le bucket des sauvegardes. Le service de
+# métadonnées qui la délivre est donc fermé à tous les pods du cluster, sauf à ceux qui portent
+# l'étiquette : un refus l'emporte sur toute autorisation. La règle ne ferme que ce port : la même
+# adresse est aussi le résolveur DNS d'Oracle, que CoreDNS interroge pour tout nom hors du
+# cluster. Elle ne place aucun pod en refus par défaut.
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: instance-identity
+spec:
+  endpointSelector:
+    matchExpressions:
+      - key: {{ .Values.instanceIdentity.label }}
+        operator: NotIn
+        values:
+          - {{ .Values.instanceIdentity.value }}
+  enableDefaultDeny:
+    egress: false
+    ingress: false
+  egressDeny:
+    - toCIDR:
+        - {{ .Values.instanceIdentity.address }}/32
+      toPorts:
+        - ports:
+            - port: {{ .Values.instanceIdentity.port | quote }}
               protocol: TCP

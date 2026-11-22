@@ -35,6 +35,41 @@ postgres:
     limits:
       memory: 384Mi
 
+# Sauvegarde de la base vers Object Storage, chaque nuit (ADR 0026). Le pod dépose avec l'identité
+# de son nœud : aucun secret d'Oracle n'entre dans le cluster.
+backup:
+  image:
+    repository: docker.io/rclone/rclone
+    tag: 1.76.0@sha256:7cbeec24a44f206067597c0368be4de90ae19a64d5113c7d1938bd737a81e466
+  # Avant le redémarrage nocturne des nœuds, à l'heure de Paris.
+  schedule: "20 2 * * *"
+  timeZone: Europe/Paris
+  # Une sauvegarde dure quelques secondes.
+  activeDeadlineSeconds: 600
+  # Région d'Oracle du bucket : les deux seuls noms que le pod joint en sortie en découlent.
+  region: eu-paris-1
+  # Dossier du bucket qui reçoit les sauvegardes d'Umami.
+  prefix: umami
+  # ConfigMap créé hors du dépôt par scripts/umami-backup-config.sh : le bucket (bucket) et le
+  # namespace Object Storage de la tenancy (namespace), lus dans les sorties du bootstrap.
+  configName: umami-backup
+  # Place laissée à la sauvegarde avant son dépôt.
+  scratchSize: 1Gi
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
+# Service de métadonnées d'Oracle, où un pod obtient l'identité de son nœud. Il est fermé à tous
+# les pods du cluster, sauf à ceux qui portent cette étiquette.
+instanceIdentity:
+  address: 169.254.169.254
+  port: 80
+  label: rtgre.fr/instance-identity
+  value: allowed
+
 # Secret créé hors du dépôt par scripts/umami-secret.sh : le mot de passe de la base
 # (postgres-password) et la clé qui signe les sessions du tableau de bord (app-secret).
 secretName: umami
