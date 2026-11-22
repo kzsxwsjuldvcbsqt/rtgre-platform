@@ -81,4 +81,4 @@ scripts/alertmanager-email.sh
 
 ## Ce que les alertes ne voient pas
 
-Prometheus et Alertmanager tournent sur le cluster qu'ils surveillent. Si le nœud de travail tombe, ou tout le cluster, aucune alerte ne part.
+Prometheus et Alertmanager tournent sur le cluster qu'ils surveillent. Si le nœud de travail tombe, ou tout le cluster, aucune alerte ne part. Le workflow `Watch` couvre ce cas : il sonde le site depuis GitHub et ouvre une issue « Incident » ([site-injoignable](site-injoignable.md)).

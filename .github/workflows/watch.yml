@@ -1,0 +1,152 @@
+name: Watch
+
+# Sonde extérieure : les alertes du cluster ne partent pas s'il tombe en entier (ADR 0022). Ce
+# workflow interroge le site depuis GitHub, ouvre une issue « Incident » quand il ne répond plus
+# et la ferme à son retour.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/watch.yml
+  workflow_dispatch:
+    inputs:
+      simulate_outage:
+        description: Sonder un nom qui n'existe pas, pour vérifier le signalement
+        type: boolean
+        default: false
+
+permissions: {}
+
+# Une sonde à la fois : deux exécutions ouvriraient deux issues.
+concurrency:
+  group: watch
+  cancel-in-progress: false
+
+env:
+  SITE_URLS: https://rtgre.fr/ https://www.rtgre.fr/
+  # Nom réservé, qui ne se résout jamais (RFC 2606).
+  SIMULATED_URL: https://panne-simulee.invalid/
+  INCIDENT_LABEL: incident
+  INCIDENT_TITLE: rtgre.fr ne répond plus depuis l'extérieur
+  RUNBOOK: docs/runbooks/site-injoignable.md
+  # Trois essais espacés : une coupure de quelques secondes n'est pas une panne.
+  ATTEMPTS: 3
+  PAUSE_SECONDS: 30
+  TIMEOUT_SECONDS: 20
+
+jobs:
+  site:
+    name: Site (external probe)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      # Une adresse est en panne si aucun essai n'obtient un 200 en HTTPS, certificat valide et
+      # redirections suivies.
+      - name: Probe the site
+        id: probe
+        env:
+          SIMULATE: ${{ inputs.simulate_outage }}
+        run: |
+          urls=$SITE_URLS
+          if [ "$SIMULATE" = "true" ]; then
+            urls=$SIMULATED_URL
+          fi
+          failures=""
+          for url in $urls; do
+            result=""
+            for attempt in $(seq 1 "$ATTEMPTS"); do
+              # Le code de réponse, ou la première ligne de l'erreur de curl.
+              result=$(curl --silent --show-error --location --output /dev/null \
+                --write-out '%{http_code}' --max-time "$TIMEOUT_SECONDS" "$url" 2>&1 | head -n 1)
+              if [ "$result" = "200" ]; then
+                break
+              fi
+              echo "$url : essai $attempt sur $ATTEMPTS, $result"
+              if [ "$attempt" -lt "$ATTEMPTS" ]; then
+                sleep "$PAUSE_SECONDS"
+              fi
+            done
+            if [ "$result" = "200" ]; then
+              echo "$url : 200"
+            else
+              failures="$failures- \`$url\` : \`$result\`"$'\n'
+            fi
+          done
+          {
+            echo "failures<<FIN"
+            printf '%s' "$failures"
+            echo "FIN"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Find the open incident
+        id: incident
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --label "$INCIDENT_LABEL" \
+            --search "\"$INCIDENT_TITLE\" in:title" --json number --jq '.[0].number // empty')
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      # Une seule issue par panne : tant qu'elle est ouverte, les sondes suivantes n'ajoutent rien.
+      - name: Open an incident
+        if: >-
+          github.event_name != 'pull_request' && steps.probe.outputs.failures != ''
+          && steps.incident.outputs.number == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FAILURES: ${{ steps.probe.outputs.failures }}
+          SIMULATE: ${{ inputs.simulate_outage }}
+        run: |
+          title=$INCIDENT_TITLE
+          if [ "$SIMULATE" = "true" ]; then
+            title="$title (simulation)"
+          fi
+          seen=$(TZ=Europe/Paris date '+%d/%m/%Y à %H h %M')
+          run="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          runbook="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/$RUNBOOK"
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --label "$INCIDENT_LABEL" \
+            --assignee "$GITHUB_REPOSITORY_OWNER" --body "### Symptômes
+
+          La sonde extérieure n'obtient plus de réponse valide, le $seen (heure de Paris), après $ATTEMPTS essais :
+
+          $FAILURES
+          [Exécution de la sonde]($run)
+
+          ### Impact
+
+          Site inaccessible
+
+          ### Que faire
+
+          [Le site ne répond plus]($runbook)
+
+          ### Chronologie
+
+          Cette issue se ferme d'elle-même quand la sonde obtient de nouveau une réponse."
+
+      - name: Close the incident
+        if: >-
+          github.event_name != 'pull_request' && steps.probe.outputs.failures == ''
+          && steps.incident.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ steps.incident.outputs.number }}
+        run: |
+          seen=$(TZ=Europe/Paris date '+%d/%m/%Y à %H h %M')
+          gh issue close "$NUMBER" --repo "$GITHUB_REPOSITORY" \
+            --comment "La sonde extérieure obtient de nouveau une réponse, le $seen (heure de Paris)."
+
+      # L'exécution échoue aussi : l'historique du workflow montre les pannes.
+      - name: Fail when the site is down
+        if: steps.probe.outputs.failures != ''
+        env:
+          FAILURES: ${{ steps.probe.outputs.failures }}
+        run: |
+          echo "::error::Le site ne répond plus depuis l'extérieur."
+          printf '%s' "$FAILURES"
+          exit 1
