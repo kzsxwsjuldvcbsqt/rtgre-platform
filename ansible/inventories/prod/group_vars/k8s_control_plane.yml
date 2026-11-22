@@ -11,3 +11,6 @@ platform_argocd_forward_port: 8080
 hardening_ssh_extra_options:
   AllowTcpForwarding: local
   PermitOpen: "127.0.0.1:{{ platform_argocd_forward_port }}"
+
+# Le plan de contrôle redémarre avant le nœud de travail (group_vars/all.yml).
+hardening_unattended_upgrades_automatic_reboot_time: "03:10"

@@ -22,6 +22,18 @@ hardening_firewall_trusted_cidrs:
 # Le trafic des pods traverse la chaîne FORWARD des nœuds.
 hardening_firewall_routed_policy: allow
 
+# Un nœud redémarre seul, la nuit, quand une mise à jour de sécurité l'exige (ADR 0023). Les
+# nœuds sont à l'heure UTC : 3 h 40 tombe à 4 h 40 ou 5 h 40 à Paris, après la génération de
+# l'heure et la conservation des journaux du lundi. Le plan de contrôle passe une demi-heure
+# avant (group_vars/k8s_control_plane.yml) : jamais les deux à la fois.
+hardening_unattended_upgrades_automatic_reboot: true
+hardening_unattended_upgrades_automatic_reboot_time: "03:40"
+
+# node-exporter lit ce dossier : il n'est écrit qu'à un endroit, dans les valeurs de son chart.
+hardening_reboot_required_metric_directory: >-
+  {{ (lookup('ansible.builtin.file', playbook_dir ~ '/../../kubernetes/node-exporter/values.yaml')
+      | from_yaml).textfileDirectory }}
+
 # Kubernetes ---------------------------------------------------------------------
 
 # Cilium 1.20 n'est testé qu'avec Kubernetes 1.33 à 1.36 : la dernière 1.36 est retenue (ADR 0009).
