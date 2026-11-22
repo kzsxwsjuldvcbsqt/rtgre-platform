@@ -93,7 +93,9 @@ resource "oci_identity_domains_group" "alerts" {
   }
 }
 
-# Le groupe peut émettre depuis les adresses autorisées du compartiment, et rien d'autre.
+# Le groupe peut utiliser le courrier du compartiment. L'usage des seuls expéditeurs
+# (approved-senders) ne suffit pas : Oracle refuse alors l'adresse d'expédition. Sans clé d'API,
+# l'utilisateur ne peut de toute façon rien appeler d'autre que le serveur SMTP.
 resource "oci_identity_policy" "alerts" {
   compartment_id = oci_identity_compartment.platform.id
   name           = "${var.project}-alerts"
@@ -103,9 +105,15 @@ resource "oci_identity_policy" "alerts" {
   statements = [
     join(" ", [
       "Allow group '${var.identity_domain_name}'/'${oci_identity_domains_group.alerts.display_name}'",
-      "to use approved-senders in compartment ${oci_identity_compartment.platform.name}",
+      "to use email-family in compartment ${oci_identity_compartment.platform.name}",
     ]),
   ]
+
+  lifecycle {
+    # Oracle remplace le nom du groupe par son identifiant à l'écriture de la politique : si le
+    # groupe est recréé, elle désigne un groupe qui n'existe plus.
+    replace_triggered_by = [oci_identity_domains_group.alerts]
+  }
 }
 
 # Identifiant et mot de passe SMTP. Le mot de passe n'est lisible qu'à la création : il reste

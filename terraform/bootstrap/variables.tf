@@ -146,6 +146,7 @@ variable "free_tier_quotas" {
     network_load_balancers  = number
     vaults                  = number
     mail_senders            = number
+    mails_per_day           = number
   })
 
   validation {

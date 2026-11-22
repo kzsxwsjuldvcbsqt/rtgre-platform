@@ -21,9 +21,11 @@ resource "oci_limits_quota" "free_tier" {
     "set block-storage quota backup-count to ${var.free_tier_quotas.block_backups} in tenancy",
     "set object-storage quota storage-bytes to ${var.free_tier_quotas.object_storage_in_bytes} in tenancy",
     "zero database quotas in tenancy",
-    # Une seule adresse d'expédition, celle des alertes.
-    "zero email-delivery quotas in tenancy",
+    # Courrier des alertes : une adresse d'expédition, et un plafond quotidien qui tient le mois
+    # sous les 3000 messages gratuits. La famille n'est pas mise à zéro : elle porte aussi le
+    # débit et la taille des messages, qu'un zéro bloquerait.
     "set email-delivery quota approved-sender-count to ${var.free_tier_quotas.mail_senders} in tenancy",
+    "set email-delivery quota max-emails-day to ${var.free_tier_quotas.mails_per_day} in tenancy",
     # Un Vault du type par défaut, pour la clé du state. Le Vault privé, payant, reste à zéro.
     "zero kms quotas in tenancy",
     "set kms quota virtual-vault-count to ${var.free_tier_quotas.vaults} in tenancy",
