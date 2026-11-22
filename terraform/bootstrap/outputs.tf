@@ -23,6 +23,11 @@ output "objectstorage_namespace" {
   value       = data.oci_objectstorage_namespace.this.namespace
 }
 
+output "backup_bucket" {
+  description = "Bucket Object Storage qui reçoit les sauvegardes de la plateforme."
+  value       = oci_objectstorage_bucket.backups.name
+}
+
 output "tag_namespace" {
   description = "Espace de noms des tags définis de la plateforme."
   value       = oci_identity_tag_namespace.platform.name

@@ -145,6 +145,19 @@ variable "alert_mail" {
   })
 }
 
+variable "backups" {
+  description = "Sauvegardes hors du cluster : nombre de jours de conservation, et délai avant l'abandon d'un dépôt inachevé."
+  type = object({
+    retention_days         = number
+    unfinished_upload_days = number
+  })
+
+  validation {
+    condition     = alltrue([for value in values(var.backups) : value >= 1 && floor(value) == value])
+    error_message = "Chaque durée est un nombre entier de jours, d'au moins un."
+  }
+}
+
 variable "free_tier_quotas" {
   description = "Limites de l'offre Always Free appliquées en quotas à toute la tenancy."
   type = object({
