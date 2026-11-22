@@ -7,6 +7,7 @@ Socle de la tenancy Oracle Cloud, appliqué une fois avant tout le reste :
 - l'application par défaut de ces tags à toute ressource créée dans le compartiment ;
 - un budget mensuel sur toute la tenancy, qui alerte par e-mail dès la première dépense réelle et quand la prévision du mois dépasse le budget ;
 - le bucket privé et versionné `rtgre-platform-tfstate`, qui conserve le state de toutes les configurations Terraform, celui du bootstrap compris ;
+- un Vault et la clé maîtresse qui chiffre ce bucket, que seul Object Storage peut utiliser ([ADR 0020](../../docs/adr/0020-chiffrer-le-state-avec-une-cle-du-vault.md)) ;
 - des quotas qui limitent toute la tenancy aux ressources de l'offre Always Free ([ADR 0008](../../docs/adr/0008-passer-en-paiement-a-l-usage-sous-quotas.md)), avec leurs valeurs dans `free-tier.auto.tfvars` ;
 - l'identité de la CI : un utilisateur de service en lecture seule sur le compartiment, que GitHub Actions emprunte en échangeant son jeton OIDC (voir l'[ADR 0005](../../docs/adr/0005-authentifier-la-ci-par-federation-d-identite.md)).
 
@@ -34,6 +35,16 @@ terraform apply bootstrap.tfplan
 
 Un second `terraform plan` doit annoncer « No changes ».
 
+## La clé du state
+
+Le bucket est chiffré par la clé `rtgre-platform-tfstate` du Vault `rtgre-platform-state`. **Sans cette clé, le state est illisible, pour toujours.**
+
+- Terraform refuse de supprimer le Vault comme la clé (`prevent_destroy`).
+- Oracle ne supprime ni l'un ni l'autre sur-le-champ : la suppression est programmée, sept jours plus tard au plus tôt, et s'annule d'ici là dans la console (Vault, puis « Cancel deletion »).
+- Désactiver la clé coupe aussitôt l'accès au state, pour tout le monde, jusqu'à sa réactivation.
+
+Ni le poste ni la CI n'ont de droit sur la clé : Object Storage l'utilise en leur nom, et lui seul y est autorisé. La clé n'est pas renouvelée aujourd'hui. Le faire demande une nouvelle version de la clé, puis un rechiffrement du bucket (`oci os bucket reencrypt`), comme lors de sa mise en place : sans lui, les objets déjà là gardent leur ancienne clé.
+
 ## Raccorder GitHub Actions
 
 Après l'apply, déposer dans le dépôt GitHub les informations de connexion de la CI. Le secret est envoyé directement à GitHub, sans passer par l'écran :
@@ -47,7 +58,7 @@ gh variable set OCI_STATE_BUCKET --body "$(terraform output -raw state_bucket)"
 terraform output -raw ci_token_exchange_client_secret | gh secret set OCI_CLIENT_SECRET
 ```
 
-Le workflow `Oracle access` vérifie ensuite que la CI peut lire le bucket du state, mais ni y écrire ni lire la racine de la tenancy.
+Le workflow `Oracle access` vérifie ensuite que la CI peut lire un objet du bucket du state, donc qu'il est déchiffré pour elle, mais qu'elle ne peut ni y écrire ni lire la racine de la tenancy.
 
 ## Reconstruction depuis une tenancy vide
 

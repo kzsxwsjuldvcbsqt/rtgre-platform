@@ -8,4 +8,7 @@ free_tier_quotas = {
   block_backups           = 5
   object_storage_in_bytes = 20000000000
   network_load_balancers  = 1
+  # Le Vault lui-même n'est pas compté par l'offre : seules les versions de clé protégées par
+  # HSM le sont. Un seul suffit, pour la clé du state.
+  vaults = 1
 }

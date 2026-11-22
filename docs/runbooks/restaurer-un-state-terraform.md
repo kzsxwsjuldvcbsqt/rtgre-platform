@@ -4,6 +4,10 @@
 
 Les commandes se lancent depuis le dossier de la configuration concernée, par exemple `terraform/bootstrap`, après un `terraform init -backend-config=backend.hcl`.
 
+## Le bucket ne se lit plus
+
+Symptôme : toute lecture échoue, pour chaque configuration, avec une erreur qui cite la clé (`KMS`, `key`). Le bucket est chiffré par une clé du Vault ([README du bootstrap](../../terraform/bootstrap/README.md)) : dans la console d'Oracle, vérifier que le Vault `rtgre-platform-state` et sa clé sont à l'état `Enabled`. Une clé désactivée se réactive ; une suppression programmée s'annule pendant son délai. Vérifier ensuite que la politique `rtgre-platform-state-encryption` existe encore dans le compartiment.
+
 ## Verrou bloqué
 
 Symptôme : `Error acquiring the state lock` alors qu'aucune autre exécution n'est en cours, par exemple après un Ctrl+C ou une coupure réseau.
