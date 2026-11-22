@@ -5,6 +5,7 @@ Un incident en production se conclut par un post-mortem : ce qui s'est passé, p
 | Date | Incident | Durée |
 | --- | --- | --- |
 | 2026-11-21 | [rtgre.fr sans certificat valide pendant la bascule](2026-11-21-bascule-sans-certificat.md) | 9 minutes |
+| 2026-11-22 | [Certificat invalide au retour de la reconstruction](2026-11-22-certificat-invalide-apres-reconstruction.md) | 5 minutes |
 
 ## En écrire un
 
