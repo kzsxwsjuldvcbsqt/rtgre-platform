@@ -53,7 +53,9 @@ locals {
 
   # Le sommet de la zone et www suivent var.site_served_by : changer cette seule valeur bascule
   # le site, dans un sens comme dans l'autre. Le cluster n'a pas d'IPv6.
-  site_ttl  = local.on_cluster ? var.cluster_ttl : 0
+  # La même durée de vie courte dans les deux sens : avec celle de la zone, une heure, un retour
+  # depuis GitHub Pages restait caché une heure aux résolveurs, dont celui du cluster lui-même.
+  site_ttl  = var.cluster_ttl
   site_ipv4 = local.on_cluster ? [local.cluster_ip] : var.github_pages.ipv4
   site_ipv6 = local.on_cluster ? [] : var.github_pages.ipv6
 

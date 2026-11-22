@@ -49,7 +49,7 @@ Pour le révoquer : espace client d'OVH, « Mon compte », « Mes clés d'API »
 ## Choix notables
 
 - **Une durée de vie de 0** désigne celle de la zone, 3 600 secondes. C'est ce que portent les enregistrements créés depuis l'espace client : la garder évite de les modifier à l'import.
-- **Les noms du cluster ont une durée de vie courte** (`cluster_ttl`) : l'adresse du load balancer est éphémère. S'il est recréé, un `terraform apply` ici fait suivre le DNS.
+- **Le site et les noms du cluster ont une durée de vie courte** (`cluster_ttl`), que le site soit servi par le cluster ou par GitHub Pages : l'adresse du load balancer est éphémère, et une bascule doit se voir en cinq minutes dans les deux sens. Avec une heure côté GitHub, le retour vers le cluster restait caché aux résolveurs pendant une heure.
 - **Le SPF a son propre type chez OVH**, qui le publie en TXT.
 - **Les alertes partent d'un sous-domaine**, qui a son SPF et sa clé DKIM : ceux du domaine principal, protégés, ne changent pas.
 - **Ne pas utiliser « Modifier en mode textuel »** dans l'espace client : OVH change alors l'identifiant de chaque enregistrement, et Terraform ne les retrouve plus.
