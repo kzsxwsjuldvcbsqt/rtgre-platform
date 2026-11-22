@@ -36,12 +36,16 @@ locals {
 resource "oci_core_instance" "node" {
   for_each = var.nodes
 
-  # checkov:skip=CKV_OCI_4:Le chiffrement en transit force la recréation des nœuds ; il sera activé au prochain remplacement (#45).
   compartment_id      = var.compartment_id
   availability_domain = local.availability_domain
   fault_domain        = local.fault_domain_by_node[each.key]
   display_name        = "${var.name}-${each.key}"
   shape               = var.shape
+
+  # Chiffre le trafic entre l'instance et son volume de démarrage.
+  launch_options {
+    is_pv_encryption_in_transit_enabled = true
+  }
 
   freeform_tags = merge(var.freeform_tags, {
     kubernetes-role = each.value.role
@@ -92,7 +96,8 @@ resource "oci_core_instance" "node" {
 
   lifecycle {
     # L'image la plus récente change chaque mois : sans cela, chaque nouvelle image recréerait les nœuds.
-    # Un nœud prend la nouvelle image quand il est volontairement remplacé (terraform apply -replace).
+    # Un nœud prend la nouvelle image quand il est volontairement remplacé : workflow Terraform lancé
+    # à la main avec son nom (docs/runbooks/reconstruire-la-plateforme.md).
     ignore_changes = [source_details[0].source_id]
   }
 }
