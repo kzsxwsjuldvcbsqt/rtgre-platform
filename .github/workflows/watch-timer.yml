@@ -1,0 +1,76 @@
+name: Watch timer
+
+# Minuteur de la sonde extérieure (ADR 0027). GitHub ne tient pas l'horaire des workflows
+# planifiés : ce workflow attend un quart d'heure grâce au délai de l'environnement
+# « watch-timer », sans occuper de machine, puis il se relance et lance la sonde.
+on:
+  workflow_dispatch:
+  # Redémarre la chaîne si elle s'est interrompue. Une exécution manquée ne coûte rien : la
+  # suivante suffit.
+  schedule:
+    - cron: '41 */4 * * *'
+
+permissions: {}
+
+env:
+  TIMER_WORKFLOW: watch-timer.yml
+  # Environnement du travail « tick », plus bas.
+  TIMER_ENVIRONMENT: watch-timer
+  PROBE_WORKFLOW: watch.yml
+
+jobs:
+  guard:
+    name: Timer (look for one already waiting)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      alone: ${{ steps.timers.outputs.alone }}
+      delay: ${{ steps.delay.outputs.minutes }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # Sans délai, le minuteur se relancerait sans fin et sans attendre. Si l'environnement
+      # manque, cette étape échoue et la chaîne s'arrête là.
+      - name: Read the delay of the timer environment
+        id: delay
+        run: |
+          minutes=$(gh api "repos/$GITHUB_REPOSITORY/environments/$TIMER_ENVIRONMENT" \
+            --jq '[.protection_rules[] | select(.type == "wait_timer") | .wait_timer] | first // 0')
+          echo "$TIMER_ENVIRONMENT : $minutes minutes"
+          echo "minutes=$minutes" >> "$GITHUB_OUTPUT"
+
+      - name: Count the other timers still running
+        id: timers
+        run: |
+          others=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$TIMER_WORKFLOW/runs?per_page=30" \
+            --jq "[.workflow_runs[] | select(.id != $GITHUB_RUN_ID and .status != \"completed\")] | length")
+          if [ "$others" -eq 0 ]; then
+            echo "alone=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "alone=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Un minuteur relancé par le précédent continue toujours. Celui que lance l'horaire ne démarre
+  # une chaîne que si aucune n'attend déjà : il n'y en a jamais deux.
+  tick:
+    name: Timer (wait, start the next one, probe)
+    needs: guard
+    if: >-
+      needs.guard.outputs.delay != '0'
+      && (github.event_name == 'workflow_dispatch' || needs.guard.outputs.alone == 'true')
+    runs-on: ubuntu-latest
+    # Le délai de l'environnement retient ce travail avant qu'une machine ne lui soit donnée.
+    environment: watch-timer
+    permissions:
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Start the next timer
+        run: gh workflow run "$TIMER_WORKFLOW" --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
+
+      # La sonde part même si le minuteur suivant n'a pas pu être lancé.
+      - name: Probe the site
+        if: always()
+        run: gh workflow run "$PROBE_WORKFLOW" --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
