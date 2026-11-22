@@ -62,7 +62,7 @@ Une seule adresse, celle du load balancer ; `server: nginx` ; `www` qui renvoie 
 - 21 h 33 : changement du DNS, propagé aux serveurs d'OVH en moins de dix secondes.
 - 21 h 42 : certificat prêt pour `rtgre.fr` et `www.rtgre.fr`.
 
-Entre les deux, pendant neuf minutes, un visiteur qui résolvait déjà la nouvelle adresse voyait une erreur de certificat. Une minute aurait suffi : la pull request du certificat, préparée d'avance, était en retard sur `main` après la fusion de celle du DNS, et sa fusion a été refusée sans que l'erreur soit lue. D'où la remarque de l'étape 3.
+Entre les deux, pendant neuf minutes, un visiteur qui résolvait déjà la nouvelle adresse voyait une erreur de certificat ([post-mortem](../postmortems/2026-11-21-bascule-sans-certificat.md)). Une minute aurait suffi : la pull request du certificat, préparée d'avance, était en retard sur `main` après la fusion de celle du DNS, et sa fusion a été refusée sans que l'erreur soit lue. D'où la remarque de l'étape 3.
 
 Le retour arrière a ensuite été joué pour de vrai : 9 secondes pour que la zone désigne de nouveau GitHub Pages, qui servait le site avec un certificat valide, puis 8 secondes pour revenir au cluster. Les MX n'ont changé à aucun moment.
 

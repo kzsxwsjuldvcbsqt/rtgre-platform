@@ -28,4 +28,4 @@ body:
     id: suivi
     attributes:
       label: Suivi
-      description: Lien vers le post-mortem dans docs/postmortems/ une fois rédigé.
+      description: Lien vers le post-mortem une fois rédigé, à partir de docs/postmortems/template.md.
