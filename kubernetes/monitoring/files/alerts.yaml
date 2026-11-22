@@ -77,6 +77,25 @@ groups:
             treize jours.
           runbook: retablir-la-conservation-des-journaux.md
 
+  - name: sauvegardes
+    rules:
+      # Tant qu'aucune sauvegarde n'a réussi, l'âge se compte depuis la création du CronJob.
+      - alert: SauvegardeTropAncienne
+        expr: >-
+          time() - (
+            kube_cronjob_status_last_successful_time{namespace="umami", cronjob="umami-backup"}
+            or kube_cronjob_created{namespace="umami", cronjob="umami-backup"}
+          ) > 2 * 86400
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: La base d'Umami n'est plus sauvegardée
+          description: >-
+            Aucune sauvegarde n'a réussi depuis {{ $value | humanizeDuration }}. L'historique d'audience ne
+            survivrait pas à la perte du nœud.
+          runbook: sauvegarder-et-restaurer-umami.md
+
   - name: plateforme
     rules:
       # Sous 15 % de place, le kubelet expulse des pods : l'alerte doit partir avant.
