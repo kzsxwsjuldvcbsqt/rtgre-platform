@@ -26,3 +26,4 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | [0020](0020-chiffrer-le-state-avec-une-cle-du-vault.md) | Chiffrer le state avec une clé du Vault | accepté |
 | [0021](0021-envoyer-les-alertes-par-courrier.md) | Envoyer les alertes par courrier | accepté |
 | [0022](0022-surveiller-le-site-depuis-github-actions.md) | Surveiller le site depuis GitHub Actions | accepté |
+| [0023](0023-redemarrer-les-noeuds-seuls-la-nuit.md) | Redémarrer les nœuds seuls, la nuit | accepté |
