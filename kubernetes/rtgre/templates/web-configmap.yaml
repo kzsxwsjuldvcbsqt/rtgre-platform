@@ -7,4 +7,4 @@ metadata:
     app.kubernetes.io/component: web
 data:
   nginx.conf: |
-    {{- .Files.Get "files/nginx.conf" | nindent 4 }}
+    {{- include "rtgre.nginxConfig" . | nindent 4 }}
