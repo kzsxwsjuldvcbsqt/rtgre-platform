@@ -51,6 +51,8 @@ Treize règles d'alerte, testées dans la CI, préviennent le propriétaire par 
 
 Dans l'espace de noms du site, le cluster contrôle lui-même chaque pod à sa création : ses images viennent de dépôts déclarés, portent leur empreinte, et celle du site doit être signée par le workflow qui la construit ([ADR 0019](docs/adr/0019-controler-les-images-a-l-admission-avec-kyverno.md), [`kubernetes/kyverno`](kubernetes/kyverno)).
 
+L'audience du site est mesurée par Umami, sans cookie : seule la collecte est exposée, sous le nom du site, et le tableau de bord ne s'ouvre que par le Bastion ([ADR 0025](docs/adr/0025-mesurer-l-audience-avec-umami.md), [`kubernetes/umami`](kubernetes/umami)).
+
 Le site est généré dans le cluster par l'image que publie le dépôt rtgre ([`kubernetes/rtgre`](kubernetes/rtgre)). Quand rtgre publie une nouvelle image, Renovate propose sa nouvelle empreinte et la fusionne de lui-même une fois la CI verte : celle-ci vérifie que l'image est signée par le workflow de rtgre.
 
 ## Dépendances
