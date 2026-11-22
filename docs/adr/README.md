@@ -28,3 +28,4 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | [0022](0022-surveiller-le-site-depuis-github-actions.md) | Surveiller le site depuis GitHub Actions | accepté ; complété par [0024](0024-surveiller-le-load-balancer-par-une-alarme-d-oracle.md) |
 | [0023](0023-redemarrer-les-noeuds-seuls-la-nuit.md) | Redémarrer les nœuds seuls, la nuit | accepté |
 | [0024](0024-surveiller-le-load-balancer-par-une-alarme-d-oracle.md) | Surveiller le load balancer par une alarme d'Oracle | accepté |
+| [0025](0025-mesurer-l-audience-avec-umami.md) | Mesurer l'audience avec Umami | accepté |
