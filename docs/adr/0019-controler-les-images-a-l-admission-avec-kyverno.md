@@ -45,6 +45,7 @@ Kyverno pour la signature, réduit à son contrôleur d'admission, et une politi
 - **La création d'un pod du site dépend maintenant de Kyverno, du registre et de Sigstore.** Si l'un manque, le site reste servi par le pod en place, mais n'est plus régénéré : l'alerte `GenerationEnEchec` part après trois heures, et `CibleInjoignable` signale l'arrêt de Kyverno. Avant, un pod pouvait démarrer avec l'image déjà présente sur le nœud.
 - nginx n'est pas signé par son éditeur : son dépôt est admis sans signature, par empreinte.
 - Un administrateur du cluster peut toujours retirer l'étiquette ou la politique. Le contrôle protège contre une erreur ou un contournement de la CI, pas contre lui.
+- Sur un cluster qui vient d'être reconstruit, les premiers pods du site sont créés avant que Kyverno ne soit déployé : ceux-là ne sont vérifiés que par la CI. Constaté à la reconstruction du 22 novembre 2026.
 - Les images posées par Ansible et kubeadm ne sont pas contrôlées : leurs espaces de noms ne sont pas étiquetés.
 - Les tâches de migration du chart sont désactivées : une montée de version demande de lire ses notes, et attend une approbation.
 - Retirer Kyverno demande de supprimer ses webhooks à la main ([README](../../kubernetes/kyverno/README.md)).

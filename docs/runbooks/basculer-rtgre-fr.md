@@ -5,7 +5,7 @@ rtgre.fr est servi soit par le cluster, soit par GitHub Pages, qui reste déploy
 | Valeur | Sommet de la zone | `www` |
 | --- | --- | --- |
 | `cluster` | Adresse du load balancer, sans IPv6, durée de vie de 5 minutes | CNAME vers `rtgre.fr.` |
-| `github-pages` | Quatre adresses IPv4 et quatre IPv6 de GitHub, durée de vie d'une heure | CNAME vers GitHub |
+| `github-pages` | Quatre adresses IPv4 et quatre IPv6 de GitHub, durée de vie de 5 minutes | CNAME vers GitHub |
 
 Les serveurs de noms, les MX et le SPF ne dépendent pas de cette valeur.
 

@@ -88,7 +88,7 @@ variable "cluster_subdomains" {
 }
 
 variable "cluster_ttl" {
-  description = "Durée de vie des enregistrements qui désignent le cluster. Courte : l'adresse du load balancer peut changer."
+  description = "Durée de vie des enregistrements du site et des noms du cluster. Courte : l'adresse du load balancer peut changer, et une bascule doit se voir vite, dans les deux sens."
   type        = number
 
   validation {

@@ -42,9 +42,14 @@ resource "oci_core_instance" "node" {
   display_name        = "${var.name}-${each.key}"
   shape               = var.shape
 
-  # Chiffre le trafic entre l'instance et son volume de démarrage. Dès qu'une option de lancement
-  # est donnée, Oracle exige le type de réseau et n'applique plus celles de l'image : elles sont
-  # donc toutes écrites, telles que l'image les pose.
+  # Chiffre le trafic entre l'instance et son volume de démarrage. Oracle lit ce réglage à deux
+  # endroits : ici à la création, et dans les options de lancement pour une instance qui existe.
+  # À la recréation du 22 novembre 2026, les options de lancement seules n'ont pas suffi : les
+  # nœuds sont nés sans chiffrement, et il a fallu l'activer ensuite, en place.
+  is_pv_encryption_in_transit_enabled = true
+
+  # Dès qu'une option de lancement est donnée, Oracle exige le type de réseau et n'applique plus
+  # celles de l'image : elles sont donc toutes écrites, telles que l'image les pose.
   launch_options {
     is_pv_encryption_in_transit_enabled = true
     network_type                        = "PARAVIRTUALIZED"
@@ -105,6 +110,8 @@ resource "oci_core_instance" "node" {
     # L'image la plus récente change chaque mois : sans cela, chaque nouvelle image recréerait les nœuds.
     # Un nœud prend la nouvelle image quand il est volontairement remplacé : workflow Terraform lancé
     # à la main avec son nom (docs/runbooks/reconstruire-la-plateforme.md).
-    ignore_changes = [source_details[0].source_id]
+    # Le réglage de création du chiffrement ne se relit pas sur une instance qui existe : sans
+    # l'ignorer, Terraform voudrait recréer les nœuds. Les options de lancement, elles, sont suivies.
+    ignore_changes = [source_details[0].source_id, is_pv_encryption_in_transit_enabled]
   }
 }
