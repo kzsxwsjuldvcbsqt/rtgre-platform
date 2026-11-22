@@ -89,7 +89,7 @@ platform = dashboard("plateforme", "Plateforme", "État des nœuds et du cluster
          steps=[GREEN, {"color": "red", "value": 1}], x=6, y=28),
     stat("Alertes en cours", 'count(ALERTS{alertstate="firing"}) or vector(0)',
          steps=[GREEN, {"color": "red", "value": 1}], x=12, y=28,
-         description="Chacune est aussi envoyée sur Telegram, avec son runbook."),
+         description="Chacune est aussi envoyée par courrier, avec son runbook."),
     stat("Données de Prometheus sur le disque", 'prometheus_tsdb_storage_blocks_bytes + prometheus_tsdb_wal_storage_size_bytes',
          unit="bytes", x=18, y=28, steps=[GREEN, {"color": "orange", "value": 3500000000}],
          description="Bornées à 4 Go, sur un volume de 5 Go."),

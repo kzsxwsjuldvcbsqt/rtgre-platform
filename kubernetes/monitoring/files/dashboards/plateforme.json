@@ -702,7 +702,7 @@
     {
       "type": "stat",
       "title": "Alertes en cours",
-      "description": "Chacune est aussi envoyée sur Telegram, avec son runbook.",
+      "description": "Chacune est aussi envoyée par courrier, avec son runbook.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
