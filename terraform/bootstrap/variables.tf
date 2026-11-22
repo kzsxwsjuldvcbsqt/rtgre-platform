@@ -40,6 +40,23 @@ variable "tag_propagation_delay" {
   default     = "30s"
 }
 
+variable "policy_propagation_delay" {
+  description = "Attente entre la création d'une politique IAM et sa première utilisation, le temps qu'Oracle l'applique."
+  type        = string
+  default     = "60s"
+}
+
+variable "state_key_length" {
+  description = "Longueur, en octets, de la clé AES qui chiffre le bucket du state."
+  type        = number
+  default     = 32
+
+  validation {
+    condition     = contains([16, 24, 32], var.state_key_length)
+    error_message = "Une clé AES fait 16, 24 ou 32 octets."
+  }
+}
+
 variable "compartment_description" {
   description = "Description affichée dans la console pour le compartiment de la plateforme."
   type        = string
@@ -116,6 +133,7 @@ variable "free_tier_quotas" {
     block_backups           = number
     object_storage_in_bytes = number
     network_load_balancers  = number
+    vaults                  = number
   })
 
   validation {
