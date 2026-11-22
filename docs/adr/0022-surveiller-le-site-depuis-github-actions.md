@@ -25,7 +25,7 @@ Rien à ouvrir : le dépôt y est déjà, et GitHub ne partage rien avec Oracle.
 
 ## Décision
 
-Un workflow planifié, `Watch`, interroge le site toutes les quinze minutes.
+Un workflow planifié, `Watch`, interroge le site quatre fois par heure, aux minutes 7, 22, 37 et 52 : GitHub retarde ou abandonne volontiers les exécutions planifiées aux minutes rondes.
 
 - **Trois essais espacés de trente secondes** par adresse : une coupure brève n'est pas une panne. Une réponse compte si elle est un 200, en HTTPS, avec un certificat valide.
 - **Une panne ouvre une issue « Incident »**, assignée au propriétaire, que GitHub lui signale par courrier. Elle renvoie au runbook, et se ferme d'elle-même au retour du site. Tant qu'elle est ouverte, les sondes suivantes n'ajoutent rien.
@@ -34,7 +34,7 @@ Un workflow planifié, `Watch`, interroge le site toutes les quinze minutes.
 
 ## Conséquences
 
-- Une panne complète est signalée en quinze à trente minutes, selon le retard de GitHub. C'est un filet, pas une alerte fine : celles du cluster restent les premières, en cinq minutes.
+- Une panne complète est signalée en quinze à trente minutes quand GitHub tient l'horaire. Il ne le garantit pas : dans l'heure et demie qui a suivi la mise en service, aucune exécution planifiée n'est partie. C'est un filet, pas une alerte fine : celles du cluster restent les premières, en cinq minutes.
 - Le signalement dépend de GitHub, et des notifications du compte du propriétaire.
 - **Si le dépôt devient privé**, chaque exécution compte pour une minute : quatre par heure dépassent les 2 000 minutes gratuites du mois. Passer alors à une sonde par heure, soit environ 750 minutes.
 - GitHub suspend les workflows planifiés d'un dépôt public resté soixante jours sans activité. Les mises à jour de Renovate, chaque semaine, l'en gardent.
