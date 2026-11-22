@@ -115,6 +115,7 @@ jobs:
           La sonde extérieure n'obtient plus de réponse valide, le $seen (heure de Paris), après $ATTEMPTS essais :
 
           $FAILURES
+
           [Exécution de la sonde]($run)
 
           ### Impact
