@@ -50,3 +50,8 @@ volumeMounts:
   - name: site
     mountPath: {{ .Values.site.mountPath }}
 {{- end }}
+
+{{/* Configuration de nginx : files/nginx.conf, où les valeurs du chart sont rendues. */}}
+{{- define "rtgre.nginxConfig" -}}
+{{ tpl (.Files.Get "files/nginx.conf") . }}
+{{- end }}

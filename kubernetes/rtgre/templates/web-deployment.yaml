@@ -25,7 +25,7 @@ spec:
         app.kubernetes.io/component: web
       annotations:
         # Une configuration modifiée redémarre nginx.
-        checksum/config: {{ .Files.Get "files/nginx.conf" | sha256sum }}
+        checksum/config: {{ include "rtgre.nginxConfig" . | sha256sum }}
     spec:
       automountServiceAccountToken: false
       dnsConfig:

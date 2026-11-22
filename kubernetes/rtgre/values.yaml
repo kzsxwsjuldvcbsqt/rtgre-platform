@@ -28,6 +28,11 @@ web:
   # Utilisateur nginx de l'image.
   user: 101
   port: 8080
+  # Réseaux dont nginx accepte l'en-tête X-Forwarded-For : la plage des pods du cluster
+  # (kubernetes_pod_cidr, dans ansible/inventories/prod/group_vars/all.yml), d'où vient la
+  # passerelle.
+  trustedProxies:
+    - 10.244.0.0/16
   # Délai entre la demande d'arrêt d'un pod et l'arrêt de nginx.
   shutdownDelaySeconds: 10
   resources:
