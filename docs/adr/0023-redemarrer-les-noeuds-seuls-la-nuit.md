@@ -38,6 +38,7 @@ Chaque nœud redémarre seul, la nuit qui suit une mise à jour qui l'exige, à 
   - **plan de contrôle** : le site ne voit rien, aucune requête perdue sur 213. L'API de Kubernetes manque 88 secondes.
 - **Les nuits où une mise à jour l'exige, le site est donc coupé trois minutes**, vers 4 h 40 ou 5 h 40 à Paris. C'est sous le seuil de l'alerte `SiteInjoignable`, cinq minutes. La sonde extérieure, qui passe tous les quarts d'heure, peut tomber dessus : elle ouvrirait un incident, refermé à la sonde suivante.
 - Si un nœud ne revient pas de son redémarrage, le nœud de travail emporte les alertes du cluster : c'est la sonde extérieure qui le signale ([ADR 0022](0022-surveiller-le-site-depuis-github-actions.md)).
+- Au retour d'un nœud, plusieurs conteneurs redémarrent deux ou trois fois avant de se stabiliser. L'exercice a déclenché `PodEnBoucle` pour kube-state-metrics : l'alerte attend maintenant vingt minutes de redémarrages soutenus.
 - Les pods sont arrêtés par l'extinction du système, pas par Kubernetes. Prometheus et Loki ont repris sans perte visible.
 - Le redémarrage a été joué à la main. Son déclenchement par la passe des mises à jour ne s'observera qu'à la prochaine qui l'exigera.
 - Avec un second nœud de travail, cette décision serait à revoir : vider le nœud aurait alors un sens.

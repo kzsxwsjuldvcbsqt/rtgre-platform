@@ -52,7 +52,7 @@ Les règles sont dans [`files/alerts.yaml`](files/alerts.yaml), au format de Pro
 | `NoeudDisquePresquePlein` | Moins de 25 % de place sur un nœud | [noeud-a-court-de-ressources](../../docs/runbooks/noeud-a-court-de-ressources.md) |
 | `NoeudMemoirePresquePleine` | Moins de 10 % de mémoire disponible sur un nœud | [noeud-a-court-de-ressources](../../docs/runbooks/noeud-a-court-de-ressources.md) |
 | `NoeudAttendUnRedemarrage` | Un nœud attend un redémarrage depuis 36 heures : celui de la nuit n'a pas eu lieu | [redemarrer-un-noeud](../../docs/runbooks/redemarrer-un-noeud.md) |
-| `PodEnBoucle` | Un conteneur redémarre 3 fois en 30 minutes | [diagnostiquer-un-pod](../../docs/runbooks/diagnostiquer-un-pod.md) |
+| `PodEnBoucle` | Un conteneur redémarre sans cesse depuis 20 minutes ; les redémarrages qui suivent celui d'un nœud ne comptent pas | [diagnostiquer-un-pod](../../docs/runbooks/diagnostiquer-un-pod.md) |
 | `CibleInjoignable` | Prometheus ne joint plus une cible depuis 15 minutes | [diagnostiquer-un-pod](../../docs/runbooks/diagnostiquer-un-pod.md) |
 | `ApplicationDesynchronisee` | Une application Argo CD diffère du dépôt depuis 30 minutes | [retablir-une-application-argocd](../../docs/runbooks/retablir-une-application-argocd.md) |
 | `ApplicationDegradee` | Une application Argo CD n'est pas saine depuis 90 minutes, plus que le temps d'une génération manquée | [retablir-une-application-argocd](../../docs/runbooks/retablir-une-application-argocd.md) |

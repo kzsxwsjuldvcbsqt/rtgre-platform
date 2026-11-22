@@ -118,15 +118,17 @@ groups:
             avoir lieu la nuit dernière.
           runbook: redemarrer-un-noeud.md
 
+      # Après le redémarrage d'un nœud, plusieurs conteneurs redémarrent deux ou trois fois en
+      # quelques minutes, le temps que leurs dépendances reviennent, puis se stabilisent. Une
+      # vraie boucle continue : l'alerte attend vingt minutes de redémarrages soutenus.
       - alert: PodEnBoucle
-        expr: increase(kube_pod_container_status_restarts_total[30m]) >= 3
-        for: 5m
+        expr: increase(kube_pod_container_status_restarts_total[15m]) >= 3
+        for: 20m
         labels:
           severity: warning
         annotations:
           summary: "{{ $labels.namespace }}/{{ $labels.pod }} redémarre en boucle"
-          description: >-
-            Le conteneur {{ $labels.container }} a redémarré {{ $value | humanize }} fois en trente minutes.
+          description: "Le conteneur {{ $labels.container }} redémarre sans cesse depuis vingt minutes."
           runbook: diagnostiquer-un-pod.md
 
       - alert: CibleInjoignable

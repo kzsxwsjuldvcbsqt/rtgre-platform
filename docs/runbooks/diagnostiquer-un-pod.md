@@ -1,6 +1,6 @@
 # Diagnostiquer un pod
 
-Alertes `PodEnBoucle` (trois redémarrages en trente minutes) et `CibleInjoignable` (Prometheus ne joint plus une cible depuis un quart d'heure). Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
+Alertes `PodEnBoucle` (des redémarrages soutenus pendant vingt minutes) et `CibleInjoignable` (Prometheus ne joint plus une cible depuis un quart d'heure). Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
 
 ## Un pod redémarre en boucle
 
