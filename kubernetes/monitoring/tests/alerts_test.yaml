@@ -171,6 +171,31 @@ tests:
               description: Il reste 5% de mémoire disponible.
               runbook: noeud-a-court-de-ressources.md
 
+  - name: Un nœud attend un redémarrage
+    interval: 1m
+    input_series:
+      - series: node_reboot_required{instance="wk-1"}
+        values: 0x60 1x2400
+      # Redémarré dans la nuit : la métrique retombe avant l'échéance.
+      - series: node_reboot_required{instance="cp-1"}
+        values: 0x60 1x1200 0x1200
+    alert_rule_test:
+      # Une nuit n'est pas encore passée.
+      - eval_time: 30h
+        alertname: NoeudAttendUnRedemarrage
+      - eval_time: 38h
+        alertname: NoeudAttendUnRedemarrage
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              instance: wk-1
+            exp_annotations:
+              summary: wk-1 attend un redémarrage
+              description: >-
+                Une mise à jour de sécurité installée ne s'applique qu'au redémarrage du nœud, qui aurait dû avoir
+                lieu la nuit dernière.
+              runbook: redemarrer-un-noeud.md
+
   - name: Un pod redémarre en boucle, une cible ne répond plus
     interval: 1m
     input_series:
