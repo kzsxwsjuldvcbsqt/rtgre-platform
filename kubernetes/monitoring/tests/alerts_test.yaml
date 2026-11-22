@@ -216,11 +216,11 @@ tests:
     interval: 1m
     input_series:
       - series: argocd_app_info{name="rtgre", sync_status="Synced", health_status="Healthy"}
-        values: 1x10 _x60
+        values: 1x10 _x200
       - series: argocd_app_info{name="rtgre", sync_status="OutOfSync", health_status="Degraded"}
-        values: _x10 1x60
+        values: _x10 1x200
       - series: argocd_app_info{name="storage", sync_status="Synced", health_status="Healthy"}
-        values: 1x70
+        values: 1x210
     alert_rule_test:
       - eval_time: 35m
         alertname: ApplicationDesynchronisee
@@ -236,7 +236,10 @@ tests:
               summary: L'application rtgre ne correspond plus au dépôt
               description: Argo CD la voit « OutOfSync » depuis trente minutes.
               runbook: retablir-une-application-argocd.md
-      - eval_time: 42m
+      # Une heure de dégradation, le temps d'une génération manquée : pas d'alerte.
+      - eval_time: 75m
+        alertname: ApplicationDegradee
+      - eval_time: 102m
         alertname: ApplicationDegradee
         exp_alerts:
           - exp_labels:
@@ -246,5 +249,5 @@ tests:
               health_status: Degraded
             exp_annotations:
               summary: L'application rtgre n'est pas saine
-              description: Argo CD la voit « Degraded » depuis trente minutes.
+              description: Argo CD la voit « Degraded » depuis une heure et demie.
               runbook: retablir-une-application-argocd.md
