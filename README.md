@@ -11,6 +11,19 @@ Le site lui-même est développé dans le dépôt [rtgre](https://github.com/kzs
 
 rtgre.fr est servi par cette plateforme depuis le 21 novembre 2026. GitHub Pages reste en secours : la zone DNS y revient en changeant une valeur ([runbook](docs/runbooks/basculer-rtgre-fr.md)).
 
+## Ce que cette plateforme est, et ce qu'elle n'est pas
+
+Servir un site statique ne demande pas un cluster Kubernetes. GitHub Pages le faisait, sans entretien et avec une meilleure disponibilité, et reste le secours. Cette plateforme est un **terrain d'apprentissage** : elle sert un vrai site, à de vrais visiteurs, pour pratiquer de bout en bout ce que fait une équipe d'exploitation. Décrire une infrastructure en code, monter un cluster et le tenir à jour, déployer en GitOps, surveiller, alerter, sauvegarder, reconstruire, et consigner ce qui casse.
+
+Elle ne prétend pas à plus :
+
+- **Pas de haute disponibilité.** Un plan de contrôle, un nœud de travail, une région. Redémarrer le nœud de travail coupe le site trois minutes ([ADR 0023](docs/adr/0023-redemarrer-les-noeuds-seuls-la-nuit.md)), et tout reconstruire a pris quarante minutes ([runbook](docs/runbooks/reconstruire-la-plateforme.md)).
+- **Pas dimensionnée pour la charge.** Deux nœuds d'un cœur et 6 Go chacun, la limite de l'offre gratuite d'Oracle ([ADR 0002](docs/adr/0002-heberger-sur-oracle-cloud-always-free.md)). C'est très au-delà du trafic du site, mais rien ne s'adapte de lui-même à une affluence.
+- **Un seul exploitant.** Les approbations, les mots de passe et la réponse aux alertes reposent sur une personne.
+- **Des données que l'on accepte de perdre.** Les métriques et les journaux vivent sur le nœud de travail et disparaissent avec lui ([ADR 0011](docs/adr/0011-stocker-sur-des-volumes-locaux-statiques.md)). Seul l'historique d'audience est sauvegardé ailleurs ([ADR 0026](docs/adr/0026-sauvegarder-la-base-d-umami-avec-l-identite-des-noeuds.md)).
+
+Chaque choix, avec les options écartées, est dans les [ADR](docs/adr). Ce qui a cassé, et ce que cela a changé, est dans les [post-mortems](docs/postmortems).
+
 ## Prérequis
 
 Les versions des outils sont fixées dans `mise.toml`. Avec [mise](https://mise.jdx.dev) installé, une seule commande installe exactement les mêmes depuis la racine du dépôt :
