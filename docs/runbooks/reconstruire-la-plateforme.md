@@ -2,7 +2,7 @@
 
 Recréer un nœud, ou les deux, puis remonter le cluster jusqu'au site servi. À utiliser après la perte d'un nœud, pour lui donner une image plus récente, ou pour vérifier que le dépôt suffit toujours à tout refaire.
 
-Le dépôt décrit tout, sauf ce que cette procédure rétablit : la clé de déploiement d'Argo CD et le Secret du courrier des alertes. Ce qui est perdu avec les nœuds : l'historique des métriques et des journaux, et les silences d'Alertmanager.
+Le dépôt décrit tout, sauf ce que cette procédure rétablit : la clé de déploiement d'Argo CD, le Secret du courrier des alertes, celui d'Umami et la destination de sa sauvegarde. Ce qui est perdu avec les nœuds : l'historique des métriques et des journaux, et les silences d'Alertmanager. L'historique d'audience, lui, se restaure depuis sa dernière sauvegarde.
 
 Le 22 novembre 2026, il a fallu quarante minutes, avec deux corrections en route (voir l'historique). Sans elles, une demi-heure devrait suffire : c'est une estimation, pas une mesure.
 
@@ -54,13 +54,17 @@ La dernière tâche du playbook attend que toutes les applications soient synchr
 ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n argocd get applications.argoproj.io
 ```
 
-Deux états sont normaux à ce stade : Alertmanager attend son Secret (étape 4), et le certificat attend le retour du DNS (étape 5).
+Trois états sont normaux à ce stade : Alertmanager et Umami attendent leur Secret (étape 4), et le certificat attend le retour du DNS (étape 5).
 
 ## 4. Rétablir ce qui ne vit pas dans le dépôt
 
 ```bash
 scripts/alertmanager-email.sh
+scripts/umami-secret.sh
+scripts/umami-backup-config.sh
 ```
+
+Umami démarre alors sur une base neuve. Y rejouer la dernière sauvegarde : [sauvegarder-et-restaurer-umami](sauvegarder-et-restaurer-umami.md).
 
 Le mot de passe initial d'Argo CD est neuf : [acceder-a-argocd](acceder-a-argocd.md).
 
