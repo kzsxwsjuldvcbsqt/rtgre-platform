@@ -53,11 +53,7 @@ spec:
             - name: DISABLE_UPDATES
               value: "1"
           securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop:
-                - ALL
+            {{- include "umami.containerSecurityContext" . | nindent 12 }}
           ports:
             - name: http
               containerPort: {{ .Values.umami.port }}
