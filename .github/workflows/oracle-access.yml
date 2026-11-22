@@ -59,10 +59,15 @@ jobs:
           tenancy: ${{ vars.OCI_TENANCY_OCID }}
           region: ${{ vars.OCI_REGION }}
 
+      # Lire un objet, et pas seulement leur liste, prouve qu'Object Storage le déchiffre avec la
+      # clé du Vault au nom de la CI.
       - name: Read the Terraform state bucket
         run: |
           oci os object list --bucket-name "$STATE_BUCKET" \
             --query 'data[].name' --output table
+          object=$(oci os object list --bucket-name "$STATE_BUCKET" --limit 1 \
+            --query 'data[0].name' --raw-output)
+          oci os object get --bucket-name "$STATE_BUCKET" --name "$object" --file /dev/null
 
       - name: Refuse writes to the state bucket
         run: |
