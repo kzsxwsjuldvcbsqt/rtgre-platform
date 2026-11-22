@@ -82,4 +82,9 @@ module "load_balancer" {
 
   listeners              = var.load_balancer_listeners
   proxy_protocol_enabled = var.load_balancer_proxy_protocol_enabled
+
+  # Le sujet des pannes et ses abonnés sont créés par le bootstrap.
+  alarm = merge(var.load_balancer_alarm, {
+    destinations = [data.terraform_remote_state.bootstrap.outputs.outage_topic_id]
+  })
 }

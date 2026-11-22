@@ -73,3 +73,14 @@ variable "health_check" {
     retries            = 3
   }
 }
+
+variable "alarm" {
+  description = "Alarmes sur la sonde du load balancer : sujets de notification prévenus, délai avant de prévenir, délai de rappel et runbook cité. Aucune alarme si null."
+  type = object({
+    destinations     = list(string)
+    pending_duration = string
+    repeat_duration  = string
+    runbook_url      = string
+  })
+  default = null
+}
