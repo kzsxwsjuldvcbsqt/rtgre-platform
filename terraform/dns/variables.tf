@@ -36,6 +36,12 @@ variable "prod_state_key" {
   default     = "envs/prod/terraform.tfstate"
 }
 
+variable "bootstrap_state_key" {
+  description = "Clé du state du bootstrap dans le bucket."
+  type        = string
+  default     = "bootstrap/terraform.tfstate"
+}
+
 variable "zone" {
   description = "Zone DNS gérée, par exemple example.org."
   type        = string

@@ -13,8 +13,42 @@ data "terraform_remote_state" "prod" {
   }
 }
 
+# Le domaine d'envoi des alertes et sa clé DKIM sont créés par le bootstrap : leurs
+# enregistrements sont lus dans son state.
+data "terraform_remote_state" "bootstrap" {
+  backend = "oci"
+
+  config = {
+    bucket              = var.state_bucket
+    namespace           = var.objectstorage_namespace
+    key                 = var.bootstrap_state_key
+    region              = var.region
+    auth                = var.oci_auth
+    config_file_profile = var.oci_profile
+  }
+}
+
 locals {
   cluster_ip = data.terraform_remote_state.prod.outputs.load_balancer.public_ip
+  alert_mail = data.terraform_remote_state.bootstrap.outputs.alert_mail
+
+  # Courrier des alertes : un sous-domaine réservé à l'envoi, avec son propre SPF et sa clé DKIM.
+  # Le courrier du domaine principal, protégé plus bas, n'est pas touché.
+  mail_records = {
+    "mail:spf" = {
+      subdomain = trimsuffix(local.alert_mail.domain, ".${var.zone}")
+      fieldtype = "SPF"
+      ttl       = 0
+      target    = local.alert_mail.spf
+    }
+    "mail:dkim" = {
+      subdomain = trimsuffix(trimsuffix(local.alert_mail.dkim_name, "."), ".${var.zone}")
+      fieldtype = "CNAME"
+      ttl       = 0
+      target    = "${trimsuffix(local.alert_mail.dkim_target, ".")}."
+    }
+  }
+
   on_cluster = var.site_served_by == "cluster"
 
   # Le sommet de la zone et www suivent var.site_served_by : changer cette seule valeur bascule
@@ -71,7 +105,7 @@ resource "ovh_domain_zone_record" "protected" {
 }
 
 resource "ovh_domain_zone_record" "this" {
-  for_each = merge(var.records, local.cluster_records, local.site_records)
+  for_each = merge(var.records, local.cluster_records, local.site_records, local.mail_records)
 
   zone      = var.zone
   subdomain = each.value.subdomain
