@@ -11,4 +11,7 @@ free_tier_quotas = {
   # Le Vault lui-même n'est pas compté par l'offre : seules les versions de clé protégées par
   # HSM le sont. Un seul suffit, pour la clé du state.
   vaults = 1
+  # L'offre compte les messages, 3000 par mois, pas les expéditeurs : un seul suffit, pour les
+  # alertes.
+  mail_senders = 1
 }

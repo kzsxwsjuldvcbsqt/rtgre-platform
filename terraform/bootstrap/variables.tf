@@ -124,6 +124,17 @@ variable "github_apply_environment" {
   }
 }
 
+variable "alert_mail" {
+  description = "Envoi du courrier des alertes : domaine, partie locale de l'expéditeur, sélecteur DKIM, serveurs à autoriser dans le SPF et port SMTP."
+  type = object({
+    domain        = string
+    sender        = string
+    dkim_selector = string
+    spf_include   = string
+    smtp_port     = number
+  })
+}
+
 variable "free_tier_quotas" {
   description = "Limites de l'offre Always Free appliquées en quotas à toute la tenancy."
   type = object({
@@ -134,6 +145,7 @@ variable "free_tier_quotas" {
     object_storage_in_bytes = number
     network_load_balancers  = number
     vaults                  = number
+    mail_senders            = number
   })
 
   validation {
