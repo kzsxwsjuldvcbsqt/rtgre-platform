@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Relève régulièrement si le nœud attend un redémarrage
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec={{ hardening_reboot_required_metric_interval }}
+
+[Install]
+WantedBy=timers.target

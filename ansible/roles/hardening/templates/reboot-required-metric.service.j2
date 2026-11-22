@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Écrit la métrique node_reboot_required pour node-exporter
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/reboot-required-metric

@@ -1,0 +1,21 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# Écrit node_reboot_required pour le collecteur « textfile » de node-exporter : 1 quand une mise
+# à jour installée attend un redémarrage du nœud, 0 sinon.
+set -eu
+
+directory={{ hardening_reboot_required_metric_directory }}
+required=0
+if [ -f /var/run/reboot-required ]; then
+  required=1
+fi
+
+# Écrit à côté puis renommé : node-exporter ne lit jamais un fichier à moitié écrit.
+temporary=$(mktemp "$directory/.reboot_required.XXXXXX")
+cat > "$temporary" <<METRIC
+# HELP node_reboot_required 1 si le nœud attend un redémarrage pour appliquer une mise à jour.
+# TYPE node_reboot_required gauge
+node_reboot_required $required
+METRIC
+chmod 0644 "$temporary"
+mv "$temporary" "$directory/reboot_required.prom"

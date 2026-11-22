@@ -53,8 +53,19 @@ hardening_firewall_remove_iptables_persistent: true
 # Mises à jour de sécurité installées automatiquement.
 hardening_unattended_upgrades_enabled: true
 
-# Pas de redémarrage automatique : un nœud Kubernetes doit être vidé avant de redémarrer.
+# Redémarrage automatique quand une mise à jour l'exige. Désactivé par défaut : un nœud qui
+# redémarre coupe ce qu'il porte, c'est à l'inventaire de le décider et de choisir l'heure.
 hardening_unattended_upgrades_automatic_reboot: false
+# Heure du redémarrage, à l'heure du nœud. Deux nœuds d'un même cluster n'ont pas la même.
+hardening_unattended_upgrades_automatic_reboot_time: "04:00"
+
+# Redémarrage attendu -------------------------------------------------------------
+
+# Écrit la métrique node_reboot_required dans un dossier que lit node-exporter (collecteur
+# « textfile ») : une mise à jour installée qui attend un redémarrage devient visible.
+hardening_reboot_required_metric_enabled: true
+hardening_reboot_required_metric_directory: /var/lib/node-exporter/textfile
+hardening_reboot_required_metric_interval: 15min
 
 # Noyau ------------------------------------------------------------------------
 

@@ -10,5 +10,9 @@
   ansible.builtin.import_tasks: upgrades.yml
   when: hardening_unattended_upgrades_enabled
 
+- name: Report whether the node is waiting for a reboot
+  ansible.builtin.import_tasks: reboot_metric.yml
+  when: hardening_reboot_required_metric_enabled
+
 - name: Harden kernel parameters
   ansible.builtin.import_tasks: sysctl.yml

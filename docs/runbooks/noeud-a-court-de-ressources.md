@@ -2,6 +2,8 @@
 
 Alertes `NoeudDisquePresquePlein` (moins de 25 % de place) et `NoeudMemoirePresquePleine` (moins de 10 % de mémoire disponible), tenues un quart d'heure. L'alerte nomme le nœud ; les exemples prennent `wk-1`. Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
 
+Un nœud qui attend un redémarrage a son propre runbook : [redemarrer-un-noeud](redemarrer-un-noeud.md).
+
 ## Le disque
 
 Le disque de démarrage porte le système, les images des conteneurs, leurs journaux et les volumes locaux ([ADR 0011](../adr/0011-stocker-sur-des-volumes-locaux-statiques.md)).

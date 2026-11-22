@@ -53,7 +53,7 @@ L'application racine suit `main` : une application nouvelle n'existe donc qu'apr
 scripts/argocd-try-branch.sh feat/ma-branche
 ```
 
-Le script suspend la synchronisation de l'application racine, puis pointe les projets et les applications sur la branche. Après la fusion, depuis `main` à jour, la même commande sans argument remet tout sur la révision du dépôt :
+Le script suspend la synchronisation de l'application racine, puis pointe les projets et les applications sur la branche. Pendant l'essai, le playbook Ansible échoue à sa dernière tâche, qui attend que toutes les applications soient synchronisées : l'application racine ne l'est plus. Les nœuds, eux, sont bien configurés. Après la fusion, depuis `main` à jour, la même commande sans argument remet tout sur la révision du dépôt :
 
 ```bash
 scripts/argocd-try-branch.sh

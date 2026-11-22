@@ -1,0 +1,43 @@
+---
+# Dit à Prometheus si le nœud attend un redémarrage : node-exporter lit ce dossier.
+- name: Create the textfile collector directory
+  ansible.builtin.file:
+    path: "{{ hardening_reboot_required_metric_directory }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the script that writes the reboot-required metric
+  ansible.builtin.template:
+    src: reboot-required-metric.sh.j2
+    dest: /usr/local/sbin/reboot-required-metric
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the service and the timer that run it
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - reboot-required-metric.service
+    - reboot-required-metric.timer
+  notify: Reload systemd
+
+- name: Reload systemd before starting the timer
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable and start the timer
+  ansible.builtin.systemd_service:
+    name: reboot-required-metric.timer
+    enabled: true
+    state: started
+
+- name: Write the metric once without waiting for the timer
+  ansible.builtin.command: /usr/local/sbin/reboot-required-metric
+  args:
+    creates: "{{ hardening_reboot_required_metric_directory }}/reboot_required.prom"

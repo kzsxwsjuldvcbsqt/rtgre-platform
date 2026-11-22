@@ -1,6 +1,17 @@
+# Dossier des nœuds où le rôle Ansible hardening écrit des métriques que node-exporter ne sait
+# pas relever seul : aujourd'hui, node_reboot_required. Le rôle lit ce chemin ici.
+textfileDirectory: &textfileDirectory /var/lib/node-exporter/textfile
+
 # Valeurs du chart officiel prometheus-node-exporter. Un pod par nœud, plan de contrôle compris.
 prometheus-node-exporter:
   fullnameOverride: node-exporter
+  extraArgs:
+    - --collector.textfile.directory=/host/textfile
+  extraHostVolumeMounts:
+    - name: textfile
+      hostPath: *textfileDirectory
+      mountPath: /host/textfile
+      readOnly: true
   # Déclare la cible à Prometheus (kubernetes/monitoring).
   prometheus:
     monitor:

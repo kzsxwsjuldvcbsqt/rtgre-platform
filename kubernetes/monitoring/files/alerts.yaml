@@ -104,6 +104,20 @@ groups:
           description: "Il reste {{ $value | humanizePercentage }} de mémoire disponible."
           runbook: noeud-a-court-de-ressources.md
 
+      # Un nœud redémarre seul la nuit qui suit une mise à jour de sécurité (ADR 0023). Après un
+      # jour et demi, ce redémarrage n'a pas eu lieu.
+      - alert: NoeudAttendUnRedemarrage
+        expr: node_reboot_required == 1
+        for: 36h
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }} attend un redémarrage"
+          description: >-
+            Une mise à jour de sécurité installée ne s'applique qu'au redémarrage du nœud, qui aurait dû
+            avoir lieu la nuit dernière.
+          runbook: redemarrer-un-noeud.md
+
       - alert: PodEnBoucle
         expr: increase(kube_pod_container_status_restarts_total[30m]) >= 3
         for: 5m

@@ -101,6 +101,44 @@
           - "'-security' in hardening_upgrades_config.content | b64decode"
           - "'-updates' not in hardening_upgrades_config.content | b64decode"
           - "'Automatic-Reboot \"false\"' in hardening_upgrades_config.content | b64decode"
+          - "'Automatic-Reboot-Time \"04:00\"' in hardening_upgrades_config.content | b64decode"
+
+    - name: Read the reboot-required metric
+      ansible.builtin.slurp:
+        src: /var/lib/node-exporter/textfile/reboot_required.prom
+      register: hardening_reboot_metric
+
+    - name: Check that the metric says no reboot is required
+      ansible.builtin.assert:
+        that:
+          - "'node_reboot_required 0' in hardening_reboot_metric.content | b64decode"
+
+    - name: Mark the node as waiting for a reboot and write the metric again
+      ansible.builtin.shell: |
+        set -eu
+        touch /var/run/reboot-required
+        /usr/local/sbin/reboot-required-metric
+        cat /var/lib/node-exporter/textfile/reboot_required.prom
+        rm /var/run/reboot-required
+        /usr/local/sbin/reboot-required-metric
+      register: hardening_reboot_metric_required
+      changed_when: false
+
+    - name: Check that the metric follows the marker
+      ansible.builtin.assert:
+        that:
+          - "'node_reboot_required 1' in hardening_reboot_metric_required.stdout"
+
+    - name: Read the timer that refreshes the metric
+      ansible.builtin.systemd_service:
+        name: reboot-required-metric.timer
+      register: hardening_reboot_timer
+
+    - name: Check that the timer is enabled and running
+      ansible.builtin.assert:
+        that:
+          - hardening_reboot_timer.status.ActiveState == 'active'
+          - hardening_reboot_timer.status.UnitFileState == 'enabled'
 
     - name: Read the kernel parameters file
       ansible.builtin.slurp:
