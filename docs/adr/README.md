@@ -21,6 +21,7 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | [0015](0015-metriques-avec-prometheus-et-son-operateur.md) | Métriques avec Prometheus et son opérateur | accepté |
 | [0016](0016-grafana-en-lecture-seule-sans-compte.md) | Grafana en lecture seule, sans compte | accepté |
 | [0017](0017-journaux-avec-loki-et-alloy.md) | Journaux avec Loki et Alloy | accepté |
-| [0018](0018-alertes-avec-alertmanager-et-telegram.md) | Alertes avec Alertmanager et Telegram | accepté |
+| [0018](0018-alertes-avec-alertmanager-et-telegram.md) | Alertes avec Alertmanager et Telegram | accepté ; canal remplacé par [0021](0021-envoyer-les-alertes-par-courrier.md) |
 | [0019](0019-controler-les-images-a-l-admission-avec-kyverno.md) | Contrôler les images à l'admission avec Kyverno | accepté |
 | [0020](0020-chiffrer-le-state-avec-une-cle-du-vault.md) | Chiffrer le state avec une clé du Vault | accepté |
+| [0021](0021-envoyer-les-alertes-par-courrier.md) | Envoyer les alertes par courrier | accepté |
