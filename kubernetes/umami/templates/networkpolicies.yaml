@@ -1,0 +1,68 @@
+# Par défaut, rien n'entre dans l'espace de noms et rien n'en sort.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Umami ne reçoit que la passerelle, pour la collecte, et ne sort que vers sa base. Son tableau
+# de bord s'ouvre par une redirection de port, qui ne passe pas par ces règles.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: umami
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: umami
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: {{ .Values.collect.gateway.namespace }}
+            app.kubernetes.io/name: traefik
+      toPorts:
+        - ports:
+            - port: {{ .Values.umami.port | quote }}
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: umami-postgres
+      toPorts:
+        - ports:
+            - port: {{ .Values.postgres.port | quote }}
+              protocol: TCP
+    # Résolution du nom de service de la base.
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"
+---
+# La base ne reçoit qu'Umami, et ne sort nulle part.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: postgres
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: umami-postgres
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: umami
+      toPorts:
+        - ports:
+            - port: {{ .Values.postgres.port | quote }}
+              protocol: TCP

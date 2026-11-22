@@ -164,3 +164,43 @@ vulnerabilities:
       la branche release-1.21 : la prochaine version corrective l'apportera. Kyverno ne lit que les signatures du
       registre déclaré et les certificats de Sigstore, seules adresses qu'il peut joindre.
     expired_at: 2027-01-31
+
+  # Umami : gestionnaire de paquets embarqué, et une dépendance de son accès à la base.
+  - id: CVE-2026-109383
+    paths:
+      - usr/local/lib/node_modules/pnpm/dist/node_modules/undici/package.json
+    statement: &umami-pnpm >-
+      Client HTTP undici embarqué dans pnpm, le gestionnaire de paquets que garde l'image d'Umami 3.5.0,
+      dernière version publiée au 2026-11-22. Umami démarre et tourne sans lui, n'utilise pas cette copie, et
+      n'a aucune sortie vers Internet.
+    expired_at: 2027-01-31
+  - id: CVE-2026-109869
+    paths:
+      - usr/local/lib/node_modules/pnpm/dist/node_modules/undici/package.json
+    statement: *umami-pnpm
+    expired_at: 2027-01-31
+  - id: CVE-2026-19534
+    paths:
+      - usr/local/lib/node_modules/pnpm/dist/node_modules/undici/package.json
+    statement: *umami-pnpm
+    expired_at: 2027-01-31
+  - id: CVE-2026-87018
+    paths:
+      - usr/local/lib/node_modules/pnpm/dist/node_modules/undici/package.json
+    statement: *umami-pnpm
+    expired_at: 2027-01-31
+  - id: CVE-2026-121707
+    paths:
+      - app/node_modules/.pnpm/effect@3.20.0/node_modules/effect/package.json
+    statement: >-
+      Expression régulière coûteuse dans la bibliothèque effect, dépendance de l'accès à la base dans Umami
+      3.5.0, dernière version publiée au 2026-11-22. Le tableau de bord n'est pas exposé, et la collecte
+      n'accepte que deux chemins.
+    expired_at: 2027-01-31
+
+  # PostgreSQL : bibliothèque XML d'Alpine.
+  - id: CVE-2026-86144
+    statement: >-
+      libxml2 dans l'image officielle de PostgreSQL 18.7, dernière version publiée au 2026-11-22. La base ne
+      reçoit qu'Umami, qui ne lui envoie aucun document XML.
+    expired_at: 2027-01-31
