@@ -29,3 +29,4 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | [0023](0023-redemarrer-les-noeuds-seuls-la-nuit.md) | Redémarrer les nœuds seuls, la nuit | accepté |
 | [0024](0024-surveiller-le-load-balancer-par-une-alarme-d-oracle.md) | Surveiller le load balancer par une alarme d'Oracle | accepté |
 | [0025](0025-mesurer-l-audience-avec-umami.md) | Mesurer l'audience avec Umami | accepté |
+| [0026](0026-sauvegarder-la-base-d-umami-avec-l-identite-des-noeuds.md) | Sauvegarder la base d'Umami avec l'identité des nœuds | accepté |

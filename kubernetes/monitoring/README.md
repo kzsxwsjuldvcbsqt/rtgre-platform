@@ -49,6 +49,7 @@ Les règles sont dans [`files/alerts.yaml`](files/alerts.yaml), au format de Pro
 | `CertificatNonPret` | Un certificat n'est pas prêt depuis 1 heure | [suivre-les-certificats](../../docs/runbooks/suivre-les-certificats.md) |
 | `JournauxDeVisiteTropAnciens` | Le serveur web n'a pas été remplacé depuis 8 jours | [retablir-la-conservation-des-journaux](../../docs/runbooks/retablir-la-conservation-des-journaux.md) |
 | `ConservationDeLokiEnPanne` | Loki n'a rien supprimé depuis 6 heures | [retablir-la-conservation-des-journaux](../../docs/runbooks/retablir-la-conservation-des-journaux.md) |
+| `SauvegardeTropAncienne` | Aucune sauvegarde de la base d'Umami n'a réussi depuis 2 jours | [sauvegarder-et-restaurer-umami](../../docs/runbooks/sauvegarder-et-restaurer-umami.md) |
 | `NoeudDisquePresquePlein` | Moins de 25 % de place sur un nœud | [noeud-a-court-de-ressources](../../docs/runbooks/noeud-a-court-de-ressources.md) |
 | `NoeudMemoirePresquePleine` | Moins de 10 % de mémoire disponible sur un nœud | [noeud-a-court-de-ressources](../../docs/runbooks/noeud-a-court-de-ressources.md) |
 | `NoeudAttendUnRedemarrage` | Un nœud attend un redémarrage depuis 36 heures : celui de la nuit n'a pas eu lieu | [redemarrer-un-noeud](../../docs/runbooks/redemarrer-un-noeud.md) |
@@ -108,7 +109,7 @@ Puis ouvrir <http://localhost:8080>. La page « Target health » liste les cible
 
 - **Conservation bornée deux fois** : quinze jours, et 4 Go, sur un volume de 5 Go. Le disque du nœud ne peut pas se remplir de métriques.
 - **Toute cible déclarée est candidate**, quel que soit son chart : Prometheus ne filtre pas sur une étiquette de release. Le filtre est la règle réseau.
-- **Des règles d'alerte écrites pour ce cluster**, plutôt que celles du chart : treize, chacune avec son test et son runbook.
+- **Des règles d'alerte écrites pour ce cluster**, plutôt que celles du chart : quatorze, chacune avec son test et son runbook.
 - **Alertmanager sans volume ni jeton de l'API** : il ne garde que des silences, et n'a rien à demander à Kubernetes.
 - **Ni l'identifiant SMTP ni le destinataire ne sont dans le dépôt** : la configuration les désigne par `$(SMTP_USERNAME)` et `$(ALERT_RECIPIENT)`, que les conteneurs qui la préparent remplacent par les valeurs d'un Secret.
 - **Retirer l'application ne supprime rien** : ses CRD emporteraient les cibles et les règles des autres charts.

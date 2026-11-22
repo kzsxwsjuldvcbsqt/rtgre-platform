@@ -53,6 +53,54 @@ tests:
               description: Dernière génération réussie il y a 3h 10m 0s. Le site publié reste en ligne, mais il date.
               runbook: suivre-la-generation-du-site.md
 
+  - name: La base d'Umami n'est plus sauvegardée
+    interval: 1m
+    input_series:
+      # Une sauvegarde réussie au départ, puis plus aucune.
+      - series: kube_cronjob_created{namespace="umami", cronjob="umami-backup"}
+        values: 0x3100
+      - series: kube_cronjob_status_last_successful_time{namespace="umami", cronjob="umami-backup"}
+        values: 3600x3100
+    alert_rule_test:
+      # Une nuit manquée : pas encore.
+      - eval_time: 47h
+        alertname: SauvegardeTropAncienne
+      - eval_time: 51h
+        alertname: SauvegardeTropAncienne
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              namespace: umami
+              cronjob: umami-backup
+            exp_annotations:
+              summary: La base d'Umami n'est plus sauvegardée
+              description: >-
+                Aucune sauvegarde n'a réussi depuis 2d 2h 0m 0s. L'historique d'audience ne survivrait pas à la
+                perte du nœud.
+              runbook: sauvegarder-et-restaurer-umami.md
+
+  - name: Aucune sauvegarde de la base d'Umami n'a jamais réussi
+    interval: 1m
+    input_series:
+      - series: kube_cronjob_created{namespace="umami", cronjob="umami-backup"}
+        values: 0x3100
+    alert_rule_test:
+      - eval_time: 47h
+        alertname: SauvegardeTropAncienne
+      - eval_time: 50h
+        alertname: SauvegardeTropAncienne
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              namespace: umami
+              cronjob: umami-backup
+            exp_annotations:
+              summary: La base d'Umami n'est plus sauvegardée
+              description: >-
+                Aucune sauvegarde n'a réussi depuis 2d 2h 0m 0s. L'historique d'audience ne survivrait pas à la
+                perte du nœud.
+              runbook: sauvegarder-et-restaurer-umami.md
+
   - name: Un certificat n'est pas renouvelé
     interval: 1m
     input_series:

@@ -8,6 +8,7 @@ Socle de la tenancy Oracle Cloud, appliqué une fois avant tout le reste :
 - un budget mensuel sur toute la tenancy, qui alerte par e-mail dès la première dépense réelle et quand la prévision du mois dépasse le budget ;
 - le bucket privé et versionné `rtgre-platform-tfstate`, qui conserve le state de toutes les configurations Terraform, celui du bootstrap compris ;
 - un Vault et la clé maîtresse qui chiffre ce bucket, que seul Object Storage peut utiliser ([ADR 0020](../../docs/adr/0020-chiffrer-le-state-avec-une-cle-du-vault.md)) ;
+- le bucket privé `rtgre-platform-backups`, chiffré par sa propre clé du même Vault, où les nœuds déposent les sauvegardes sans pouvoir les lire ni les supprimer, et qu'Object Storage purge après trente jours ([ADR 0026](../../docs/adr/0026-sauvegarder-la-base-d-umami-avec-l-identite-des-noeuds.md)), avec ses durées dans `backups.auto.tfvars` ;
 - l'envoi du courrier des alertes par Email Delivery : un domaine d'envoi, sa signature DKIM, un expéditeur, et un utilisateur limité à son identifiant SMTP ([ADR 0021](../../docs/adr/0021-envoyer-les-alertes-par-courrier.md)), avec ses valeurs dans `alerting.auto.tfvars` ;
 - le sujet de notification des pannes vues depuis Oracle, et l'abonnement par courrier de son destinataire ([ADR 0024](../../docs/adr/0024-surveiller-le-load-balancer-par-une-alarme-d-oracle.md)) ;
 - des quotas qui limitent toute la tenancy aux ressources de l'offre Always Free ([ADR 0008](../../docs/adr/0008-passer-en-paiement-a-l-usage-sous-quotas.md)), avec leurs valeurs dans `free-tier.auto.tfvars` ;

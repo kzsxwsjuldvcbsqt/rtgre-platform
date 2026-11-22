@@ -1,0 +1,107 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: umami-backup
+  labels:
+    app.kubernetes.io/name: umami-backup
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  timeZone: {{ .Values.backup.timeZone }}
+  # Une sauvegarde à la fois. Une nuit manquée n'est pas rattrapée : la suivante suffit, et
+  # l'alerte SauvegardeTropAncienne part au bout de deux jours.
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: {{ .Values.backup.activeDeadlineSeconds }}
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: umami-backup
+            {{ .Values.instanceIdentity.label }}: {{ .Values.instanceIdentity.value }}
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            {{- include "umami.podSecurityContext" .Values.postgres.user | nindent 12 }}
+          initContainers:
+            # Le fichier porte la date et l'heure de la sauvegarde, en temps universel : chaque
+            # dépôt crée un objet de plus, et n'en remplace aucun.
+            - name: dump
+              image: {{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}
+              command:
+                - sh
+                - -euc
+                - >-
+                  pg_dump --format=custom
+                  --file="/backup/{{ .Values.backup.prefix }}-$(date -u +%Y%m%dT%H%M%SZ).dump"
+              env:
+                - name: PGHOST
+                  value: umami-postgres
+                - name: PGPORT
+                  value: {{ .Values.postgres.port | quote }}
+                - name: PGDATABASE
+                  value: {{ .Values.postgres.database }}
+                - name: PGUSER
+                  value: {{ .Values.postgres.username }}
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secretName }}
+                      key: postgres-password
+              securityContext:
+                {{- include "umami.containerSecurityContext" . | nindent 16 }}
+              resources:
+                {{- toYaml .Values.backup.resources | nindent 16 }}
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+          containers:
+            # « --immutable » refuse de toucher à un objet déjà déposé ; « --error-on-no-transfer »
+            # fait échouer le Job si rien n'est parti.
+            - name: upload
+              image: {{ .Values.backup.image.repository }}:{{ .Values.backup.image.tag }}
+              args:
+                - copy
+                - --immutable
+                - --error-on-no-transfer
+                - /backup
+                - backup:$(BACKUP_BUCKET)/{{ .Values.backup.prefix }}
+              env:
+                - name: BACKUP_BUCKET
+                  valueFrom:
+                    configMapKeyRef:
+                      name: {{ .Values.backup.configName }}
+                      key: bucket
+                # Aucun fichier de configuration : la destination « backup » est décrite ici.
+                - name: RCLONE_CONFIG
+                  value: /dev/null
+                - name: RCLONE_CONFIG_BACKUP_TYPE
+                  value: oracleobjectstorage
+                - name: RCLONE_CONFIG_BACKUP_PROVIDER
+                  value: instance_principal_auth
+                - name: RCLONE_CONFIG_BACKUP_REGION
+                  value: {{ .Values.backup.region }}
+                - name: RCLONE_CONFIG_BACKUP_NAMESPACE
+                  valueFrom:
+                    configMapKeyRef:
+                      name: {{ .Values.backup.configName }}
+                      key: namespace
+                # Le pod n'a pas le droit de lire le bucket lui-même, seulement d'y déposer.
+                - name: RCLONE_CONFIG_BACKUP_NO_CHECK_BUCKET
+                  value: "true"
+              securityContext:
+                {{- include "umami.containerSecurityContext" . | nindent 16 }}
+              resources:
+                {{- toYaml .Values.backup.resources | nindent 16 }}
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+                  readOnly: true
+          volumes:
+            - name: backup
+              emptyDir:
+                sizeLimit: {{ .Values.backup.scratchSize }}
