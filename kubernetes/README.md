@@ -13,6 +13,7 @@ Ce qui tourne dans le cluster est décrit ici et déployé par Argo CD ([ADR 001
 | [`monitoring`](monitoring) | Métriques, tableaux de bord et alertes : Prometheus, son opérateur, kube-state-metrics, Grafana et Alertmanager |
 | [`node-exporter`](node-exporter) | Métriques des nœuds, dans le seul espace de noms privilégié |
 | [`rtgre`](rtgre) | Le site rtgre.fr : génération horaire depuis ADE, et serveur web |
+| [`umami`](umami) | Mesure d'audience du site : Umami et sa base, collecte sous le nom du site |
 | [`storage`](storage) | Volumes persistants locaux, déclarés un par un |
 
 [`kyverno/files/signed-images.txt`](kyverno/files/signed-images.txt) liste les images qui doivent être signées, et par qui : la CI le vérifie avant toute fusion, et le cluster à chaque création de pod. [`unused-images.txt`](unused-images.txt) liste celles qu'un chart cite sans jamais les lancer.

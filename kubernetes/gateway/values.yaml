@@ -7,6 +7,8 @@ loadBalancerCidr: &loadBalancerCidr 10.20.10.0/24
 # a le droit de sortir.
 routeNamespaces: &routeNamespaces
   - rtgre
+  # Collecte de la mesure d'audience, sous le nom du site (kubernetes/umami).
+  - umami
 
 # Certificat des noms publics, demandé à cert-manager (kubernetes/cert-manager). Chaque nom doit
 # déjà désigner le load balancer : Let's Encrypt le vérifie en HTTP, et un seul nom en échec

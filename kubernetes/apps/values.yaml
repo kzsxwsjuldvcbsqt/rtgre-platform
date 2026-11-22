@@ -95,6 +95,12 @@ applications:
     namespaceLabels:
       pod-security.kubernetes.io/enforce: privileged
     cascade: true
+  # Mesure d'audience du site : Umami et sa base. Seule la collecte est exposée.
+  umami:
+    namespace: umami
+    namespaceLabels:
+      pod-security.kubernetes.io/enforce: restricted
+    cascade: true
   # Le site. Ses images sont contrôlées à la création de chaque pod : dépôts déclarés, empreinte
   # et signature (kubernetes/kyverno).
   rtgre:

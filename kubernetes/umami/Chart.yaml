@@ -1,0 +1,5 @@
+apiVersion: v2
+name: umami
+description: Mesure d'audience du site, avec Umami et sa base PostgreSQL, sans cookie.
+type: application
+version: 0.1.0

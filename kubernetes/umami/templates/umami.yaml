@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: umami
+  labels:
+    app.kubernetes.io/name: umami
+spec:
+  selector:
+    app.kubernetes.io/name: umami
+  ports:
+    - name: http
+      port: {{ .Values.umami.port }}
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: umami
+  labels:
+    app.kubernetes.io/name: umami
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: umami
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: umami
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        {{- include "umami.podSecurityContext" .Values.umami.user | nindent 8 }}
+      containers:
+        - name: umami
+          image: {{ .Values.umami.image.repository }}:{{ .Values.umami.image.tag }}
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: postgres-password
+            - name: DATABASE_URL
+              value: postgresql://{{ .Values.postgres.username }}:$(POSTGRES_PASSWORD)@umami-postgres:{{ .Values.postgres.port }}/{{ .Values.postgres.database }}
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: app-secret
+            # Aucune sortie vers Internet : ni statistiques d'usage, ni recherche de mises à jour.
+            - name: DISABLE_TELEMETRY
+              value: "1"
+            - name: DISABLE_UPDATES
+              value: "1"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: {{ .Values.umami.port }}
+          # Le premier démarrage crée les tables de la base.
+          startupProbe:
+            httpGet:
+              path: /api/heartbeat
+              port: http
+            periodSeconds: 5
+            failureThreshold: 48
+          readinessProbe:
+            httpGet:
+              path: /api/heartbeat
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/heartbeat
+              port: http
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.umami.resources | nindent 12 }}
+          # Seuls dossiers où Umami écrit : son cache de rendu et les fichiers temporaires.
+          volumeMounts:
+            - name: cache
+              mountPath: /app/.next/cache
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: cache
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}

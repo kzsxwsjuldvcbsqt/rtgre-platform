@@ -32,3 +32,10 @@ volumes:
     claim:
       namespace: rtgre
       name: site
+  # Base de données d'Umami : la demande porte le nom que lui donne son StatefulSet.
+  umami-postgres:
+    node: wk-1
+    capacity: 2Gi
+    claim:
+      namespace: umami
+      name: data-umami-postgres-0
