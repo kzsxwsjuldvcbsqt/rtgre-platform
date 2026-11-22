@@ -4,8 +4,10 @@ name: Watch
 # workflow interroge le site depuis GitHub, ouvre une issue « Incident » quand il ne répond plus
 # et la ferme à son retour.
 on:
+  # Quatre fois par heure, hors des minutes rondes : GitHub y retarde ou abandonne les exécutions
+  # planifiées, les plus demandées.
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '7,22,37,52 * * * *'
   pull_request:
     branches:
       - main
