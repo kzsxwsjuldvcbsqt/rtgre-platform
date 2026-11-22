@@ -42,9 +42,16 @@ resource "oci_core_instance" "node" {
   display_name        = "${var.name}-${each.key}"
   shape               = var.shape
 
-  # Chiffre le trafic entre l'instance et son volume de démarrage.
+  # Chiffre le trafic entre l'instance et son volume de démarrage. Dès qu'une option de lancement
+  # est donnée, Oracle exige le type de réseau et n'applique plus celles de l'image : elles sont
+  # donc toutes écrites, telles que l'image les pose.
   launch_options {
     is_pv_encryption_in_transit_enabled = true
+    network_type                        = "PARAVIRTUALIZED"
+    boot_volume_type                    = "PARAVIRTUALIZED"
+    remote_data_volume_type             = "PARAVIRTUALIZED"
+    firmware                            = "UEFI_64"
+    is_consistent_volume_naming_enabled = true
   }
 
   freeform_tags = merge(var.freeform_tags, {
