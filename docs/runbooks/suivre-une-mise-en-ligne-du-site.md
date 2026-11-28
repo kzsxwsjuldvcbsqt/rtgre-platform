@@ -7,10 +7,12 @@ Une modification fusionnée dans le dépôt [rtgre](https://github.com/kzsxwsjul
 | 1. L'image est construite, analysée, publiée et signée | workflow `Image` de rtgre | 3 à 5 minutes |
 | 2. Ce workflow lance la promotion et attend son résultat | travail « Image (promote to the platform) » de rtgre | quelques secondes |
 | 3. L'empreinte est proposée, contrôlée, puis fusionnée | workflow `Promote` de ce dépôt | 3 à 5 minutes |
-| 4. Argo CD relit le dépôt et déploie | cluster | 3 minutes au plus |
+| 4. Argo CD relit le dépôt et déploie | cluster | de quelques secondes à 5 minutes |
 | 5. Le site est généré avec la nouvelle image | Job `rtgre-generator-sync` | une vingtaine de secondes |
 
 Les commandes `gh` se lancent depuis ce dépôt. Celles du cluster passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
+
+Mesuré le 28 novembre 2026, du lancement du workflow `Image` au site généré : 9 minutes 54 secondes. L'image a pris 3 minutes, la promotion 2 minutes 15 secondes, Argo CD 4 minutes 5 secondes, la génération 19 secondes. Le même jour, une promotion lancée seule a été déployée 26 secondes après sa fusion.
 
 ## Voir où en est une mise en ligne
 
@@ -36,7 +38,7 @@ ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre get job rtgre-generator-s
 | `Promote` répond « aucune signature de… » | L'image du registre n'est pas signée par le workflow `image.yml` de rtgre sur `main`. | Ne rien contourner. Chercher qui a publié cette image : registre du dépôt rtgre, exécutions du workflow `Image`. |
 | `Promote` échoue en attendant un contrôle | Un contrôle de la pull request a échoué deux fois. La pull request reste ouverte. | Lire le contrôle. S'il concerne l'image du site, corriger dans rtgre. S'il n'a pas de rapport, comme une vulnérabilité publiée dans une autre image, le traiter ici d'abord, puis « Relancer une promotion ». |
 | `Promote` échoue à la fusion | `main` a avancé pendant les contrôles : la branche n'est plus à jour. | « Relancer une promotion » : elle repart de la pointe de `main`. |
-| La pull request est fusionnée, le site ne change pas | Argo CD n'a pas encore relu le dépôt, ou la génération a échoué. | Attendre trois minutes. Sinon, [rétablir l'application](retablir-une-application-argocd.md) ou [suivre la génération](suivre-la-generation-du-site.md). |
+| La pull request est fusionnée, le site ne change pas | Argo CD n'a pas encore relu le dépôt, ou la génération a échoué. | Attendre cinq minutes : Argo CD relit le dépôt toutes les deux à trois minutes, et garde un moment en mémoire la révision qu'il a lue. Sinon, [rétablir l'application](retablir-une-application-argocd.md) ou [suivre la génération](suivre-la-generation-du-site.md). |
 
 ## Relancer une promotion
 
