@@ -66,13 +66,13 @@ Dans l'espace de noms du site, le cluster contrôle lui-même chaque pod à sa c
 
 L'audience du site est mesurée par Umami, sans cookie : seule la collecte est exposée, sous le nom du site, et le tableau de bord ne s'ouvre que par le Bastion ([ADR 0025](docs/adr/0025-mesurer-l-audience-avec-umami.md), [`kubernetes/umami`](kubernetes/umami)). Sa base est exportée chaque nuit vers un bucket d'Object Storage, hors du cluster : les nœuds y déposent avec leur propre identité, sans secret, et ne peuvent ni lire ni supprimer une sauvegarde ([ADR 0026](docs/adr/0026-sauvegarder-la-base-d-umami-avec-l-identite-des-noeuds.md), [runbook](docs/runbooks/sauvegarder-et-restaurer-umami.md)).
 
-Le site est généré dans le cluster par l'image que publie le dépôt rtgre ([`kubernetes/rtgre`](kubernetes/rtgre)). Quand rtgre publie une nouvelle image, Renovate propose sa nouvelle empreinte et la fusionne de lui-même une fois la CI verte : celle-ci vérifie que l'image est signée par le workflow de rtgre.
+Le site est généré dans le cluster par l'image que publie le dépôt rtgre ([`kubernetes/rtgre`](kubernetes/rtgre)). Quand rtgre publie une nouvelle image, son workflow déclenche ici le workflow `Promote` : celui-ci lit l'empreinte dans le registre, vérifie qu'elle est signée par le workflow de rtgre, la propose par une pull request et la fusionne une fois tous les contrôles passés. Argo CD déploie, puis lance aussitôt une génération : une modification du site est en ligne sans intervention, une dizaine de minutes après sa fusion ([ADR 0028](docs/adr/0028-mettre-en-ligne-l-image-du-site-par-un-workflow-declenche.md), [runbook](docs/runbooks/suivre-une-mise-en-ligne-du-site.md)).
 
 ## Dépendances
 
 Toutes les versions sont épinglées : outils dans `mise.toml`, providers Terraform, hooks pre-commit, actions GitHub par SHA, dépendances d'Ansible, images de test par empreinte, Kubernetes, Cilium et le chart d'Argo CD.
 
-- **Renovate** (`renovate.json`) propose les mises à jour, regroupées par écosystème, chaque lundi matin. Les correctifs de sécurité arrivent sans attendre. Une montée mineure de Kubernetes, de Cilium ou d'Argo CD attend une approbation dans le tableau de bord des dépendances, car leur compatibilité doit être vérifiée ([ADR 0009](docs/adr/0009-reseau-des-pods-avec-cilium.md), [ADR 0010](docs/adr/0010-deployer-en-gitops-avec-argo-cd.md)).
+- **Renovate** (`renovate.json`) propose les mises à jour, regroupées par écosystème, chaque lundi matin. L'image du site n'en fait pas partie : elle suit son propre chemin. Les correctifs de sécurité arrivent sans attendre. Une montée mineure de Kubernetes, de Cilium ou d'Argo CD attend une approbation dans le tableau de bord des dépendances, car leur compatibilité doit être vérifiée ([ADR 0009](docs/adr/0009-reseau-des-pods-avec-cilium.md), [ADR 0010](docs/adr/0010-deployer-en-gitops-avec-argo-cd.md)).
 - **Les alertes Dependabot** signalent une vulnérabilité publiée sur une dépendance en place.
 - **Le workflow `Security`** analyse chaque lundi, avec Trivy, les dépendances et chaque image que le cluster déploie.
 
