@@ -51,6 +51,36 @@ volumeMounts:
     mountPath: {{ .Values.site.mountPath }}
 {{- end }}
 
+{{/*
+Pod du générateur, commun à la tâche horaire et à la génération qui suit un déploiement.
+Paramètres : « root », le contexte du chart, et « command », facultatif, qui remplace la commande
+de l'image.
+*/}}
+{{- define "rtgre.generatorPod" -}}
+metadata:
+  labels:
+    {{- include "rtgre.labels" .root | nindent 4 }}
+    app.kubernetes.io/component: generator
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  dnsConfig:
+    {{- include "rtgre.dnsConfig" .root | nindent 4 }}
+  securityContext:
+    {{- include "rtgre.podSecurityContext" (dict "root" .root "user" .root.Values.user) | nindent 4 }}
+  containers:
+    - name: generator
+      {{- include "rtgre.generatorContainer" .root | nindent 6 }}
+      {{- with .command }}
+      command:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  volumes:
+    - name: site
+      persistentVolumeClaim:
+        claimName: {{ .root.Values.site.claimName }}
+{{- end }}
+
 {{/* Configuration de nginx : files/nginx.conf, où les valeurs du chart sont rendues. */}}
 {{- define "rtgre.nginxConfig" -}}
 {{ tpl (.Files.Get "files/nginx.conf") . }}

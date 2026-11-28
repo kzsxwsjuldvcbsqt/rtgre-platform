@@ -1,6 +1,6 @@
 # Suivre la génération du site
 
-Le site est généré chaque heure, à la septième minute, par le CronJob `rtgre-generator` ([README de `kubernetes/rtgre`](../../kubernetes/rtgre/README.md)). Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
+Le site est généré chaque heure, à la septième minute, par le CronJob `rtgre-generator`, et à la fin de chaque déploiement, par le Job `rtgre-generator-sync` ([README de `kubernetes/rtgre`](../../kubernetes/rtgre/README.md)). Les commandes passent par le Bastion ([se-connecter-a-un-noeud](se-connecter-a-un-noeud.md)).
 
 L'alerte `GenerationEnEchec` part quand aucune génération n'a réussi depuis trois heures : commencer par « Une génération échoue ».
 
@@ -12,6 +12,7 @@ ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre get cronjob,jobs,pods
 
 - `LAST SCHEDULE` du CronJob date de moins d'une heure.
 - Le dernier Job est `Complete`. Le cluster garde la dernière réussite et les trois derniers échecs.
+- Le Job `rtgre-generator-sync` est `Complete` : c'est la génération du dernier déploiement, qu'Argo CD garde jusqu'au suivant.
 - Le pod `rtgre-web` est `Running` et prêt (`1/1`).
 
 ## Lire une génération
@@ -35,7 +36,7 @@ ssh -F ansible/.ssh/bastion.conf cp-1 kubectl -n rtgre delete job generation-man
 | Journal du Job | Cause | Que faire |
 | --- | --- | --- |
 | `Failed to fetch ADE calendar…` | ADE ne répond pas : le générateur a réessayé puis abandonné. | Rien : le site publié reste en place, l'heure suivante réessaie. Le site prévient lui-même ses visiteurs après douze heures sans mise à jour. |
-| `Another build is publishing…` | Une autre génération tenait le volume. | Rien, sauf si l'erreur revient chaque heure : chercher alors un Job bloqué. |
+| `Another build is publishing…` | Une autre génération tenait le volume : la génération horaire et celle d'un déploiement se sont croisées. | Rien : Argo CD rejoue celle du déploiement, et la génération horaire revient l'heure suivante. Si l'erreur revient chaque heure, chercher un Job bloqué. |
 | Autre erreur Python | La réponse d'ADE ou la configuration du site a changé. | Corriger dans le dépôt rtgre. Le site publié reste en place en attendant. |
 
 Si le nom d'ADE change, il se corrige à deux endroits : la configuration du site, dans le dépôt rtgre, et `generator.adeHost`, dans `kubernetes/rtgre/values.yaml`. Sinon la politique réseau bloque le nouveau nom.

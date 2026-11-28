@@ -20,21 +20,4 @@ spec:
       backoffLimit: 0
       activeDeadlineSeconds: {{ .Values.generator.activeDeadlineSeconds }}
       template:
-        metadata:
-          labels:
-            {{- include "rtgre.labels" . | nindent 12 }}
-            app.kubernetes.io/component: generator
-        spec:
-          restartPolicy: Never
-          automountServiceAccountToken: false
-          dnsConfig:
-            {{- include "rtgre.dnsConfig" . | nindent 12 }}
-          securityContext:
-            {{- include "rtgre.podSecurityContext" (dict "root" . "user" .Values.user) | nindent 12 }}
-          containers:
-            - name: generator
-              {{- include "rtgre.generatorContainer" . | nindent 14 }}
-          volumes:
-            - name: site
-              persistentVolumeClaim:
-                claimName: {{ .Values.site.claimName }}
+        {{- include "rtgre.generatorPod" (dict "root" .) | nindent 8 }}

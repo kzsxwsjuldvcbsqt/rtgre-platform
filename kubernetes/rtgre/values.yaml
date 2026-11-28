@@ -11,6 +11,9 @@ generator:
   # Une génération dure une dizaine de secondes. Quand ADE ne répond pas, le générateur
   # réessaie de lui-même pendant quelques minutes avant d'abandonner.
   activeDeadlineSeconds: 900
+  # Code de sortie du générateur quand ADE ne répond pas (os.EX_TEMPFAIL). La génération qui suit
+  # un déploiement l'accepte : le site publié reste en place, et la génération horaire réessaie.
+  unavailableExitCode: 75
   # Seul service que le générateur a le droit de joindre.
   adeHost: ade-uga-ro-vs.grenet.fr
   resources:
