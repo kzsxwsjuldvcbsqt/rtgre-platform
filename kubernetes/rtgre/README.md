@@ -4,7 +4,7 @@ Le site [rtgre.fr](https://rtgre.fr), tel que le cluster le génère et le sert.
 
 ```mermaid
 flowchart LR
-    ADE[ADE] -->|HTTPS| G[CronJob rtgre-generator<br>chaque heure]
+    ADE[ADE] -->|HTTPS| G[CronJob rtgre-generator<br>chaque heure, et après un déploiement]
     G -->|écrit| V[(Volume site)]
     V -->|lecture seule| W[Deployment rtgre-web<br>nginx]
     W --> S[Service rtgre-web]
@@ -14,6 +14,7 @@ flowchart LR
 | Objet | Rôle |
 | --- | --- |
 | CronJob `rtgre-generator` | Génère le site chaque heure, une génération à la fois. Il remplace le site publié d'un seul coup : nginx ne sert jamais un site à moitié écrit. |
+| Job `rtgre-generator-sync` | Génère le site à la fin de chaque synchronisation par Argo CD : un déploiement est publié aussitôt, sans attendre l'heure suivante. |
 | Deployment `rtgre-web` | nginx sert le volume en lecture seule. Sur un volume vide, un conteneur d'initialisation génère d'abord le site. |
 | PersistentVolumeClaim `site` | Volume local déclaré dans [`storage`](../storage) : le dernier site publié survit au redémarrage des pods. |
 | CronJob `rtgre-log-retention` | Remplace le pod du serveur web chaque semaine : ses journaux disparaissent avec lui. |
@@ -24,6 +25,7 @@ flowchart LR
 ## Choix notables
 
 - **Quand ADE ne répond pas**, le générateur s'arrête sans toucher au site publié, et l'heure suivante réessaie. C'est le comportement du déploiement sur GitHub Pages.
+- **Un déploiement est publié aussitôt** : le Job `rtgre-generator-sync` est un crochet `PostSync` d'Argo CD, lancé une fois les nouveaux objets en place et sains. Argo CD ne synchronise que si un objet du chart change, ce qui est le cas d'une nouvelle image : sans changement, seule la génération horaire tourne. Le Job n'échoue pas quand ADE ne répond pas (`generator.unavailableExitCode`) : un déploiement ne dépend pas d'ADE. Toute autre erreur fait échouer la synchronisation, qu'Argo CD rejoue. Le générateur pose un verrou sur le volume : deux générations simultanées ne peuvent pas publier en même temps.
 - **Sans privilège** : les deux images tournent sous un utilisateur ordinaire, système de fichiers en lecture seule, sans capacité, dans un espace de noms au niveau Pod Security `restricted`. L'image officielle de nginx est lancée sans son script d'entrée, sur le port 8080.
 - **Partage du volume par le groupe** : le générateur (utilisateur 65532) écrit, nginx (utilisateur 101) lit, tous deux par le `fsGroup` 65532.
 - **Sortie filtrée par nom** : une NetworkPolicy ne filtre que des adresses, et celles d'ADE peuvent changer. La politique de Cilium autorise le nom `generator.adeHost`, et son proxy DNS refuse tout autre nom. Les pods demandent ce nom tel quel (`ndots: 1`) : un refus sur un domaine de recherche du cluster arrêterait la résolution.

@@ -1,0 +1,23 @@
+{{/*
+Génération lancée par Argo CD à la fin de chaque synchronisation de l'application : un
+déploiement du site est publié aussitôt, sans attendre la génération horaire. Argo CD remplace
+le Job précédent avant d'en créer un, et garde le dernier, pour ses journaux.
+*/}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rtgre-generator-sync
+  labels:
+    {{- include "rtgre.labels" . | nindent 4 }}
+    app.kubernetes.io/component: generator
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  # Un échec fait échouer la synchronisation, qu'Argo CD rejoue : c'est lui qui réessaie.
+  backoffLimit: 0
+  activeDeadlineSeconds: {{ .Values.generator.activeDeadlineSeconds }}
+  template:
+    {{- /* ADE injoignable n'est pas un échec du déploiement. */}}
+    {{- $command := list "sh" "-c" (printf "python -m schedule.build || [ \"$?\" -eq %d ]" (int .Values.generator.unavailableExitCode)) }}
+    {{- include "rtgre.generatorPod" (dict "root" . "command" $command) | nindent 4 }}
