@@ -4,7 +4,7 @@
 generator:
   image:
     repository: ghcr.io/kzsxwsjuldvcbsqt/rtgre
-    tag: latest@sha256:58f0ab1772c229732c25744e7258b2a3606983e2d92c6947f74bc00d10b5da7f
+    tag: latest@sha256:ec1faf53dbe7d5ae4dcd536768343575872c090f6dae1af51729356d0921b69d
   # Une génération par heure, à l'heure de Paris.
   schedule: "7 * * * *"
   timeZone: Europe/Paris
