@@ -31,3 +31,4 @@ Chaque fichier consigne une décision, son contexte et ses conséquences. La mé
 | [0025](0025-mesurer-l-audience-avec-umami.md) | Mesurer l'audience avec Umami | accepté |
 | [0026](0026-sauvegarder-la-base-d-umami-avec-l-identite-des-noeuds.md) | Sauvegarder la base d'Umami avec l'identité des nœuds | accepté |
 | [0027](0027-lancer-la-sonde-exterieure-par-un-minuteur.md) | Lancer la sonde extérieure par un minuteur | accepté |
+| [0028](0028-mettre-en-ligne-l-image-du-site-par-un-workflow-declenche.md) | Mettre en ligne l'image du site par un workflow déclenché | accepté |

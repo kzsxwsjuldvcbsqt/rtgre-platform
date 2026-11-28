@@ -85,14 +85,11 @@
       "groupName": "Kubernetes et Cilium"
     },
     {
-      "description": "Image du générateur de rtgre : chaque publication du dépôt rtgre est proposée sans attendre le lundi, puis fusionnée d'elle-même une fois la CI verte. Le job « Images (cosign) » n'accepte qu'une image signée par le workflow de rtgre sur sa branche principale",
+      "description": "Image du générateur de rtgre : le workflow Promote la met en ligne dès sa publication (ADR 0028). Renovate ne la propose pas, pour qu'il n'y ait qu'un seul chemin",
       "matchPackageNames": [
         "ghcr.io/kzsxwsjuldvcbsqt/rtgre"
       ],
-      "schedule": [
-        "at any time"
-      ],
-      "automerge": true
+      "enabled": false
     },
     {
       "description": "nginx : seulement la branche stable, dont le numéro mineur est pair (1.30, 1.32). Les mineurs impairs sont la branche de développement",

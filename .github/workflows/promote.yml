@@ -1,0 +1,205 @@
+name: Promote
+
+# Mise en ligne d'une image à signature exigée (ADR 0028). Le dépôt qui publie l'image lance ce
+# workflow sans rien lui transmettre : l'empreinte est lue dans le registre et sa signature
+# vérifiée, puis une pull request la propose. Ce workflow la fusionne une fois ses contrôles
+# passés, et Argo CD déploie.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+# Une promotion à la fois. Celle qui attend est remplacée par la suivante : seule la dernière
+# image publiée compte.
+concurrency:
+  group: promote
+  cancel-in-progress: false
+
+env:
+  # renovate: datasource=github-releases depName=jdx/mise extractVersion=^v(?<version>.+)$
+  MISE_VERSION: '2026.11.11'
+  # Branches des promotions : ce préfixe, puis le nom de l'image et son empreinte abrégée.
+  BRANCH_PREFIX: chore/image-
+  PR_LABEL: dépendances
+  # Workflows qui doivent réussir sur la pull request avant la fusion.
+  GATE_WORKFLOWS: quality.yml kubernetes.yml security.yml
+  # Un contrôle met quelques secondes à démarrer : 30 essais au plus, puis son état est relu, au
+  # même intervalle, en secondes.
+  GATE_START_ATTEMPTS: 30
+  GATE_INTERVAL: 10
+
+jobs:
+  promote:
+    name: Promote (propose, check, merge)
+    runs-on: ubuntu-latest
+    # Garde-fou : les contrôles d'une pull request durent quelques minutes.
+    timeout-minutes: 30
+    # La clé de l'application de promotion n'est lisible que depuis main.
+    environment: promotion
+    permissions:
+      contents: read
+      # Suivre les contrôles de la pull request, et relancer une fois celui qui échoue.
+      actions: write
+    steps:
+      # La pointe de la branche, et non le commit du déclenchement : une promotion qui a attendu
+      # son tour part de ce que la précédente a fusionné.
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: false
+
+      - name: Install pinned tools
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          version: ${{ env.MISE_VERSION }}
+
+      # Rien ne vient de celui qui a lancé le workflow : l'empreinte est celle du registre, et
+      # elle n'est retenue que si elle est signée par l'identité attendue.
+      - name: Read the published digests and verify their signatures
+        id: images
+        run: scripts/ci/promote-signed-images.sh
+
+      # Une pull request ouverte avec le jeton du workflow ne lancerait aucun contrôle : celle-ci
+      # est ouverte, puis fusionnée, par une application qui n'a que ces deux droits.
+      - name: Create a token for the promotion application
+        if: steps.images.outputs.changed == 'true'
+        id: token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.PROMOTION_APP_CLIENT_ID }}
+          private-key: ${{ secrets.PROMOTION_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Open the pull request
+        if: steps.images.outputs.changed == 'true'
+        id: pull-request
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          SUMMARY: ${{ steps.images.outputs.summary }}
+          SLUG: ${{ steps.images.outputs.slug }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BODY_TEMPLATE: scripts/ci/promote-pull-request.md
+        run: |
+          branch="$BRANCH_PREFIX$SLUG"
+          title="chore(deps): met à jour $SUMMARY"
+          base=$(git rev-parse HEAD)
+
+          # Une promotion plus ancienne, restée ouverte, n'a plus lieu d'être.
+          gh pr list --state open --json number,headRefName |
+            jq --raw-output --arg prefix "$BRANCH_PREFIX" --arg branch "$branch" \
+              '.[] | select(.headRefName | startswith($prefix)) | select(.headRefName != $branch) | .number' |
+            while read -r superseded; do
+              gh pr close "$superseded" --delete-branch < /dev/null \
+                --comment "Remplacée par une promotion plus récente : $SUMMARY."
+            done
+
+          # Une promotion rejouée repart de zéro : sa branche est recréée.
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$branch" --silent 2> /dev/null; then
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$branch" --silent
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" --field ref="refs/heads/$branch" --field sha="$base" --silent
+
+          # Le commit est créé par l'API, sans auteur déclaré : GitHub le signe pour l'application.
+          additions=$(git diff --name-only -- 'kubernetes/*/values.yaml' | while read -r path; do
+            jq --null-input --arg path "$path" --arg contents "$(base64 --wrap=0 "$path")" \
+              '{path: $path, contents: $contents}'
+          done | jq --slurp .)
+          # shellcheck disable=SC2016 # Variable GraphQL, pas une variable du shell.
+          mutation='mutation($input: CreateCommitOnBranchInput!) {
+            createCommitOnBranch(input: $input) { commit { oid } } }'
+          head=$(jq --null-input --arg query "$mutation" --arg repository "$GITHUB_REPOSITORY" \
+            --arg branch "$branch" --arg base "$base" --arg headline "$title" \
+            --argjson additions "$additions" \
+            '{query: $query, variables: {input: {
+              branch: {repositoryNameWithOwner: $repository, branchName: $branch},
+              expectedHeadOid: $base,
+              message: {headline: $headline},
+              fileChanges: {additions: $additions}}}}' |
+            gh api graphql --input - --jq .data.createCommitOnBranch.commit.oid)
+
+          # Seules ces trois variables sont remplacées dans le modèle.
+          body=$(mktemp)
+          # shellcheck disable=SC2016 # Noms de variables pour envsubst, pas des valeurs.
+          envsubst '$SUMMARY $GATE_WORKFLOWS $RUN_URL' < "$BODY_TEMPLATE" > "$body"
+          url=$(gh pr create --base "$GITHUB_REF_NAME" --head "$branch" --title "$title" \
+            --body-file "$body" --label "$PR_LABEL")
+
+          echo "$url"
+          {
+            echo "url=$url"
+            echo "head=$head"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Wait for the checks of the pull request
+        if: steps.images.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ steps.pull-request.outputs.head }}
+        run: |
+          # Attend la fin d'une exécution, puis affiche sa conclusion.
+          conclusion() {
+            local state
+            while :; do
+              state=$(gh run view "$1" --json status,conclusion --jq '"\(.status) \(.conclusion)"')
+              case "$state" in
+                completed*) break ;;
+              esac
+              sleep "$GATE_INTERVAL"
+            done
+            echo "${state#completed }"
+          }
+
+          for workflow in $GATE_WORKFLOWS; do
+            run=
+            for _ in $(seq "$GATE_START_ATTEMPTS"); do
+              run=$(gh run list --workflow "$workflow" --commit "$HEAD_SHA" --event pull_request \
+                --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+              if [ -n "$run" ]; then
+                break
+              fi
+              sleep "$GATE_INTERVAL"
+            done
+            if [ -z "$run" ]; then
+              echo "::error::$workflow n'a pas démarré sur $HEAD_SHA."
+              exit 1
+            fi
+
+            # Un échec peut être passager, comme un registre qui refuse une lecture : une seule relance.
+            result=$(conclusion "$run")
+            if [ "$result" != success ]; then
+              echo "::warning::$workflow : $result. Ses travaux en échec sont relancés une fois."
+              gh run rerun "$run" --failed
+              sleep "$GATE_INTERVAL"
+              result=$(conclusion "$run")
+            fi
+            if [ "$result" != success ]; then
+              echo "::error::$workflow : $result. La pull request reste ouverte."
+              exit 1
+            fi
+            echo "$workflow : réussi."
+          done
+
+      - name: Merge the pull request
+        if: steps.images.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          PULL_REQUEST: ${{ steps.pull-request.outputs.url }}
+        run: gh pr merge "$PULL_REQUEST" --merge
+
+      - name: Summarize the promotion
+        env:
+          CHANGED: ${{ steps.images.outputs.changed }}
+          SUMMARY: ${{ steps.images.outputs.summary }}
+          PULL_REQUEST: ${{ steps.pull-request.outputs.url }}
+        run: |
+          {
+            echo "### Promotion"
+            echo
+            if [ "$CHANGED" = true ]; then
+              echo "$SUMMARY, fusionnée par $PULL_REQUEST. Argo CD la déploie, puis le site est généré."
+            else
+              echo "Rien à faire : les images à signature exigée sont déjà celles que publie leur registre."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
