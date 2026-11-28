@@ -52,7 +52,7 @@ Le workflow `Promote` de ce dépôt met en ligne l'image du site, et le workflow
 
 ## Conséquences
 
-- Une modification fusionnée dans rtgre est en ligne sans intervention. L'ordre de grandeur attendu est d'une dizaine de minutes : la construction de l'image, les contrôles de la pull request, puis trois minutes au plus pour qu'Argo CD relise le dépôt.
+- Une modification fusionnée dans rtgre est en ligne sans intervention, en une dizaine de minutes : 9 minutes 54 secondes au premier essai, le 28 novembre 2026. Argo CD en prend la plus grande part, de quelques secondes à quatre minutes : il relit le dépôt à son rythme.
 - **Les deux applications et leurs clés ne vivent pas dans le dépôt** : ce sont des réglages de GitHub. Le [runbook](../runbooks/suivre-une-mise-en-ligne-du-site.md) dit comment les recréer et renouveler leurs clés.
 - **Sans elles, rien ne casse** : l'image est publiée, et la mise en ligne redevient manuelle.
 - **Un contrôle rouge sans rapport bloque la mise en ligne**, par exemple une vulnérabilité publiée dans une autre image. C'est voulu : la pull request reste ouverte, le workflow `Image` de rtgre échoue et prévient son auteur, et le runbook dit comment trancher.
